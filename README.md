@@ -172,12 +172,73 @@ hold different roles in two companies, which an identity provider cannot express
 Better Auth answers "who are you"; `roles` and `role_permissions` answer "what may
 you do here". Nav items a person lacks are hidden rather than disabled.
 
+## Testing
+
+```bash
+npm test            # everything
+npm run test:watch  # while working
+```
+
+Two suites, because they need different things.
+
+**`tests/rules`** covers the pure domain functions — the assignment engine, the
+SLA planner, payroll, the clock. No database, no browser, runs anywhere. These
+are properties rather than fixtures: stage budgets sum to 100 for every product,
+a payslip nets out to gross minus deductions for all twenty-eight people, tax
+never falls as income rises, and no QC stage is ever given to the author of the
+stage it reviews.
+
+That last one is the reason `runDay` takes a `RunContext`. Against the seeded
+roster the self-review rule can be deleted without any test noticing — not
+because it is redundant, but because filling the emptiest desk first incidentally
+moves the author down the list once their load has gone up. So the suite builds
+the roster where the rule is the only thing in the way (one person in both Search
+and Search QC) and asserts *both* directions: with the rule, the stage is refused
+and reported; without it, the collision reproduces. A test that cannot fail is
+not a test.
+
+**`tests/db`** covers tenant isolation, which can only be tested against a real
+Postgres because the thing under test *is* Postgres. An unscoped `SELECT` returns
+nothing; a scoped one returns one workspace; a write naming another workspace is
+refused by the policy; and the scope does not survive its transaction. It skips
+itself when the database URLs are unset, so `npm test` still works with nothing
+installed.
+
+## The API
+
+Ten of these existed before; the rest were written so the HRMS and business
+screens have somewhere to point.
+
+| | |
+| --- | --- |
+| Session | `/api/me` · `/api/memberships` |
+| Production | `/api/orders` · `/api/orders/:id` · `POST /api/orders/:id/stages/:stageId` |
+| Reference | `/api/people` · `/api/departments` · `/api/roles` · `/api/levels` · `/api/products` · `/api/counties` · `/api/links` |
+| Business | `/api/clients` · `/api/invoices` · `/api/leads` |
+| HRMS | `/api/hr/attendance` · `/api/hr/leave` · `POST /api/hr/leave/:id/decision` · `/api/hr/payruns` · `/api/hr/payslips` · `/api/hr/petty-cash` · `/api/hr/openings` |
+| Configuration | `/api/config/rules` · `POST /api/config/rules/:id` · `/api/config/sla` · `/api/config/stage-budgets` · `/api/config/settings` |
+
+Two patterns run through it. A route serving both a personal and a company view
+**narrows to the caller rather than refusing** — "my payslips" and "the pay run"
+are one endpoint answering honestly to two different people. And a rule that
+exists for a compliance reason is **re-checked on the write path**: assignment
+re-runs the self-review check before it writes, and returns 409 rather than
+trusting that the picker filtered correctly.
+
 ## Known scope
 
-The front end runs against the design's seed data. The API, schema, RLS policies
-and seed script are in place and cover the core domain — tenants, people, roles,
-departments, orders and their stages, clients, products, counties and links,
-invoices, leave, attendance, pay runs, petty cash and recruitment — but the screens
-have not yet been switched over from the bundled data to TanStack Query calls
-against it. That swap is contained: the data shapes in `src/data/types.ts` and the
-API responses are the same model.
+Capabilities now come from the database: `SessionProvider` reads `/api/me`, and
+`can()` answers from that whenever a server is reachable, falling back to the
+bundled roles for the seed-data build. `authority` on the session says which is
+in force.
+
+The screens themselves still render from `src/data/`. That swap is contained —
+the shapes in `src/data/types.ts` and the API responses are the same model — but
+it is per screen and has not been done. Do it a navigation group at a time
+rather than a screen at a time: a group shares its data, so a half-migrated group
+is the only genuinely confusing state.
+
+Also outstanding, and carried over from the original design: the `person`,
+`client` and `lead` detail drill-downs were never built, so three register
+screens render rows that look clickable and are not; and the New lead button
+raises a toast rather than a capture form.
