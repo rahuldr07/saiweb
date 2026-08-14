@@ -1,5 +1,11 @@
 /* AUTO-GENERATED from the Claude Design "Title CRM 897". Values are the design's own. */
-import type { ChipKind } from './types'
+
+/*
+ * Bulk data only. The small constants that used to sit at the end of this file
+ * (BUDGET, ONTIMETARGET, LSTATUS) moved to `budget.ts`, because importing one of
+ * them pulled all 767 delivery records into the chunk — 348 KB, onto four screens
+ * that never read them. Keep this module exporting nothing but DELIVERIES.
+ */
 
 /** One delivered order: hours spent per stage, who did each, and whether it beat the SLA. */
 export interface Delivery {
@@ -19197,28 +19203,3 @@ export const DELIVERIES: Delivery[] = [
     late: false,
   },
 ]
-
-export const ONTIMETARGET = 98
-
-/** Share of an order's budget each stage gets, and the per-product overrides. */
-export const BUDGET: {
-  buffer: number
-  base: Record<string, number>
-  over: { pr: string; shares: Record<string, number> }[]
-} = {
-  buffer: 10,
-  base: { Search: 50, "Search QC": 11, Typing: 25, "Typing QC": 10, RTS: 4 },
-  over: [
-    { pr: "40Y", shares: { Search: 62, "Search QC": 10, Typing: 18, "Typing QC": 7, RTS: 3 } },
-    { pr: "FS+", shares: { Search: 60, "Search QC": 10, Typing: 20, "Typing QC": 7, RTS: 3 } },
-  ],
-}
-
-export const LSTATUS: Record<string, [string, ChipKind]> = {
-  new: ["New", "n"],
-  contacted: ["Contacted", "b"],
-  interested: ["Interested", "r"],
-  notnow: ["Not now", "n"],
-  won: ["Won", "v"],
-  lost: ["Lost", "d"],
-}

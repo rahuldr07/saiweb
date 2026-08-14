@@ -1,7 +1,7 @@
 import { Banner, Card, CardHead, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { DELIVERIES } from '@/data/quality'
-import { WORK } from '@/lib/engine'
+import { board } from '@/lib/engine'
 import { ONTIMETARGET } from '@/lib/metrics'
 import { NOW, fmtDate } from '@/lib/format'
 
@@ -15,7 +15,7 @@ export default function MyPerformance() {
   const mine = DELIVERIES.filter((d) => Object.values(d.by).includes(me.id))
   const late = mine.filter((d) => d.late).length
   const onTime = mine.length ? ((mine.length - late) / mine.length) * 100 : null
-  const today = WORK[me.id]
+  const today = board().work[me.id]
 
   /* The five days before today, so the bar chart has a shape rather than one column. */
   const byDay = Array.from({ length: 5 }, (_, i) => {

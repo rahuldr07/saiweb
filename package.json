@@ -12,8 +12,12 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
+    "db:rls": "tsx server/db/apply-rls.ts",
     "db:seed": "tsx server/db/seed.ts",
-    "server": "tsx watch server/index.ts"
+    "db:reset": "tsx server/db/reset.ts",
+    "server": "tsx watch server/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",
@@ -26,6 +30,7 @@
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@hono/node-server": "^2.1.1",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query-devtools": "^5.101.4",
@@ -35,13 +40,13 @@
     "@vitejs/plugin-react": "^6.0.5",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.1",
-    "@eslint/js": "^10.0.1",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.11.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.12",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.67.0",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "vitest": "^3.2.7"
   }
 }

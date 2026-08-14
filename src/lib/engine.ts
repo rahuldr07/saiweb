@@ -15,6 +15,42 @@ import { NOW, fmtDate } from './format'
 import { COVSTAGES, coversPlace, coversProduct } from './coverage'
 import type { Order, Person, Rule, RuleCondition } from '@/data/types'
 
+/* ── what a run is given ────────────────────────────────────────────────── */
+
+/**
+ * Everything the engine reads about the world, passed in rather than imported.
+ *
+ * It used to read the seed modules directly, which meant the rules could only
+ * ever be exercised against one roster — and a roster where load-balancing
+ * happens to avoid self-review even with the self-review rule switched off. A
+ * rule you cannot construct a counter-example for is a rule you cannot test.
+ */
+export interface RunContext {
+  staff: Person[]
+  rules: Rule[]
+  /** The stages placed automatically, in the order they run. */
+  assignStages: string[]
+  /** Every stage, including the manual ones. */
+  stages: string[]
+  /** QC stage → the stage it reviews. */
+  pairs: Record<string, string>
+  /** Stages where place and product coverage apply. */
+  covStages: string[]
+  coversPlace: (id: string, state: string, county: string | null) => boolean
+  coversProduct: (id: string, product: string) => boolean
+}
+
+export const defaultContext = (): RunContext => ({
+  staff: STAFF,
+  rules: RULES,
+  assignStages: ASSIGN_STAGES,
+  stages: STAGES,
+  pairs: PAIRS,
+  covStages: COVSTAGES,
+  coversPlace,
+  coversProduct,
+})
+
 /* ── the arriving day ───────────────────────────────────────────────────── */
 
 /** Today and the four days before it. */
@@ -92,7 +128,8 @@ export function makeDay(): DayBucket[] {
 
 /* ── rules ──────────────────────────────────────────────────────────────── */
 
-export const ruleOn = (id: string) => RULES.find((x) => x.id === id)?.on ?? false
+export const ruleOn = (id: string, rules: Rule[] = RULES) =>
+  rules.find((x) => x.id === id)?.on ?? false
 
 export function ruleMatches(r: Rule, o: Arrival, stage: string): boolean {
   const c: RuleCondition = r.cond ?? {}
@@ -146,11 +183,15 @@ export interface RunResult {
   today: Arrival[]
   days: { date: Date; dk: string; n: number }[]
   total: number
+  /** What this run was given, so the roll-ups below read the same world. */
+  ctx: RunContext
 }
 
-const whoName = (id: string | undefined) => STAFF.find((s) => s.id === id)?.n ?? '—'
+export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): RunResult {
+  const cx: RunContext = { ...defaultContext(), ...overrides }
+  const { staff: STAFF, rules: RULES, assignStages: ASSIGN_STAGES, pairs: PAIRS } = cx
+  const whoName = (id: string | undefined) => STAFF.find((s) => s.id === id)?.n ?? '—'
 
-export function runDay(days: DayBucket[]): RunResult {
   const load: Record<string, number> = {}
   const fired: Record<string, number> = {}
   const narrowed: Record<string, number> = {}
@@ -158,6 +199,11 @@ export function runDay(days: DayBucket[]): RunResult {
     fired[r.id] = 0
     narrowed[r.id] = 0
   })
+  /* A constructed roster may not carry every built-in rule, so the counters
+     tolerate an id they were not primed with rather than going NaN. */
+  const bump = (m: Record<string, number>, id: string, by = 1) => {
+    m[id] = (m[id] ?? 0) + by
+  }
 
   const assigns: Assignment[] = []
   const exc: Exception[] = []
@@ -167,7 +213,7 @@ export function runDay(days: DayBucket[]): RunResult {
   /* Departments where everybody is out: any order needing that stage has nowhere to go. */
   const deptOut = [
     ...new Set(
-      STAGES.filter((g) => {
+      cx.stages.filter((g) => {
         const m = STAFF.filter((s) => s.dep.includes(g))
         return m.length > 0 && m.every((s) => s.avail !== 'ok')
       }),
@@ -191,8 +237,8 @@ export function runDay(days: DayBucket[]): RunResult {
         for (const stage of ASSIGN_STAGES) {
           let pool: Person[] = STAFF.filter((s) => s.dep.includes(stage))
           trace.push({ r: 'r1', left: pool.length, note: `${pool.length} in ${stage}` })
-          fired.r1++
-          narrowed.r1 += pool.length // summed, so it can be reported as an average
+          bump(fired, 'r1')
+          bump(narrowed, 'r1', pool.length) // summed, so it can be reported as an average
           if (!pool.length) {
             exc.push({
               o,
@@ -211,8 +257,8 @@ export function runDay(days: DayBucket[]): RunResult {
             if (ruleMatches(r, o, stage)) {
               const before = pool.length
               pool = pool.filter((s) => r.pool?.includes(s.id))
-              fired[r.id]++
-              if (before !== pool.length) narrowed[r.id]++
+              bump(fired, r.id)
+              if (before !== pool.length) bump(narrowed, r.id)
               trace.push({ r: r.id, left: pool.length, note: `${r.n} — ${before} → ${pool.length}` })
             }
           }
@@ -232,12 +278,12 @@ export function runDay(days: DayBucket[]): RunResult {
           /* Coverage runs before availability and load on purpose: someone who does
              not cover Alaska is not "unavailable", they were never a candidate — and
              the exception should say that rather than blaming the roster. */
-          if (ruleOn('r6') && COVSTAGES.includes(stage)) {
+          if (ruleOn('r6', RULES) && cx.covStages.includes(stage)) {
             const b = pool.length
-            pool = pool.filter((x) => coversPlace(x.id, o.st, o.co))
-            fired.r6++
+            pool = pool.filter((x) => cx.coversPlace(x.id, o.st, o.co))
+            bump(fired, 'r6')
             if (b !== pool.length) {
-              narrowed.r6++
+              bump(narrowed, 'r6')
               trace.push({
                 r: 'r6',
                 left: pool.length,
@@ -246,7 +292,7 @@ export function runDay(days: DayBucket[]): RunResult {
             }
             if (!pool.length) {
               const stateOnly = STAFF.filter(
-                (x) => x.dep.includes(stage) && x.active !== false && coversPlace(x.id, o.st, null),
+                (x) => x.dep.includes(stage) && x.active !== false && cx.coversPlace(x.id, o.st, null),
               )
               exc.push({
                 o,
@@ -262,12 +308,12 @@ export function runDay(days: DayBucket[]): RunResult {
             }
           }
 
-          if (ruleOn('r7') && COVSTAGES.includes(stage)) {
+          if (ruleOn('r7', RULES) && cx.covStages.includes(stage)) {
             const b = pool.length
-            pool = pool.filter((x) => coversProduct(x.id, o.pr))
-            fired.r7++
+            pool = pool.filter((x) => cx.coversProduct(x.id, o.pr))
+            bump(fired, 'r7')
             if (b !== pool.length) {
-              narrowed.r7++
+              bump(narrowed, 'r7')
               trace.push({
                 r: 'r7',
                 left: pool.length,
@@ -276,7 +322,7 @@ export function runDay(days: DayBucket[]): RunResult {
             }
             if (!pool.length) {
               const placeOK = STAFF.filter(
-                (x) => x.dep.includes(stage) && x.active !== false && coversPlace(x.id, o.st, o.co),
+                (x) => x.dep.includes(stage) && x.active !== false && cx.coversPlace(x.id, o.st, o.co),
               )
               exc.push({
                 o,
@@ -292,12 +338,12 @@ export function runDay(days: DayBucket[]): RunResult {
             }
           }
 
-          if (ruleOn('r2')) {
+          if (ruleOn('r2', RULES)) {
             const b = pool.length
             pool = pool.filter((s) => s.avail === 'ok' && s.active !== false)
-            fired.r2++
+            bump(fired, 'r2')
             if (b !== pool.length) {
-              narrowed.r2++
+              bump(narrowed, 'r2')
               trace.push({ r: 'r2', left: pool.length, note: `availability — ${b} → ${pool.length}` })
             }
           }
@@ -314,12 +360,12 @@ export function runDay(days: DayBucket[]): RunResult {
             continue
           }
 
-          if (ruleOn('r3')) {
+          if (ruleOn('r3', RULES)) {
             const b = pool.length
             pool = pool.filter((s) => load[s.id] < s.cap)
-            fired.r3++
+            bump(fired, 'r3')
             if (b !== pool.length) {
-              narrowed.r3++
+              bump(narrowed, 'r3')
               trace.push({ r: 'r3', left: pool.length, note: `at target — ${b} → ${pool.length}` })
             }
           }
@@ -338,13 +384,13 @@ export function runDay(days: DayBucket[]): RunResult {
 
           /* QC independence: a QC stage can never go to the person who did the work. */
           const paired = PAIRS[stage]
-          if (ruleOn('r4') && paired) {
+          if (ruleOn('r4', RULES) && paired) {
             const b = pool.length
             pool = pool.filter((s) => onOrder[paired] !== s.id)
-            fired.r4++
+            bump(fired, 'r4')
             if (b !== pool.length) {
               avoided++
-              narrowed.r4++
+              bump(narrowed, 'r4')
               trace.push({
                 r: 'r4',
                 left: pool.length,
@@ -366,7 +412,7 @@ export function runDay(days: DayBucket[]): RunResult {
           }
 
           pool.sort((a, b) => load[a.id] / a.cap - load[b.id] / b.cap)
-          fired.r8++
+          bump(fired, 'r8')
           const p = pool[0]
           trace.push({ r: 'r8', left: 1, note: `emptiest — ${p.n} at ${load[p.id]}/${p.cap}` })
           load[p.id]++
@@ -406,6 +452,7 @@ export function runDay(days: DayBucket[]): RunResult {
       n: d.arrivals.reduce((a, x) => a + x.orders.length, 0),
     })),
     total: orders.length * ASSIGN_STAGES.length,
+    ctx: cx,
   }
 }
 
@@ -450,7 +497,7 @@ export interface WorkRow {
 
 export function staffWork(run: RunResult): Record<string, WorkRow> {
   const m: Record<string, WorkRow> = {}
-  STAFF.filter((s) => s.dep.length).forEach((s) => {
+  run.ctx.staff.filter((s) => s.dep.length).forEach((s) => {
     m[s.id] = { s, done: 0, pend: 0, tot: 0, pct: 0, items: [], stages: {} }
   })
   run.assigns
@@ -494,8 +541,8 @@ export interface DeptRow {
 
 export function deptWork(run: RunResult): Record<string, DeptRow> {
   const m: Record<string, DeptRow> = {}
-  STAGES.forEach((d) => {
-    const staff = STAFF.filter((s) => s.dep.includes(d))
+  run.ctx.stages.forEach((d) => {
+    const staff = run.ctx.staff.filter((s) => s.dep.includes(d))
     const free = staff.filter((s) => s.avail === 'ok')
     m[d] = {
       d,
@@ -504,7 +551,7 @@ export function deptWork(run: RunResult): Record<string, DeptRow> {
       tot: 0,
       pct: 0,
       unplaced: 0,
-      auto: ASSIGN_STAGES.includes(d),
+      auto: run.ctx.assignStages.includes(d),
       staff,
       cap: free.reduce((a, s) => a + s.cap, 0),
       load: free.reduce((a, s) => a + (run.load[s.id] ?? 0), 0),
@@ -543,17 +590,61 @@ export function deptWork(run: RunResult): Record<string, DeptRow> {
 
 /* ── the one run everything reads ───────────────────────────────────────── */
 
-export const DAY = makeDay()
-export const RUN = runDay(DAY)
-export const BATCH = RUN.today
-export const WORK = staffWork(RUN)
-export const WORKED = Object.values(WORK)
-  .filter((r) => r.tot > 0)
-  .sort((a, b) => b.tot - a.tot)
-export const TOT_DONE = WORKED.reduce((a, r) => a + r.done, 0)
-export const TOT_PEND = WORKED.reduce((a, r) => a + r.pend, 0)
-export const DWORK = deptWork(RUN)
-export const DEPTS = STAGES.map((d) => DWORK[d])
+/**
+ * The run used to be computed at module scope, which meant importing this file —
+ * something any screen touching orders does — dealt 2,160 stage decisions before
+ * React had rendered anything. It is now computed on first use and memoised, so
+ * the cost lands on the screen that actually needs it and nowhere else.
+ *
+ * Everything derived from the run is memoised alongside it, because they are all
+ * views of the same deal and recomputing one against a different run would let
+ * two panels on the same screen disagree.
+ */
+export interface AssignmentBoard {
+  day: DayBucket[]
+  run: RunResult
+  batch: Arrival[]
+  work: Record<string, WorkRow>
+  worked: WorkRow[]
+  totDone: number
+  totPend: number
+  dwork: Record<string, DeptRow>
+  depts: DeptRow[]
+}
+
+let memo: AssignmentBoard | null = null
+
+export function computeBoard(overrides: Partial<RunContext> = {}): AssignmentBoard {
+  const day = makeDay()
+  const run = runDay(day, overrides)
+  const work = staffWork(run)
+  const worked = Object.values(work)
+    .filter((r) => r.tot > 0)
+    .sort((a, b) => b.tot - a.tot)
+  const dwork = deptWork(run)
+  return {
+    day,
+    run,
+    batch: run.today,
+    work,
+    worked,
+    totDone: worked.reduce((a, r) => a + r.done, 0),
+    totPend: worked.reduce((a, r) => a + r.pend, 0),
+    dwork,
+    depts: run.ctx.stages.map((d) => dwork[d]),
+  }
+}
+
+/** The shared board. Computed once, on first read. */
+export function board(): AssignmentBoard {
+  if (!memo) memo = computeBoard()
+  return memo
+}
+
+/** Drops the memo, so a test can run against a different roster. */
+export function resetBoard(): void {
+  memo = null
+}
 
 /** The five exclusion labels, exactly as the design words them. */
 export const EXCLUSION: Record<ExclusionReason, [string, 'warn' | 'bad', string]> = {

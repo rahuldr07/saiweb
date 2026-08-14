@@ -2,7 +2,8 @@
  * Cross-cutting numbers the dashboard and reports both quote. Kept in one place
  * so "on time" means exactly one thing everywhere it appears.
  */
-import { DELIVERIES, ONTIMETARGET, type Delivery } from '@/data/quality'
+import { DELIVERIES, type Delivery } from '@/data/quality'
+import { ONTIMETARGET } from '@/data/budget'
 import { NOW } from './format'
 
 export { ONTIMETARGET }

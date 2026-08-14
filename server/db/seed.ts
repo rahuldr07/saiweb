@@ -3,9 +3,13 @@
  * database matches the screens exactly.
  *
  *   npm run db:push && npm run db:seed
+ *
+ * This runs as the **owner** (`DATABASE_URL`), not as the application role.
+ * Creating a workspace means writing the very row that every RLS policy scopes
+ * against, so there is no scope to be inside while doing it — which is why the
+ * owner holds `BYPASSRLS` and the server does not.
  */
-import { sql } from 'drizzle-orm'
-import { db, withTenant } from './client'
+import { createDb, withTenantOn } from './connect'
 import {
   assignmentRules,
   clients,
@@ -26,7 +30,18 @@ import { TENANTS, DEPTLIST, ROLELIST, RULES } from '../../src/data/org'
 import { STAFF } from '../../src/data/people'
 import { PRODUCTS, COUNTIES, CLIENTS, LINKTYPES } from '../../src/data/catalog'
 import { LEVELS } from '../../src/data/org'
-import { BUDGET } from '../../src/data/quality'
+import { BUDGET } from '../../src/data/budget'
+
+const url = process.env.DATABASE_URL
+if (!url) {
+  throw new Error(
+    'DATABASE_URL is not set. The seed runs as the owning role, not as the ' +
+      'application role — copy .env.example to .env and fill it in.',
+  )
+}
+const { db, queryClient } = createDb(url, 1)
+const withTenant = <T>(tenantId: string, fn: Parameters<typeof withTenantOn<T>>[2]) =>
+  withTenantOn(db, tenantId, fn)
 
 async function main() {
   console.log('seeding…')
@@ -198,12 +213,14 @@ async function main() {
     })
   }
 
-  await db.execute(sql`select 1`)
   console.log('done')
-  process.exit(0)
 }
 
-main().catch((e) => {
-  console.error(e)
-  process.exit(1)
-})
+main()
+  .then(() => queryClient.end({ timeout: 5 }))
+  .then(() => process.exit(0))
+  .catch(async (e) => {
+    console.error(e)
+    await queryClient.end({ timeout: 5 }).catch(() => {})
+    process.exit(1)
+  })

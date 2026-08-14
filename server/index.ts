@@ -4,7 +4,7 @@ import { createMiddleware } from 'hono/factory'
 import { cors } from 'hono/cors'
 import { and, desc, eq } from 'drizzle-orm'
 import { auth } from './auth'
-import { withTenant } from './db/client'
+import { assertServerRoleIsSafe, withTenant } from './db/client'
 import {
   clients,
   counties,
@@ -237,8 +237,21 @@ app.get('/api/counties', async (c) => {
 })
 
 const port = Number(process.env.PORT ?? 8787)
-serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`API listening on http://localhost:${info.port}`)
-})
+
+/**
+ * Check the connection before accepting a single request. If this role can
+ * bypass row-level security, every policy silently stops applying and the
+ * server looks entirely healthy — so the only safe response is to not start.
+ */
+assertServerRoleIsSafe()
+  .then(() => {
+    serve({ fetch: app.fetch, port }, (info) => {
+      console.log(`API listening on http://localhost:${info.port}`)
+    })
+  })
+  .catch((e: unknown) => {
+    console.error(e instanceof Error ? e.message : e)
+    process.exit(1)
+  })
 
 export default app

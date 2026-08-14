@@ -8,7 +8,7 @@
  * three hours into a perfectly healthy Search.
  */
 import { ASSIGN_STAGES } from '@/data/org'
-import { BUDGET } from '@/data/quality'
+import { BUDGET } from '@/data/budget'
 import { NOW } from './format'
 import type { Order } from '@/data/types'
 

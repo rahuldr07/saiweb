@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: lint · types · build · tests
+    runs-on: ubuntu-latest
+
+    # Tenant isolation is enforced by Postgres, so the tests that cover it need a
+    # real Postgres. The rule tests do not, and run without touching this.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: titlecrm
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/titlecrm
+      APP_DATABASE_URL: postgres://app_user:ci-password@localhost:5432/titlecrm
+      BETTER_AUTH_SECRET: ci-only-secret-not-used-for-anything-real
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc -b
+
+      - name: Build
+        run: npx vite build
+
+      # Same three commands the README gives a developer. If the documented setup
+      # breaks, CI should be what notices.
+      - name: Create schema
+        run: npx drizzle-kit push --force
+
+      - name: Apply row-level security
+        run: npm run db:rls
+
+      - name: Seed
+        run: npm run db:seed
+
+      - name: Test
+        run: npm test

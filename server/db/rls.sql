@@ -5,23 +5,45 @@
 -- inside, and from then on a missing WHERE clause returns nothing rather than
 -- another company's rows.
 --
--- Run after `drizzle-kit push` (or wire it in as a migration):
---   psql "$DATABASE_URL" -f server/db/rls.sql
-
--- The application role. It must NOT be the table owner or a superuser: RLS is
--- bypassed for both, which would silently defeat everything below.
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'app_user') THEN
-    CREATE ROLE app_user NOLOGIN;
-  END IF;
-END
-$$;
+-- Run after `drizzle-kit push`:
+--   npm run db:rls
+--
+-- This file is deliberately plain SQL with no psql meta-commands, so the runner
+-- in `apply-rls.ts` can execute it over an ordinary connection. The application
+-- role is created there rather than here, because its password comes from
+-- APP_DATABASE_URL — that way the role this script grants to and the role the
+-- server connects as cannot drift apart.
+--
+-- Two things about that role are load-bearing:
+--
+--  * It must be able to log in, because this is the role the server connects as.
+--  * It must NOT be a table owner or a superuser: RLS is bypassed for both,
+--    which would silently defeat everything below.
 
 GRANT USAGE ON SCHEMA public TO app_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO app_user;
+
+-- The role running this script owns the tables and also loads the seed. Creating
+-- a workspace means inserting the very row that every policy below scopes
+-- against, so there is no scope to be inside while doing it — FORCE would refuse
+-- the insert even from the owner. BYPASSRLS is the supported way to say "this
+-- role provisions, it does not serve requests".
+--
+-- Granting it needs superuser. Where the owner is not a superuser and cannot be
+-- given the attribute, run the seed before this script instead.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = current_user AND rolsuper) THEN
+    EXECUTE format('ALTER ROLE %I BYPASSRLS', current_user);
+  ELSIF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = current_user AND rolbypassrls) THEN
+    RAISE WARNING
+      'Role % has neither superuser nor BYPASSRLS. npm run db:seed will be refused by the policies below; grant BYPASSRLS or seed first.',
+      current_user;
+  END IF;
+END
+$$;
 
 -- Current workspace, read from the connection-local setting. `true` makes the
 -- lookup return NULL instead of erroring when it has not been set, so an
@@ -84,3 +106,32 @@ CREATE POLICY tenant_self ON tenants
 
 -- Better Auth's own tables are global by design: a person may belong to more than
 -- one workspace, and the session records which one is active.
+
+-- ── the one deliberate exception ─────────────────────────────────────────────
+--
+-- "Which workspaces do I belong to?" cannot be answered from inside a workspace,
+-- and the policies above are what make that true. The workspace switcher needs
+-- an answer anyway, so this is the exception — narrow, named, and written down
+-- rather than solved by handing the server a role that bypasses everything.
+--
+-- SECURITY DEFINER runs it as the owner, so it sees across tenants. It is safe
+-- because it takes a user id and returns only that user's own memberships: there
+-- is no argument that widens it, and it exposes nothing but the workspaces a
+-- caller is already entitled to enter.
+CREATE OR REPLACE FUNCTION app_memberships(p_user_id text)
+RETURNS TABLE (tenant_id uuid, slug text, name text, plan text, state text, person_id uuid)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT t.id, t.slug, t.name, t.plan, t.state, p.id
+  FROM people p
+  JOIN tenants t ON t.id = p.tenant_id
+  WHERE p.user_id = p_user_id
+    AND p.active
+  ORDER BY t.name
+$$;
+
+REVOKE ALL ON FUNCTION app_memberships(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION app_memberships(text) TO app_user;

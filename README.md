@@ -60,12 +60,29 @@ rather than a demo mode.
 To run the API and database as well:
 
 ```bash
-cp .env.example .env      # fill in DATABASE_URL and BETTER_AUTH_SECRET
-npm run db:push           # create the tables
-psql "$DATABASE_URL" -f server/db/rls.sql   # enable row-level security
+cp .env.example .env      # fill in the two database URLs and BETTER_AUTH_SECRET
+npm run db:push           # create the tables (as the owner)
+npm run db:rls            # create app_user and enable row-level security
 npm run db:seed           # load the workspaces, people, counties and catalog
 npm run server            # API on :8787, proxied from the dev server at /api
 ```
+
+There are deliberately **two** connection strings, and the difference between them
+is the whole of tenant isolation:
+
+| | Role | Used by |
+| --- | --- | --- |
+| `DATABASE_URL` | the owner, holding `BYPASSRLS` | `db:push` · `db:rls` · `db:seed` |
+| `APP_DATABASE_URL` | `app_user` — owns nothing, bypasses nothing | the server |
+
+Row-level security is bypassed entirely for table owners and superusers, so a
+server connected as the owner would enforce nothing and look completely normal.
+The server therefore checks its own role at startup and refuses to serve if it
+would bypass the policies. The seed is the mirror image: creating a workspace
+means writing the row every policy scopes against, so it runs as the owner.
+
+`db:rls` passes the password from `APP_DATABASE_URL` through to the script, so
+the role it creates and the role the server connects as cannot drift apart.
 
 The API answers on **http://localhost:8787** — check it with
 http://localhost:8787/api/health. The dev server proxies `/api` there, so the

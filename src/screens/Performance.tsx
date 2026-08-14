@@ -4,7 +4,7 @@ import { RequireCap } from '@/components/RequireCap'
 import { useUi } from '@/state/ui'
 import { DELIVERIES } from '@/data/quality'
 import { ASSIGN_STAGES } from '@/data/org'
-import { DEPTS, RUN } from '@/lib/engine'
+import { board } from '@/lib/engine'
 import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
 import { hh } from '@/lib/sla'
 import { csvName, downloadCSV } from '@/lib/csv'
@@ -39,6 +39,7 @@ function Performance() {
   const { toast } = useUi()
   const [tab, setTab] = useState<Tab>('Turnaround')
 
+  const { run: RUN, depts: DEPTS } = board()
   const ot = onTime30()
   const byClient = useMemo(() => groupBy((d) => d.cl), [])
   const byProduct = useMemo(() => groupBy((d) => d.pr), [])

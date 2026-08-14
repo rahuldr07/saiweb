@@ -7,7 +7,7 @@ import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
 import { NOW, TZ, fmtDate } from '@/lib/format'
 import { ATRISK, OPEN, PASTDUE } from '@/lib/derived'
-import { RUN, curStage, stageCounts } from '@/lib/engine'
+import { board, curStage, stageCounts } from '@/lib/engine'
 import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
 
 const st = (k: string) => STATUS[k]?.[0] ?? k
@@ -25,6 +25,7 @@ function Dashboard() {
 
   const ot = onTime30()
   const unassigned = ORDERS.filter((o) => !o.done && Object.values(o.a).every((x) => !x)).length
+  const { run: RUN } = board()
   const delivered = RUN.today.filter((o) => !curStage(o)).length
   const moving = RUN.today.filter((o) => curStage(o)).length
   const unplaced = RUN.exc.filter((e) => e.today).length

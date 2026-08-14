@@ -3,7 +3,7 @@ import { Avatar, Banner, Bar, Card, CardHead, Chip, Empty, Kpi, Kpis, PageHead, 
 import { RequireCap } from '@/components/RequireCap'
 import { AVAIL, STAFF } from '@/data/people'
 import { ASSIGN_STAGES, RULES } from '@/data/org'
-import { DEPTS, EXCLUSION, RUN, TOT_DONE, TOT_PEND, WORKED, type ExclusionReason } from '@/lib/engine'
+import { EXCLUSION, board, type ExclusionReason } from '@/lib/engine'
 import { covSummary } from '@/lib/coverage'
 
 const TABS = ['Live', 'Exceptions', 'Capacity', 'Rules'] as const
@@ -17,6 +17,7 @@ type Tab = (typeof TABS)[number]
 function Assignment() {
   const [tab, setTab] = useState<Tab>('Live')
 
+  const { run: RUN, depts: DEPTS, worked: WORKED, totDone: TOT_DONE, totPend: TOT_PEND } = board()
   const todayExc = RUN.exc.filter((e) => e.today)
   const todayAssigns = RUN.assigns.filter((a) => a.today)
 
