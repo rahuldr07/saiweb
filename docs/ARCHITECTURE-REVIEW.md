@@ -1,6 +1,8 @@
 # Title CRM — architecture and design review
 
 Reviewed against `157e3fb` on `claude/design-architecture-review-ib3i4n`, 08/14/2026.
+**All four phases have since been carried out** — see `## Outcome` at the end for
+what closed, what only partly closed, and two places where this review was wrong.
 Method: full read of `src/` and `server/`, a production build, and a direct comparison
 against the recovered Claude Design export.
 
@@ -280,3 +282,83 @@ under version control alongside the code it governs. If the design is the visual
 of truth, a reference that cannot be diffed against a commit is a weaker reference.
 Restoring it under `reference/` with the `linguist-documentation` attribute costs 706 KB
 of git history and nothing at build time — it was already excluded from the bundle.
+
+
+---
+
+# Outcome
+
+Reviewed at `157e3fb`, delivered at `339fad0`. 57 files, +4,630 −638.
+
+| | |
+| --- | --- |
+| Tests | 74, from 0 |
+| Mutations caught by the suite | 7 of 7 attempted |
+| API endpoints | 28, from 10 |
+| The `/orders` route | 76 KB, from 391 KB |
+| Routes rendering with no console errors | 23 of 23 |
+| Documented setup completes from a clean database | yes |
+
+## Two corrections to this review
+
+**The heavy-chunk finding named four screens. It was five.** The first
+measurement checked *direct* imports, so it caught Orders, order detail, Company
+and Leads and missed Dashboard, which reaches the same 348 KB transitively
+through `lib/metrics`. A transitive walk finds it immediately. Dashboard is also
+the one case the fix does not close — `onTime30()` genuinely computes its figure
+from the delivery records, so that screen needs them until the number comes from
+the API.
+
+**The first version of the QC-independence test could not fail.** It asserted the
+right property and passed with the self-review rule deleted, because filling the
+emptiest desk first incidentally moves the author down the list once their load
+has gone up. The rule was doing real work; the seeded roster never forced it to.
+That is what drove the `RunContext` refactor — not the other way round. The suite
+now builds the roster where the rule is the only thing in the way, and asserts
+both directions, so it cannot go vacuous again.
+
+## Findings
+
+| | Status | Evidence |
+| --- | --- | --- |
+| F1 setup cannot complete | fixed | schema dropped and rebuilt with the three README commands |
+| F2 two permission systems | fixed | demote the role in the database, same session is refused |
+| F3 no tests | fixed | 74 tests; each rule test verified to fail without its rule |
+| F4 348 KB for three constants | mostly | four routes fixed; Dashboard genuinely needs the data |
+| F5 frozen clock | fixed | clock tests move it and assert the derived judgements move |
+| F6 engine ran at import | fixed | run memoised behind `board()`; `runDay` takes a `RunContext` |
+| F7 identity switcher | fixed | tree-shaken from production: SignIn 2.16 kB → 0.76 kB |
+| F8 API covered a third | fixed | 28 endpoints; self-review re-checked on the write path |
+| F9 switcher could not list | fixed | one narrow `SECURITY DEFINER` function, per-user only |
+
+## Mutations, and what caught them
+
+A test that stays green when its rule is deleted is not evidence of anything.
+Each of these was applied to the source, the suite run, and the source restored.
+
+| Mutation | Caught by |
+| --- | --- |
+| self-review rule (r4) removed | `engine.test.ts` — constructed-roster case |
+| daily-target rule (r3) removed | `engine.test.ts` — per-day load assertion |
+| coverage rule (r6) removed | `engine.test.ts` — place/product assertion |
+| a stage budget share changed | `sla.test.ts` — shares sum to 100 |
+| `set_config` transaction-local flag dropped | `isolation.test.ts` — scope outliving its transaction |
+| `x-tenant-id` membership check removed | `api.test.ts` — three cross-workspace cases |
+| server-side self-review re-check removed | `api.test.ts` — the 409 case |
+
+## Still open
+
+- **The screens still render from `src/data/`.** Capabilities come from the
+  database; the rows do not. The endpoints exist and the shapes match, so the
+  swap is mechanical — but it is per screen and has not been done. A navigation
+  group at a time, not a screen at a time.
+- **Dashboard still loads the delivery history**, for its on-time KPI. The fix is
+  an endpoint returning that figure, which belongs with the screen migration.
+- **Three detail drill-downs were never built** — `person`, `client` and `lead` —
+  so three register screens render rows that look clickable and are not.
+- **New lead raises a toast** rather than opening a capture form.
+- **The write surface is thin.** Four endpoints write: stage assignment, a leave
+  decision, a rule toggle, tenant settings. Reads first, then the screens, then
+  the writes those screens need — but the API cannot yet run the business.
+- **The design export is still deleted.** It was recovered from `157e3fb^` for
+  this review and used for the comparison, but not restored.
