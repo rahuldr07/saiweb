@@ -1,0 +1,46 @@
+@import 'tailwindcss';
+
+/*
+ * The design's own stylesheet is imported AFTER Tailwind so its component rules
+ * (unlayered) always win over Tailwind's `utilities` layer. Tailwind supplies the
+ * token scale and one-off utilities; design.css supplies the visual contract.
+ */
+@import './design.css';
+
+/* The design toggles dark mode with `body.dark`, not the OS preference. */
+@custom-variant dark (&:where(body.dark, body.dark *));
+
+/* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */
+@theme {
+  --color-nav: #131a2b;
+  --color-nav2: #1b2438;
+  --color-navtx: #94a3b8;
+  --color-bg: #f6f7f9;
+  --color-card: #ffffff;
+  --color-ink: #0f172a;
+  --color-gr: #64748b;
+  --color-hair: #e6e9ef;
+  --color-brand: #4f46e5;
+  --color-brand2: #6366f1;
+  --color-brandsoft: #eef0fe;
+  --color-ok: #0f7b4f;
+  --color-oksoft: #e7f5ee;
+  --color-warn: #b45309;
+  --color-warnsoft: #fef3e2;
+  --color-bad: #be2a2a;
+  --color-badsoft: #fdecec;
+  --color-tint: #f8f9fc;
+  --color-tint2: #f1f3f7;
+  --color-rail: #e6e9ef;
+  --color-flag: #fef9ee;
+  --color-flagline: #f0d9ae;
+
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-card: 13px;
+  --radius-ctl: 9px;
+
+  --shadow-sh1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 4px 14px rgba(15, 23, 42, 0.05);
+  --shadow-sh2: 0 4px 10px rgba(15, 23, 42, 0.07), 0 18px 44px rgba(15, 23, 42, 0.1);
+}
