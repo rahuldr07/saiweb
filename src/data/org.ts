@@ -93,7 +93,7 @@ export const NAVPERM: Record<string, string | null> = {
   intake: "all",
   billing: "pricing",
   leads: "pricing",
-  reports: "all",
+  performance: "all",
   integ: "config",
   company: "people",
   dash: "all",

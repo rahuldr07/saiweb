@@ -69,7 +69,7 @@ const routeTree = rootRoute.addChildren([
   screen('/linkcheck', () => import('./screens/LinkMonitor')),
 
   /* Insight */
-  screen('/reports', () => import('./screens/Reports')),
+  screen('/performance', () => import('./screens/Performance')),
 
   /* Configure */
   screen('/integ', () => import('./screens/Integrations')),

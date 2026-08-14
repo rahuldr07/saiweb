@@ -27,8 +27,15 @@ function groupBy(pick: (d: (typeof DELIVERIES)[number]) => string): Group[] {
   return [...m.values()].sort((a, b) => b.n - a.n)
 }
 
-/** Cross-cutting analytics. Every table here exports. */
-function Reports() {
+/**
+ * How the company is delivering against what it promised: on-time rate, where
+ * the hours go stage by stage, and the same question asked of each client,
+ * product and department. The personal equivalent is "How I'm doing", which
+ * compares a person to their own target and never to a colleague.
+ *
+ * Every table here exports.
+ */
+function Performance() {
   const { toast } = useUi()
   const [tab, setTab] = useState<Tab>('Turnaround')
 
@@ -81,8 +88,8 @@ function Reports() {
   return (
     <>
       <PageHead
-        title="Reports"
-        sub={`${DELIVERIES.length} delivered orders on record.`}
+        title="Performance"
+        sub={`How we are delivering against the promise, across ${DELIVERIES.length} delivered orders.`}
         actions={
           <Btn variant="ghost" onClick={exportTab}>
             Export
@@ -213,10 +220,10 @@ function Reports() {
   )
 }
 
-export default function ReportsRoute() {
+export default function PerformanceRoute() {
   return (
     <RequireCap cap="all">
-      <Reports />
+      <Performance />
     </RequireCap>
   )
 }

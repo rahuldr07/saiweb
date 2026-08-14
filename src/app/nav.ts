@@ -51,7 +51,7 @@ export const NAV: NavGroup[] = [
       ['Link monitor', 'linkcheck', '◉'],
     ],
   },
-  { l: 'Insight', t: [['Reports', 'reports', '▤']] },
+  { l: 'Insight', t: [['Performance', 'performance', '▤']] },
   {
     l: 'Configure',
     t: [

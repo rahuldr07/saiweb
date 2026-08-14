@@ -49,7 +49,7 @@ Every screen deep-links, so you can go straight to one:
 | Payroll | http://localhost:5173/payroll |
 | County coverage | http://localhost:5173/counties |
 | Link monitor | http://localhost:5173/linkcheck |
-| Reports | http://localhost:5173/reports |
+| Performance | http://localhost:5173/performance |
 | Company | http://localhost:5173/company |
 | Switch user | http://localhost:5173/signin |
 
@@ -102,7 +102,7 @@ Six groups, twenty-two screens, plus the order detail and the account switcher.
 | Business | Leads · Invoicing |
 | HRMS | Attendance · Leave · Payroll · Payslips · Recruitment · Petty cash |
 | Reference | County coverage · Link monitor |
-| Insight | Reports |
+| Insight | Performance |
 | Configure | Integrations · Company · Add a company |
 
 ### Layout
