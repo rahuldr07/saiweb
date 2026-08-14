@@ -9,7 +9,7 @@
  */
 import { ASSIGN_STAGES } from '@/data/org'
 import { BUDGET } from '@/data/budget'
-import { NOW } from './format'
+import { now } from '@/lib/clock'
 import type { Order } from '@/data/types'
 
 export interface SlaRule {
@@ -120,7 +120,7 @@ export function orderPlan(o: Order): OrderPlan {
   const h = slaHours(o)
   const cps = checkpoints(h, o.pr)
   const i = curIdx(o)
-  const elapsed = (NOW.getTime() - o.recv.getTime()) / 36e5
+  const elapsed = (now().getTime() - o.recv.getTime()) / 36e5
 
   const rows: PlanRow[] = cps.map((c, idx) => ({
     ...c,

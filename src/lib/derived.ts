@@ -9,17 +9,17 @@ import { LEADS, STALE_WARN } from '@/data/business'
 import { LEAVE } from '@/data/hrms'
 import { STAFF } from '@/data/people'
 import { DEPTLIST } from '@/data/org'
-import { NOW } from './format'
+import { now } from '@/lib/clock'
 import type { ChipKind, County, CountyLink, Lead, LinkStatus } from '@/data/types'
 
-export const days = (d: Date) => Math.floor((NOW.getTime() - d.getTime()) / 86400000)
+export const days = (d: Date) => Math.floor((now().getTime() - d.getTime()) / 86400000)
 
 /* ── orders ─────────────────────────────────────────────────────────────── */
 
 export const openOrders = () => ORDERS.filter((o) => !o.done)
-export const pastDue = () => openOrders().filter((o) => o.due < NOW)
+export const pastDue = () => openOrders().filter((o) => o.due < now())
 export const atRisk = () =>
-  openOrders().filter((o) => o.due >= NOW && (o.due.getTime() - NOW.getTime()) / 3600000 < 4)
+  openOrders().filter((o) => o.due >= now() && (o.due.getTime() - now().getTime()) / 3600000 < 4)
 
 export const PASTDUE = pastDue().length
 export const ATRISK = atRisk().length
@@ -121,7 +121,7 @@ export function alerts(): Alert[] {
       go: 'linkcheck',
     })
   }
-  if (NOW >= nextLinkCheck()) {
+  if (now() >= nextLinkCheck()) {
     out.push({
       sev: 'warn',
       t: 'Link check is due',

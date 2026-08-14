@@ -4,7 +4,7 @@
  */
 import { DELIVERIES, type Delivery } from '@/data/quality'
 import { ONTIMETARGET } from '@/data/budget'
-import { NOW } from './format'
+import { now } from '@/lib/clock'
 
 export { ONTIMETARGET }
 
@@ -17,7 +17,7 @@ export interface OnTime {
 
 /** On-time delivery over the last thirty days. */
 export function onTime30(): OnTime {
-  const cut = NOW.getTime() - 30 * 86400000
+  const cut = now().getTime() - 30 * 86400000
   const rows = DELIVERIES.filter((d) => d.d.getTime() >= cut)
   if (!rows.length) return { pct: null, total: 0, late: 0, rows: [] }
   const late = rows.filter((d) => d.late)

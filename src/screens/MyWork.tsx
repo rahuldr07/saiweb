@@ -5,7 +5,8 @@ import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
-import { NOW, TZ } from '@/lib/format'
+import { TZ } from '@/lib/format'
+import { now } from '@/lib/clock'
 
 const st = (k: string) => STATUS[k]?.[0] ?? k
 const COLS = '140px 120px 1.3fr 140px 180px 110px'
@@ -29,7 +30,7 @@ export default function MyWork() {
 
   const outstanding = mine.filter((r) => !done.includes(r.key) && !r.o.done)
   const finished = mine.filter((r) => done.includes(r.key) || r.o.done)
-  const late = outstanding.filter((r) => r.o.due < NOW)
+  const late = outstanding.filter((r) => r.o.due < now())
 
   const markDone = (key: string, label: string) => {
     setDone((d) => [...d, key])
@@ -100,7 +101,7 @@ export default function MyWork() {
                       </div>
                     </div>
                     <div className="cell">
-                      <Chip kind={r.o.due < NOW ? 'd' : 'b'}>{r.stage}</Chip>
+                      <Chip kind={r.o.due < now() ? 'd' : 'b'}>{r.stage}</Chip>
                     </div>
                     <div className="cell">
                       <Due at={r.o.due} />

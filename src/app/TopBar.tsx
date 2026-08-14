@@ -1,8 +1,10 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { fmtTime, initials, NOW, TZ, TZ2 } from '@/lib/format'
+import { fmtTime, initials, TZ, TZ2 } from '@/lib/format'
+import { now } from '@/lib/clock'
 import { alerts } from '@/lib/derived'
+import { DEMO_IDENTITY } from '@/lib/demo'
 import { LINKCHECK } from '@/data/catalog'
 import { ROUTE_LABEL } from './nav'
 import { Empty, Row, Rows } from '@/components/ui'
@@ -94,10 +96,10 @@ export function TopBar({ current }: { current: string }) {
 
       <div className="clock">
         <b>
-          {fmtTime(NOW)} {TZ}
+          {fmtTime(now())} {TZ}
         </b>{' '}
         <span>
-          · {fmtTime(new Date(NOW.getTime() + LOCAL_OFFSET_H * 3600000))} {TZ2}
+          · {fmtTime(new Date(now().getTime() + LOCAL_OFFSET_H * 3600000))} {TZ2}
         </span>
       </div>
 
@@ -126,7 +128,7 @@ export function TopBar({ current }: { current: string }) {
       <button
         className="who"
         type="button"
-        aria-label="Account — switch who you are signed in as"
+        aria-label={DEMO_IDENTITY ? 'Account — switch who you are signed in as' : 'Account'}
         onClick={() => navigate({ to: '/signin' })}
       >
         <span className="ava" style={{ width: 26, height: 26, fontSize: '9.5px' }}>

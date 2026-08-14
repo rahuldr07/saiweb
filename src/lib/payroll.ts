@@ -22,7 +22,8 @@ import {
   LEAVETYPES,
 } from '@/data/hrms'
 import { STAFF } from '@/data/people'
-import { NOW, pad } from './format'
+import { pad } from './format'
+import { now } from '@/lib/clock'
 import type { Person } from '@/data/types'
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -273,7 +274,7 @@ export function leaveBalance(pid: string): Record<string, Balance> {
     const earned =
       t.k === 'co'
         ? LEAVE.filter((l) => l.who === pid && l.type === 'co').length + 2
-        : Math.round((t.annual * (NOW.getMonth() + 1)) / 12)
+        : Math.round((t.annual * (now().getMonth() + 1)) / 12)
     out[t.k] = { earned, taken, pending, left: Math.max(0, earned - taken - pending), annual: t.annual }
   })
   return out
@@ -284,7 +285,7 @@ export function leaveBalance(pid: string): Record<string, Balance> {
 export function yearsServed(p: Person): number | null {
   if (!p.doj) return null
   const [m, d, y] = p.doj.split('/').map(Number)
-  return (NOW.getTime() - new Date(y, m - 1, d).getTime()) / (365.25 * 24 * 3600 * 1000)
+  return (now().getTime() - new Date(y, m - 1, d).getTime()) / (365.25 * 24 * 3600 * 1000)
 }
 
 /** Fifteen days of last-drawn basic per completed year, after five. */
@@ -293,7 +294,7 @@ export function settlement(p: Person, lastDay?: Date) {
   const a = ATT[PAYMONTHS[PAYMONTHS.length - 1]]?.[p.id]
   const yrs = yearsServed(p)
   const perDay = st.gross / Math.max(1, a?.working ?? 26)
-  const dayOfMonth = lastDay ? lastDay.getDate() : NOW.getDate()
+  const dayOfMonth = lastDay ? lastDay.getDate() : now().getDate()
   const salary = Math.round(perDay * Math.round(((a?.working ?? 26) * dayOfMonth) / 30))
   const bal = leaveBalance(p.id)
   const encash = Math.round((bal.pl.left * st.basic) / 26)

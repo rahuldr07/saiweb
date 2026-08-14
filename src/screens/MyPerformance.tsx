@@ -3,7 +3,8 @@ import { useSession } from '@/state/session'
 import { DELIVERIES } from '@/data/quality'
 import { board } from '@/lib/engine'
 import { ONTIMETARGET } from '@/lib/metrics'
-import { NOW, fmtDate } from '@/lib/format'
+import { fmtDate } from '@/lib/format'
+import { now } from '@/lib/clock'
 
 /**
  * Personal performance compares to a target, never to a colleague. There are no
@@ -19,7 +20,7 @@ export default function MyPerformance() {
 
   /* The five days before today, so the bar chart has a shape rather than one column. */
   const byDay = Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() - (4 - i))
+    const d = new Date(now().getFullYear(), now().getMonth(), now().getDate() - (4 - i))
     const key = fmtDate(d)
     return { key, n: mine.filter((x) => x.dk === key).length }
   })

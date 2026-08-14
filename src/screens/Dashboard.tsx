@@ -5,7 +5,8 @@ import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
 import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
-import { NOW, TZ, fmtDate } from '@/lib/format'
+import { TZ, fmtDate } from '@/lib/format'
+import { now } from '@/lib/clock'
 import { ATRISK, OPEN, PASTDUE } from '@/lib/derived'
 import { board, curStage, stageCounts } from '@/lib/engine'
 import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
@@ -21,7 +22,7 @@ function Dashboard() {
   const [pipe, setPipe] = useState<string | null>(null)
 
   const counts = stageCounts(ORDERS)
-  const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : ORDERS.filter((o) => !o.done && o.due < NOW)
+  const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : ORDERS.filter((o) => !o.done && o.due < now())
 
   const ot = onTime30()
   const unassigned = ORDERS.filter((o) => !o.done && Object.values(o.a).every((x) => !x)).length
@@ -160,7 +161,7 @@ function Dashboard() {
                       </div>
                     </div>
                     <div className="cell">
-                      <Chip kind={o.due < NOW && !o.done ? 'd' : 'b'}>{st(o.stt)}</Chip>
+                      <Chip kind={o.due < now() && !o.done ? 'd' : 'b'}>{st(o.stt)}</Chip>
                     </div>
                     <div className="cell">
                       <Due at={o.due} />
@@ -188,7 +189,7 @@ function Dashboard() {
         <Kpi
           title="Received"
           value={RUN.today.length}
-          detail={`${fmtDate(NOW)} · every client`}
+          detail={`${fmtDate(now())} · every client`}
           onClick={() => navigate({ to: '/performance' })}
         />
         <Kpi

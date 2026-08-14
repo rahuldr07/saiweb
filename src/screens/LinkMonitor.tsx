@@ -5,7 +5,8 @@ import { useUi } from '@/state/ui'
 import { LINKCHECK } from '@/data/catalog'
 import { LSTATE, allLinks, brokenLinks, linkStats, nextLinkCheck } from '@/lib/derived'
 import { ALLSTATES, stateName } from '@/lib/coverage'
-import { NOW, fmtDT } from '@/lib/format'
+import { fmtDT } from '@/lib/format'
+import { now } from '@/lib/clock'
 import type { LinkStatus } from '@/data/types'
 
 /**
@@ -19,7 +20,7 @@ export default function LinkMonitor() {
 
   const stats = linkStats()
   const base = allLinks().filter((x) => state === 'all' || x.c.st === state)
-  const due = NOW >= nextLinkCheck()
+  const due = now() >= nextLinkCheck()
 
   const rows: DataRow[] = base.map((x) => {
     const [label, kind] = LSTATE[x.l.s]

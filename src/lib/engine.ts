@@ -11,7 +11,8 @@ import { ASSIGN_STAGES, PAIRS, RULES, STAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { COUNTIES } from '@/data/catalog'
 import { PRODMIX, CLIENTMIX } from '@/data/production'
-import { NOW, fmtDate } from './format'
+import { fmtDate } from './format'
+import { now } from '@/lib/clock'
 import { COVSTAGES, coversPlace, coversProduct } from './coverage'
 import type { Order, Person, Rule, RuleCondition } from '@/data/types'
 
@@ -57,7 +58,7 @@ export const defaultContext = (): RunContext => ({
 export const DAYCOUNT = 5
 
 const dayDate = (i: number) =>
-  new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() - (DAYCOUNT - 1 - i))
+  new Date(now().getFullYear(), now().getMonth(), now().getDate() - (DAYCOUNT - 1 - i))
 
 export interface Arrival {
   id: string
@@ -468,7 +469,7 @@ const stageIdx = (s: string) => ASSIGN_STAGES.indexOf(s)
 const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
 
 export const ageHrs = (o: Arrival) =>
-  Math.round((midnight(NOW) - midnight(o.date)) / 36e5) + (NOW.getHours() + NOW.getMinutes() / 60 - o.hr)
+  Math.round((midnight(now()) - midnight(o.date)) / 36e5) + (now().getHours() + now().getMinutes() / 60 - o.hr)
 
 export const doneCount = (o: Arrival) =>
   Math.max(0, Math.min(ASSIGN_STAGES.length, Math.floor(ageHrs(o) / STAGE_HOURS)))

@@ -8,6 +8,7 @@
  *    percentage. That is a CSS concern (`.mono`), but it is why these helpers
  *    return bare strings rather than markup.
  */
+import { now } from './clock'
 
 /** Deadlines are stated in the client's zone; the operator's is secondary. */
 export const TZ = 'ET'
@@ -38,15 +39,9 @@ export const fmtTime = (d: Date) => {
 
 export const fmtDT = (d: Date) => `${fmtDate(d)} ${fmtTime(d)}`
 
-/**
- * Mon 3 Aug 2026, 5:30 PM ET — a fixed clock at the end of the working day.
- * The design pins "now" so every countdown, late flag and roll-up is stable.
- */
-export const NOW = new Date(2026, 7, 3, 17, 30)
+export const hrs = (h: number) => new Date(now().getTime() + h * 3600000)
 
-export const hrs = (h: number) => new Date(NOW.getTime() + h * 3600000)
-
-export const dstamp = () => `${NOW.getFullYear()}-${pad(NOW.getMonth() + 1)}-${pad(NOW.getDate())}`
+export const dstamp = () => `${now().getFullYear()}-${pad(now().getMonth() + 1)}-${pad(now().getDate())}`
 
 /** Client-side money is USD. */
 export const money = (n: number) =>
@@ -65,7 +60,7 @@ export type DueKind = 'late' | 'soon' | 'ok'
 
 /** Late is computed from the due datetime — nobody marks it. */
 export function dueMeta(d: Date): { kind: DueKind; abs: string; rel: string } {
-  const diff = (d.getTime() - NOW.getTime()) / 3600000
+  const diff = (d.getTime() - now().getTime()) / 3600000
   const kind: DueKind = diff < 0 ? 'late' : diff < 4 ? 'soon' : 'ok'
   const rel =
     diff < 0
@@ -77,6 +72,6 @@ export function dueMeta(d: Date): { kind: DueKind; abs: string; rel: string } {
 }
 
 /** Days between a past date and the fixed clock. */
-export const daysSince = (d: Date) => Math.floor((NOW.getTime() - d.getTime()) / 86400000)
+export const daysSince = (d: Date) => Math.floor((now().getTime() - d.getTime()) / 86400000)
 
 export const pct = (n: number, digits = 0) => `${n.toFixed(digits)}%`

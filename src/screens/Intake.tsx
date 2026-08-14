@@ -5,7 +5,8 @@ import { RequireCap } from '@/components/RequireCap'
 import { useUi } from '@/state/ui'
 import { CLIENTS, COUNTIES, PRODUCTS } from '@/data/catalog'
 import { ALLSTATES, countiesIn, stateName } from '@/lib/coverage'
-import { NOW, TZ, fmtDT, money } from '@/lib/format'
+import { TZ, fmtDT, money } from '@/lib/format'
+import { now } from '@/lib/clock'
 
 /**
  * New order entry. The due date is computed from the product's SLA, and the
@@ -25,7 +26,7 @@ function Intake() {
   const [paste, setPaste] = useState('')
 
   const prod = PRODUCTS.find((p) => p.id === product) ?? PRODUCTS[0]
-  const due = useMemo(() => new Date(NOW.getTime() + prod.h * 3600000), [prod.h])
+  const due = useMemo(() => new Date(now().getTime() + prod.h * 3600000), [prod.h])
   const covered = COUNTIES.some((c) => c.n === county && c.st === state)
 
   const submit = () => {

@@ -23,7 +23,8 @@ import { PRODUCTS, COUNTIES } from '@/data/catalog'
 import { PAIRS, STAGES, STATUS } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
 import { BUDGET } from '@/data/budget'
-import { NOW, TZ, TZ2, fmtDT, fmtDate, hrs, money } from '@/lib/format'
+import { TZ, TZ2, fmtDT, fmtDate, hrs, money } from '@/lib/format'
+import { now } from '@/lib/clock'
 import { whoName } from '@/lib/permissions'
 import { LSTATE } from '@/lib/derived'
 import { SLA, hh, orderPlan } from '@/lib/sla'
@@ -117,7 +118,7 @@ export default function OrderDetail() {
         sub={`${o.pr} · ${o.prop}, ${o.co} County, ${o.st} · ${o.cl}`}
         actions={
           <>
-            <Chip kind={o.done ? 'v' : o.due < NOW ? 'd' : 'b'}>{st(o.stt)}</Chip>
+            <Chip kind={o.done ? 'v' : o.due < now() ? 'd' : 'b'}>{st(o.stt)}</Chip>
             {can('pricing') ? <Chip kind="n" plain>{money(o.fee)}</Chip> : null}
           </>
         }
@@ -199,7 +200,7 @@ export default function OrderDetail() {
               </Field>
               <Field label="Due">
                 <ReadOnly>
-                  <span className="mono" style={{ color: o.due < NOW ? 'var(--bad)' : 'var(--ink)' }}>
+                  <span className="mono" style={{ color: o.due < now() ? 'var(--bad)' : 'var(--ink)' }}>
                     {fmtDT(o.due)} {TZ}
                   </span>
                 </ReadOnly>
