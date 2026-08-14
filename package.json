@@ -19,7 +19,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "smoke": "node scripts/smoke.mjs",
-    "profile": "node scripts/profile.mjs"
+    "profile": "node scripts/profile.mjs",
+    "check": "node scripts/interactions.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

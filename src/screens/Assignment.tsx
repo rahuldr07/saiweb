@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Banner, Bar, Card, CardHead, Chip, Empty, Kpi, Kpis, PageHead, SectionHead, Tabs } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { AVAIL, STAFF } from '@/data/people'
@@ -15,6 +16,7 @@ type Tab = (typeof TABS)[number]
  * each is different, which is why Exceptions groups by cause rather than by order.
  */
 function Assignment() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('Live')
 
   const { run: RUN, depts: DEPTS, worked: WORKED, totDone: TOT_DONE, totPend: TOT_PEND } = board()
@@ -86,7 +88,13 @@ function Assignment() {
           <Card>
             <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
               {WORKED.map((r) => (
-                <div className="rw" key={r.s.id}>
+                <button
+                  type="button"
+                  className="rw"
+                  style={{ width: '100%' }}
+                  key={r.s.id}
+                  onClick={() => navigate({ to: '/staff/$personId', params: { personId: r.s.id } })}
+                >
                   <span>
                     <Avatar name={r.s.n} />
                   </span>
@@ -103,7 +111,7 @@ function Assignment() {
                   <span className="mono" style={{ fontSize: '12.5px' }}>
                     {r.done}/{r.tot}
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </Card>

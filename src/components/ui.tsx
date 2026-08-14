@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { dueMeta, initials } from '@/lib/format'
 import type { ChipKind } from '@/data/types'
 
@@ -38,6 +39,54 @@ export function Btn({
     >
       {children}
     </button>
+  )
+}
+
+/**
+ * The way back from a detail screen. Every one of them needs it and each was
+ * spelling it out, so the arrow, the spacing and the ghost treatment live here
+ * rather than being retyped with small differences.
+ */
+export function BackLink({ to, children }: { to: string; children: ReactNode; }) {
+  const navigate = useNavigate()
+  return (
+    <Btn variant="ghost" small style={{ marginBottom: 14 }} onClick={() => navigate({ to })}>
+      ← {children}
+    </Btn>
+  )
+}
+
+/**
+ * A detail screen for a record that is not there. Same shape every time: say so
+ * plainly, say why it might be, and offer the way back rather than leaving the
+ * reader on a dead end.
+ */
+export function NotFoundRecord({
+  what,
+  backTo,
+  backLabel,
+}: {
+  what: string
+  backTo: string
+  backLabel: string
+}) {
+  const navigate = useNavigate()
+  return (
+    <>
+      <BackLink to={backTo}>{backLabel}</BackLink>
+      <PageHead
+        title={`That ${what} is not here`}
+        sub="It may have been removed, or the link may be out of date."
+      />
+      <Card>
+        <Empty
+          icon="⊘"
+          action={<Btn small onClick={() => navigate({ to: backTo })}>Back to {backLabel.toLowerCase()}</Btn>}
+        >
+          Nothing matches that reference.
+        </Empty>
+      </Card>
+    </>
   )
 }
 

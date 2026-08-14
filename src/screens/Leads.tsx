@@ -1,75 +1,25 @@
 import { useState } from 'react'
-import { Banner, Btn, Chip, Kpi, Kpis, PageHead, Rows } from '@/components/ui'
+import { useNavigate } from '@tanstack/react-router'
+import { Banner, Btn, Kpi, Kpis, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
-import { useUi } from '@/state/ui'
 import { LEADS } from '@/data/business'
 import { LSTATUS } from '@/data/budget'
-import { fmtDate } from '@/lib/format'
 import { whoName } from '@/lib/permissions'
-import { followUpCount, isStale, lastTouch, leadAge, needsFollowUp } from '@/lib/derived'
+import { followUpCount, isStale, leadAge, needsFollowUp } from '@/lib/derived'
 
 /**
  * Free-form statuses, no enforced pipeline and no due dates. A follow-up is either
  * flagged by a person or derived from how long the lead has gone quiet.
  */
 function Leads() {
-  const { openModal, toast } = useUi()
+  const navigate = useNavigate()
   const [pill, setPill] = useState('all')
-
-  const open = (id: string) => {
-    const l = LEADS.find((x) => x.id === id)
-    if (!l) return
-    openModal({
-      title: l.co,
-      body: (
-        <>
-          <p className="gr" style={{ fontSize: '12.5px', marginBottom: 14 }}>
-            {l.loc} · owned by {whoName(l.own)} · last touched {fmtDate(lastTouch(l))}
-          </p>
-          <div className="lb">Contacts</div>
-          <Rows>
-            {l.contacts.map((c) => (
-              <div className="rw" key={c.e}>
-                <span className="gr">·</span>
-                <span>
-                  <b>{c.n}</b>
-                  <div className="sd">
-                    {c.role} · {c.e} · {c.p}
-                  </div>
-                </span>
-                <span>{c.main ? <Chip kind="b">Main</Chip> : null}</span>
-              </div>
-            ))}
-          </Rows>
-          <div className="lb" style={{ marginTop: 16 }}>
-            Notes
-          </div>
-          <Rows>
-            {[...l.notes].reverse().map((n, i) => (
-              <div className="rw" key={i}>
-                <span className="gr mono" style={{ fontSize: '11.5px' }}>
-                  {fmtDate(n.at)}
-                </span>
-                <span>
-                  <b style={{ fontWeight: 400, fontSize: '13.5px' }}>{n.t}</b>
-                </span>
-                <span className="gr" style={{ fontSize: '11.5px' }}>
-                  {whoName(n.w ?? n.who ?? '')}
-                </span>
-              </div>
-            ))}
-          </Rows>
-        </>
-      ),
-      footer: <Btn onClick={() => toast(`${l.co} — converted to a client`)}>Convert to client</Btn>,
-    })
-  }
 
   const rows: DataRow[] = LEADS.map((l) => ({
     id: l.id,
     k: needsFollowUp(l) ? [l.st, 'followup'] : l.st,
-    onClick: () => open(l.id),
+    onClick: () => navigate({ to: '/leads/$leadId', params: { leadId: l.id } }),
     search: `${l.co} ${l.loc} ${l.contacts.map((c) => c.n).join(' ')}`,
     c: [
       { v: l.co, s: l.loc },
@@ -92,7 +42,7 @@ function Leads() {
       <PageHead
         title="Leads"
         sub="Companies we are talking to. No pipeline is enforced — the statuses are labels, not gates."
-        actions={<Btn onClick={() => toast('New lead')}>＋ New lead</Btn>}
+        actions={<Btn onClick={() => navigate({ to: '/leads/new' })}>＋ New lead</Btn>}
       />
 
       {fu ? (

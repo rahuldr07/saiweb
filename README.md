@@ -110,12 +110,14 @@ The front end is a static bundle. Two pieces of host configuration matter:
 
 ### Screens
 
-Six groups, twenty-two screens, plus the order detail and the account switcher.
+Six groups, twenty-two screens in the sidebar, plus five detail screens reached
+from a register row — order, person, client, lead, and the new-lead form.
 
 | Group | Screens |
 | --- | --- |
 | Production | My work · My payslips · How I'm doing · Dashboard · Orders (+ order detail) · Assignment · Order intake · Commitment report |
-| Business | Leads · Invoicing |
+| People | Person detail, from the roster or an assignment strip |
+| Business | Leads (+ lead detail · new lead) · Invoicing |
 | HRMS | Attendance · Leave · Payroll · Payslips · Recruitment · Petty cash |
 | Reference | County coverage · Link monitor |
 | Insight | Performance |
@@ -179,6 +181,19 @@ npm test            # everything
 npm run test:watch  # while working
 ```
 
+Three more checks need a built app and a browser, so they are not in CI:
+
+```bash
+npm run build && npm run preview &
+npm run smoke     # every route renders, with no console errors
+npm run check     # navigation, form validation, and the writes that leave a trace
+npm run profile   # JS per route, longest task, total blocking time
+```
+
+`smoke` and `check` answer different questions, and a screen can pass the first
+while being inert — one proves the route renders, the other proves the thing it
+rendered does what it claims.
+
 Two suites, because they need different things.
 
 **`tests/rules`** covers the pure domain functions — the assignment engine, the
@@ -238,7 +253,7 @@ it is per screen and has not been done. Do it a navigation group at a time
 rather than a screen at a time: a group shares its data, so a half-migrated group
 is the only genuinely confusing state.
 
-Also outstanding, and carried over from the original design: the `person`,
-`client` and `lead` detail drill-downs were never built, so three register
-screens render rows that look clickable and are not; and the New lead button
-raises a toast rather than a capture form.
+The `person`, `client` and `lead` drill-downs the original design has are now
+built, and the registers link to them. What remains is the write surface: four
+endpoints write, so edits made on a detail screen live in the page's own state
+rather than going anywhere.

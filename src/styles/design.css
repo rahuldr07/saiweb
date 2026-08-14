@@ -912,3 +912,13 @@ main.anim > *:nth-child(n + 4) { animation-delay: 0.12s; }
 @media (prefers-reduced-motion: reduce) {
   .skel { background: var(--tint2); }
 }
+
+/* A table row that navigates. The affordance has to be visible — a row that
+   only reveals it is clickable on hover is invisible to anyone not using a
+   mouse, which is why the focus state is here too. */
+tr.clickable { cursor: pointer; }
+tr.clickable:hover td { background: var(--tint); }
+tr.clickable:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}

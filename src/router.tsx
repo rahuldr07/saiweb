@@ -54,7 +54,10 @@ const routeTree = rootRoute.addChildren([
 
   /* Business */
   screen('/leads', () => import('./screens/Leads')),
+  screen('/leads/new', () => import('./screens/NewLead')),
+  screen('/leads/$leadId', () => import('./screens/LeadDetail')),
   screen('/billing', () => import('./screens/Invoicing')),
+  screen('/clients/$clientCode', () => import('./screens/ClientDetail')),
 
   /* HRMS */
   screen('/attend', () => import('./screens/Attendance')),
@@ -70,6 +73,9 @@ const routeTree = rootRoute.addChildren([
 
   /* Insight */
   screen('/performance', () => import('./screens/Performance')),
+
+  /* People — reached from the Company roster and from an order's assignment strip. */
+  screen('/staff/$personId', () => import('./screens/PersonDetail')),
 
   /* Configure */
   screen('/integ', () => import('./screens/Integrations')),

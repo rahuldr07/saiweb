@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Btn, Card, CardHead, Chip, Field, Form, KeyValues, PageHead, Rows, Tabs } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -16,6 +17,7 @@ import { roleName } from '@/lib/permissions'
 function Company() {
   const { tenant } = useSession()
   const { toast } = useUi()
+  const navigate = useNavigate()
   const [tab, setTab] = useState<string>(COTABS[0])
 
   return (
@@ -58,7 +60,13 @@ function Company() {
           <CardHead title={`${STAFF.filter((s) => s.active !== false).length} people`} />
           <Rows>
             {STAFF.filter((s) => s.active !== false).map((p) => (
-              <div className="rw" key={p.id}>
+              <button
+                type="button"
+                className="rw"
+                style={{ width: '100%' }}
+                key={p.id}
+                onClick={() => navigate({ to: '/staff/$personId', params: { personId: p.id } })}
+              >
                 <span>
                   <Avatar name={p.n} />
                 </span>
@@ -72,7 +80,7 @@ function Company() {
                 <span>
                   <Chip kind={AVAIL[p.avail][1]}>{AVAIL[p.avail][0]}</Chip>
                 </span>
-              </div>
+              </button>
             ))}
           </Rows>
         </Card>
@@ -95,10 +103,22 @@ function Company() {
               </thead>
               <tbody>
                 {CLIENTS.map((c) => (
-                  <tr key={c.n}>
+                  <tr
+                    key={c.n}
+                    className="clickable"
+                    tabIndex={0}
+                    role="link"
+                    onClick={() => navigate({ to: '/clients/$clientCode', params: { clientCode: c.n } })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        navigate({ to: '/clients/$clientCode', params: { clientCode: c.n } })
+                      }
+                    }}
+                  >
                     <td>
                       <b>{c.n}</b>
-                      <div className="sd gr">{c.e || 'no email on file'}</div>
+                      <div className="sd gr">{c.dn}</div>
                     </td>
                     <td>{c.terms}</td>
                     <td className="n">{c.orders.toLocaleString('en-US')}</td>

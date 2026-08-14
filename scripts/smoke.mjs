@@ -22,6 +22,10 @@ const routes = [
   '/performance', '/company', '/leads', '/billing', '/mywork', '/intake',
   '/commitment', '/leave', '/payslips', '/hiring', '/petty', '/integ', '/onboard',
   '/signin', '/myperf', '/mypay',
+  /* Detail screens, reached from a register row. */
+  '/staff/pd', '/clients/MGR', '/leads/l1', '/leads/new',
+  /* And the not-found path each of them has to handle. */
+  '/staff/nobody', '/clients/NOPE', '/leads/nope',
 ]
 
 /* Some sandboxes cannot spawn the usual multi-process browser. */
