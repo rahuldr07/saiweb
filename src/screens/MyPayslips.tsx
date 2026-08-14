@@ -72,7 +72,6 @@ export default function MyPayslips() {
     <>
       <PageHead title="My payslips" sub={`${me.n} · ${me.dep.join(', ') || 'No department'}`} />
 
-      <SectionHead>What I’m paid</SectionHead>
       <Kpis>
         <Kpi
           title="Monthly gross"

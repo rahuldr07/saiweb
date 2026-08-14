@@ -47,7 +47,6 @@ export default function MyPerformance() {
         </Banner>
       ) : null}
 
-      <SectionHead>How I’m tracking</SectionHead>
       <Kpis>
         <Kpi title="Assigned today" value={today?.tot ?? 0} detail="stages on your desk" />
         <Kpi title="Finished today" value={<span className="ok">{today?.done ?? 0}</span>} detail={`${today?.pct ?? 0}% of them`} />

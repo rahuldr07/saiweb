@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
+import { Banner, Btn, Kpi, Kpis, PageHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
 import { LINKCHECK } from '@/data/catalog'
@@ -58,7 +58,6 @@ export default function LinkMonitor() {
         </Banner>
       ) : null}
 
-      <SectionHead>Link health</SectionHead>
       <Kpis>
         <Kpi title="Working" value={<span className="mono ok">{stats.by.ok}</span>} detail="checked and fine" />
         <Kpi

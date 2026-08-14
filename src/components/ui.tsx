@@ -120,6 +120,7 @@ export function Kpi({
   icon,
   onClick,
   selected,
+  flat,
 }: {
   title: string
   value: ReactNode
@@ -128,12 +129,18 @@ export function Kpi({
   icon?: string
   onClick?: () => void
   selected?: boolean
+  /** Drop the card treatment — the design's `stat` variant, for a bare run of figures. */
+  flat?: boolean
 }) {
-  /* Tiles that do nothing lose their card treatment — the design's `stat` variant. */
+  /*
+   * Every tile is a card unless it asks not to be. The design flattened any tile
+   * that was not clickable, which left whole screens of figures floating with no
+   * edges — so the box is the default here and `flat` is opt-in.
+   */
   const cls = [
     'kpi',
     tone === 'alert' ? 'alert' : tone === 'warn' ? 'warnk' : '',
-    onClick ? '' : 'stat',
+    flat ? 'stat' : '',
     selected ? 'sel' : '',
   ]
     .filter(Boolean)

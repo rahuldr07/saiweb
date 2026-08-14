@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Banner, Btn, Field, Form, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
+import { Banner, Btn, Field, Form, Kpi, Kpis, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
@@ -142,7 +142,6 @@ function PettyCash() {
         </Banner>
       ) : null}
 
-      <SectionHead>The float</SectionHead>
       <Kpis>
         <Kpi title="Float" value={<span className="mono">{inr(PETTYCFG.float)}</span>} detail="opening balance" />
         <Kpi title="Spent" value={<span className="mono">{inr(spent)}</span>} detail="since the float was set" />

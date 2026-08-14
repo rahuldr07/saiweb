@@ -31,18 +31,10 @@ function Assignment() {
         title="Assignment"
         sub="Work is placed as it arrives. Every choice records why it was made, and every refusal says which rule stopped it."
       />
-
-      {/* Two different questions, so two sub-sections: where today's work went,
-          and what the rules did to it. */}
-      <SectionHead>Where today’s work went</SectionHead>
       <Kpis>
         <Kpi title="Placed today" value={todayAssigns.length} detail="stages given an owner" />
         <Kpi title="Finished" value={<span className="ok">{TOT_DONE}</span>} detail="through their stage" />
         <Kpi title="On desks" value={<span className="warn">{TOT_PEND}</span>} detail="still in hand" />
-      </Kpis>
-
-      <SectionHead>What the rules did</SectionHead>
-      <Kpis>
         <Kpi
           title="Could not be placed"
           value={<span className={todayExc.length ? 'bad' : 'ok'}>{todayExc.length}</span>}

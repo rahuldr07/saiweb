@@ -47,7 +47,6 @@ function Recruitment() {
         actions={<Btn onClick={() => toast('New opening')}>＋ New opening</Btn>}
       />
 
-      <SectionHead>Where hiring stands</SectionHead>
       <Kpis>
         <Kpi title="Open roles" value={OPENINGS.length} detail={`${seats} seats in total`} />
         <Kpi title="In the pipeline" value={CANDIDATES.length} detail="across every stage" />

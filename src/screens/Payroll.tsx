@@ -82,7 +82,6 @@ function Payroll() {
         {note}
       </Banner>
 
-      <SectionHead>This run</SectionHead>
       <Kpis>
         <Kpi title="People" value={people.length} detail="on payroll this month" />
         <Kpi title="Gross" value={<span className="mono">{inr(gross)}</span>} detail="before deductions" />

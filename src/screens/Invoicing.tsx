@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Btn, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Btn, Chip, Kpi, Kpis, PageHead, Rows } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
@@ -117,7 +117,6 @@ function Invoicing() {
         }
       />
 
-      <SectionHead>Money owed and collected</SectionHead>
       <Kpis>
         <Kpi title="Outstanding" value={<span className="mono">{money(outstanding)}</span>} detail="not yet paid" />
         <Kpi

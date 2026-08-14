@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Banner, Btn, Chip, Kpi, Kpis, PageHead, Rows } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
@@ -101,7 +101,6 @@ function Leads() {
         </Banner>
       ) : null}
 
-      <SectionHead>Where the pipeline stands</SectionHead>
       <Kpis>
         <Kpi title="Open leads" value={LEADS.filter((l) => !['won', 'lost'].includes(l.st)).length} detail="still live" />
         <Kpi title="Need following up" value={<span className={fu ? 'warn' : 'ok'}>{fu}</span>} detail="flagged or quiet" />
