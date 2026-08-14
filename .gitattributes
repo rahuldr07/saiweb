@@ -1,0 +1,23 @@
+# Normalise line endings in the repository, and check out whatever the platform
+# uses. Without this, every commit from Windows warns about LF being replaced.
+* text=auto eol=lf
+
+# The Claude Design export is reference material, not code we wrote or maintain.
+# Left unmarked it is 706KB of HTML against ~860KB of TypeScript, so GitHub
+# reports the project as nearly half HTML — which describes the design file, not
+# the application.
+reference/** linguist-documentation
+
+# Seed data transcribed from that export by script. It ships in the build, so it
+# is not vendored, but a 480KB diff of delivery records is noise in a review.
+src/data/business.ts linguist-generated
+src/data/catalog.ts  linguist-generated
+src/data/hrms.ts     linguist-generated
+src/data/org.ts      linguist-generated
+src/data/people.ts   linguist-generated
+src/data/production.ts linguist-generated
+src/data/quality.ts  linguist-generated
+
+# Binary-ish artefacts that should never be diffed as text.
+*.png binary
+*.zip binary
