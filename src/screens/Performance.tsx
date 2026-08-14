@@ -1,31 +1,23 @@
 import { useMemo, useState } from 'react'
 import { Btn, Card, CardHead, Kpi, Kpis, PageHead, SectionHead, Tabs } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
+import { LoadFailed, SkeletonValue } from '@/components/async'
 import { useUi } from '@/state/ui'
-import { DELIVERIES } from '@/data/quality'
 import { ASSIGN_STAGES } from '@/data/org'
 import { board } from '@/lib/engine'
-import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
+import {
+  ONTIMETARGET,
+  groupDeliveries,
+  medianTurnaround,
+  onTime30,
+  type Delivery,
+} from '@/lib/metrics'
+import { useDeliveries } from '@/lib/useDeliveries'
 import { hh } from '@/lib/sla'
 import { csvName, downloadCSV } from '@/lib/csv'
 
 const TABS = ['Turnaround', 'By client', 'By product', 'By department'] as const
 type Tab = (typeof TABS)[number]
-
-type Group = { key: string; n: number; late: number; hrs: number }
-
-function groupBy(pick: (d: (typeof DELIVERIES)[number]) => string): Group[] {
-  const m = new Map<string, Group>()
-  DELIVERIES.forEach((d) => {
-    const key = pick(d)
-    const g = m.get(key) ?? { key, n: 0, late: 0, hrs: 0 }
-    g.n++
-    if (d.late) g.late++
-    g.hrs += d.hrs
-    m.set(key, g)
-  })
-  return [...m.values()].sort((a, b) => b.n - a.n)
-}
 
 /**
  * How the company is delivering against what it promised: on-time rate, where
@@ -40,25 +32,37 @@ function Performance() {
   const [tab, setTab] = useState<Tab>('Turnaround')
 
   const { run: RUN, depts: DEPTS } = board()
-  const ot = onTime30()
-  const byClient = useMemo(() => groupBy((d) => d.cl), [])
-  const byProduct = useMemo(() => groupBy((d) => d.pr), [])
 
-  const median = useMemo(() => {
-    const xs = DELIVERIES.map((d) => d.hrs).sort((a, b) => a - b)
-    return xs.length ? xs[Math.floor(xs.length / 2)] : 0
-  }, [])
+  /* 374 KB of history, fetched when this screen opens rather than shipped with
+     the route. Every figure below is derived from it, so they arrive together. */
+  const history = useDeliveries()
+  const deliveries: Delivery[] = useMemo(() => history.data ?? [], [history.data])
+  const loading = history.isPending
+
+  const ot = useMemo(() => onTime30(deliveries), [deliveries])
+  const byClient = useMemo(() => groupDeliveries(deliveries, (d) => d.cl), [deliveries])
+  const byProduct = useMemo(() => groupDeliveries(deliveries, (d) => d.pr), [deliveries])
+  const median = useMemo(() => medianTurnaround(deliveries), [deliveries])
 
   const stageAvg = useMemo(
     () =>
       ASSIGN_STAGES.map((s) => {
-        const xs = DELIVERIES.map((d) => d.st[s]).filter((x) => typeof x === 'number')
+        const xs = deliveries.map((d) => d.st[s]).filter((x) => typeof x === 'number')
         return { stage: s, avg: xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0 }
       }),
-    [],
+    [deliveries],
   )
 
   const rows = tab === 'By client' ? byClient : tab === 'By product' ? byProduct : []
+
+  if (history.isError) {
+    return (
+      <>
+        <PageHead title="Performance" sub="How we are delivering against the promise." />
+        <LoadFailed what="The delivery history" error={history.error} onRetry={() => history.refetch()} />
+      </>
+    )
+  }
 
   const exportTab = () => {
     const data =
@@ -90,7 +94,11 @@ function Performance() {
     <>
       <PageHead
         title="Performance"
-        sub={`How we are delivering against the promise, across ${DELIVERIES.length} delivered orders.`}
+        sub={
+          loading
+            ? 'How we are delivering against the promise.'
+            : `How we are delivering against the promise, across ${deliveries.length} delivered orders.`
+        }
         actions={
           <Btn variant="ghost" onClick={exportTab}>
             Export
@@ -101,12 +109,20 @@ function Performance() {
       <Kpis>
         <Kpi
           title="On time · 30d"
-          value={ot.pct === null ? '—' : ot.pct.toFixed(1) + '%'}
-          tone={ot.pct !== null && ot.pct < ONTIMETARGET ? 'warn' : undefined}
-          detail={`target ${ONTIMETARGET}% · ${ot.late} late of ${ot.total}`}
+          value={loading ? <SkeletonValue /> : ot.pct === null ? '—' : ot.pct.toFixed(1) + '%'}
+          tone={!loading && ot.pct !== null && ot.pct < ONTIMETARGET ? 'warn' : undefined}
+          detail={loading ? `target ${ONTIMETARGET}%` : `target ${ONTIMETARGET}% · ${ot.late} late of ${ot.total}`}
         />
-        <Kpi title="Median turnaround" value={<span className="mono">{hh(median)}</span>} detail="end to end" />
-        <Kpi title="Delivered" value={DELIVERIES.length} detail="all time" />
+        <Kpi
+          title="Median turnaround"
+          value={loading ? <SkeletonValue width={56} /> : <span className="mono">{hh(median)}</span>}
+          detail="end to end"
+        />
+        <Kpi
+          title="Delivered"
+          value={loading ? <SkeletonValue width={48} /> : deliveries.length}
+          detail="all time"
+        />
         <Kpi title="Placed today" value={RUN.assigns.filter((a) => a.today).length} detail="stages given an owner" />
       </Kpis>
 

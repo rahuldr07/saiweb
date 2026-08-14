@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Btn, Chip, Due, Empty, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
@@ -10,6 +10,8 @@ import { now } from '@/lib/clock'
 import { ATRISK, OPEN, PASTDUE } from '@/lib/derived'
 import { board, curStage, stageCounts } from '@/lib/engine'
 import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
+import { useDeliveries } from '@/lib/useDeliveries'
+import { SkeletonValue } from '@/components/async'
 
 const st = (k: string) => STATUS[k]?.[0] ?? k
 const stColor = (k: string) => STATUS[k]?.[1] ?? '#94A3B8'
@@ -24,7 +26,12 @@ function Dashboard() {
   const counts = stageCounts(ORDERS)
   const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : ORDERS.filter((o) => !o.done && o.due < now())
 
-  const ot = onTime30()
+  /* The one figure on this screen derived from the delivery history. It is
+     fetched rather than bundled, so the tile shows a placeholder for the moment
+     it takes rather than holding the whole dashboard back for it. */
+  const history = useDeliveries()
+  const ot = useMemo(() => onTime30(history.data ?? []), [history.data])
+  const otLoading = history.isPending
   const unassigned = ORDERS.filter((o) => !o.done && Object.values(o.a).every((x) => !x)).length
   const { run: RUN } = board()
   const delivered = RUN.today.filter((o) => !curStage(o)).length
@@ -84,8 +91,8 @@ function Dashboard() {
         <Kpi
           title="On time · 30d"
           icon="✓"
-          value={ot.pct === null ? '—' : ot.pct.toFixed(1) + '%'}
-          tone={ot.pct !== null && ot.pct < ONTIMETARGET ? 'warn' : undefined}
+          value={otLoading ? <SkeletonValue /> : ot.pct === null ? '—' : ot.pct.toFixed(1) + '%'}
+          tone={!otLoading && ot.pct !== null && ot.pct < ONTIMETARGET ? 'warn' : undefined}
           detail={
             <span className={ot.pct !== null && ot.pct < ONTIMETARGET ? 'warn' : 'ok'}>
               target {ONTIMETARGET}%

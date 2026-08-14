@@ -1,8 +1,10 @@
+import { useMemo } from 'react'
 import { Banner, Card, CardHead, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { LoadFailed, SkeletonValue } from '@/components/async'
 import { useSession } from '@/state/session'
-import { DELIVERIES } from '@/data/quality'
 import { board } from '@/lib/engine'
 import { ONTIMETARGET } from '@/lib/metrics'
+import { useDeliveries } from '@/lib/useDeliveries'
 import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 
@@ -13,18 +15,38 @@ import { now } from '@/lib/clock'
 export default function MyPerformance() {
   const { me } = useSession()
 
-  const mine = DELIVERIES.filter((d) => Object.values(d.by).includes(me.id))
+  const history = useDeliveries()
+  const loading = history.isPending
+
+  /* Only the orders this person actually touched, at any stage. */
+  const mine = useMemo(
+    () => (history.data ?? []).filter((d) => Object.values(d.by).includes(me.id)),
+    [history.data, me.id],
+  )
   const late = mine.filter((d) => d.late).length
   const onTime = mine.length ? ((mine.length - late) / mine.length) * 100 : null
   const today = board().work[me.id]
 
   /* The five days before today, so the bar chart has a shape rather than one column. */
-  const byDay = Array.from({ length: 5 }, (_, i) => {
-    const d = new Date(now().getFullYear(), now().getMonth(), now().getDate() - (4 - i))
-    const key = fmtDate(d)
-    return { key, n: mine.filter((x) => x.dk === key).length }
-  })
+  const byDay = useMemo(
+    () =>
+      Array.from({ length: 5 }, (_, i) => {
+        const d = new Date(now().getFullYear(), now().getMonth(), now().getDate() - (4 - i))
+        const key = fmtDate(d)
+        return { key, n: mine.filter((x) => x.dk === key).length }
+      }),
+    [mine],
+  )
   const max = Math.max(...byDay.map((b) => b.n), 1)
+
+  if (history.isError) {
+    return (
+      <>
+        <PageHead title="How I’m doing" sub={me.n} />
+        <LoadFailed what="Your delivery history" error={history.error} onRetry={() => history.refetch()} />
+      </>
+    )
+  }
 
   const stages = today
     ? Object.entries(today.stages).map(([stage, v]) => ({ stage, ...v }))
@@ -37,7 +59,7 @@ export default function MyPerformance() {
         sub={`${me.n} · ${me.dep.join(', ') || 'No department'}. Measured against your own target, not against anyone else.`}
       />
 
-      {onTime !== null && onTime < ONTIMETARGET ? (
+      {loading ? null : onTime !== null && onTime < ONTIMETARGET ? (
         <Banner kind="r" icon="◷" title="Below the on-time target">
           {onTime.toFixed(1)}% of the orders you touched went out on time, against a target of{' '}
           {ONTIMETARGET}%. The stage that runs over most often is the place to look first.
@@ -53,11 +75,15 @@ export default function MyPerformance() {
         <Kpi title="Finished today" value={<span className="ok">{today?.done ?? 0}</span>} detail={`${today?.pct ?? 0}% of them`} />
         <Kpi
           title="On time"
-          value={onTime === null ? '—' : onTime.toFixed(1) + '%'}
-          tone={onTime !== null && onTime < ONTIMETARGET ? 'warn' : undefined}
+          value={loading ? <SkeletonValue /> : onTime === null ? '—' : onTime.toFixed(1) + '%'}
+          tone={!loading && onTime !== null && onTime < ONTIMETARGET ? 'warn' : undefined}
           detail={`target ${ONTIMETARGET}%`}
         />
-        <Kpi title="Orders touched" value={mine.length} detail="delivered, all time" />
+        <Kpi
+          title="Orders touched"
+          value={loading ? <SkeletonValue width={48} /> : mine.length}
+          detail="delivered, all time"
+        />
       </Kpis>
 
       <SectionHead>Completed per day</SectionHead>

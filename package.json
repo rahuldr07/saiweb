@@ -18,7 +18,8 @@
     "server": "tsx watch server/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "profile": "node scripts/profile.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.101.4",

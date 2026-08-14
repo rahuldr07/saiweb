@@ -10,8 +10,8 @@ src/data/catalog.ts  linguist-generated
 src/data/hrms.ts     linguist-generated
 src/data/org.ts      linguist-generated
 src/data/people.ts   linguist-generated
+src/data/deliveries.json linguist-generated
 src/data/production.ts linguist-generated
-src/data/quality.ts  linguist-generated
 
 # Binary-ish artefacts that should never be diffed as text.
 *.png binary
