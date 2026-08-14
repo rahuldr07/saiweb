@@ -10,7 +10,8 @@ This is a faithful implementation of the Claude Design **Title CRM 897**. The
 design is the visual source of truth: its stylesheet is ported verbatim into
 [`src/styles/design.css`](src/styles/design.css), and its data and rules were
 extracted rather than re-typed, so the screens show exactly the numbers the design
-does.
+does. The export itself is kept in [`reference/`](reference) so the implementation
+and the design it came from live together.
 
 ## Stack
 
