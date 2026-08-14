@@ -33,8 +33,30 @@ npm install
 npm run dev
 ```
 
+The application is then at **http://localhost:5173**.
+
 That is enough to see every screen — the front end ships with the design's seed
 data, so it runs with no database.
+
+Every screen deep-links, so you can go straight to one:
+
+| | |
+| --- | --- |
+| Dashboard | http://localhost:5173/dash |
+| Orders | http://localhost:5173/orders |
+| Assignment | http://localhost:5173/assign |
+| Attendance | http://localhost:5173/attend |
+| Payroll | http://localhost:5173/payroll |
+| County coverage | http://localhost:5173/counties |
+| Link monitor | http://localhost:5173/linkcheck |
+| Reports | http://localhost:5173/reports |
+| Company | http://localhost:5173/company |
+| Switch user | http://localhost:5173/signin |
+
+You start as Harry Whitfield, a company admin. `/signin` switches to any of the
+other twenty-seven people — a lead or a member of production staff sees a
+different sidebar and a different Orders register, which is the permission model
+rather than a demo mode.
 
 To run the API and database as well:
 
@@ -46,12 +68,16 @@ npm run db:seed           # load the workspaces, people, counties and catalog
 npm run server            # API on :8787, proxied from the dev server at /api
 ```
 
+The API answers on **http://localhost:8787** — check it with
+http://localhost:8787/api/health. The dev server proxies `/api` there, so the
+front end calls same-origin paths and there is no CORS in development.
+
 Other commands:
 
 ```bash
 npm run build      # tsc -b && vite build
 npm run lint       # eslint
-npm run preview    # serve the production build
+npm run preview    # serve the production build on http://localhost:4173
 ```
 
 ### Deploying
