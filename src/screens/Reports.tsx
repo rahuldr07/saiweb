@@ -90,6 +90,7 @@ function Reports() {
         }
       />
 
+      <SectionHead>Headline numbers</SectionHead>
       <Kpis>
         <Kpi
           title="On time · 30d"

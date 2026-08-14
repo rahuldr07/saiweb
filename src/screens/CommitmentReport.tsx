@@ -11,7 +11,7 @@ const TABS = ['Capture', 'Preview', 'Documents'] as const
 type Tab = (typeof TABS)[number]
 
 /** Produce the client deliverable from a completed order. */
-export default function ReportGenerator() {
+export default function CommitmentReport() {
   const { toast } = useUi()
   const [tab, setTab] = useState<Tab>('Capture')
   const [orderId, setOrderId] = useState(ORDERS[ORDERS.length - 1].id)
@@ -33,8 +33,8 @@ export default function ReportGenerator() {
   return (
     <>
       <PageHead
-        title="Report generator"
-        sub="The typed report a client receives, built from the order’s own fields."
+        title="Commitment report"
+        sub="The commitment a client receives, built from the completed order’s own fields."
         actions={
           <>
             <Btn variant="ghost" onClick={() => toast(`${o.id} — DOCX queued`)}>

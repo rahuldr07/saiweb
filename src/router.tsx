@@ -50,7 +50,7 @@ const routeTree = rootRoute.addChildren([
   screen('/myperf', () => import('./screens/MyPerformance')),
   screen('/assign', () => import('./screens/Assignment')),
   screen('/intake', () => import('./screens/Intake')),
-  screen('/repgen', () => import('./screens/ReportGenerator')),
+  screen('/commitment', () => import('./screens/CommitmentReport')),
 
   /* Business */
   screen('/leads', () => import('./screens/Leads')),

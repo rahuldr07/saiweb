@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Btn, Kpi, Kpis, PageHead, Seg } from '@/components/ui'
+import { Btn, Kpi, Kpis, PageHead, SectionHead, Seg } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
@@ -83,6 +83,7 @@ function Attendance() {
         }
       />
 
+      <SectionHead>Who is in today</SectionHead>
       <Kpis>
         <Kpi title="Available today" value={<span className="ok">{available}</span>} detail={`of ${people.length} people`} />
         <Kpi title="On leave" value={<span className={onLeave ? 'warn' : 'ok'}>{onLeave}</span>} detail="approved absence" />

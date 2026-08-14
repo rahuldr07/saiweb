@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Btn, Chip, Kpi, Kpis, PageHead, Rows } from '@/components/ui'
+import { Btn, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
 import { COUNTIES, LINKTYPES } from '@/data/catalog'
@@ -110,6 +110,7 @@ export default function Counties() {
         }
       />
 
+      <SectionHead>Where we can take work</SectionHead>
       <Kpis>
         <Kpi title="Counties" value={base.length} detail={`across ${new Set(base.map((c) => c.st)).size} states`} />
         <Kpi title="Sources online" value={<span className="mono">{online}</span>} detail={`of ${total} possible`} />

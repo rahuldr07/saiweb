@@ -98,7 +98,7 @@ export const NAVPERM: Record<string, string | null> = {
   company: "people",
   dash: "all",
   mywork: null,
-  repgen: null,
+  commitment: null,
   orders: null,
   counties: null,
   linkcheck: null,

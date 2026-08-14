@@ -44,6 +44,7 @@ function Dashboard() {
         }
       />
 
+      <SectionHead>The board right now</SectionHead>
       <Kpis>
         <Kpi
           title="Past due"

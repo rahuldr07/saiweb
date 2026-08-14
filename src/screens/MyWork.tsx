@@ -43,6 +43,7 @@ export default function MyWork() {
         sub={`The stages assigned to you across every order. ${me.dep.join(', ') || 'No department'}.`}
       />
 
+      <SectionHead>My day</SectionHead>
       <Kpis>
         <Kpi title="Assigned today" value={mine.length} detail="stages across every order" />
         <Kpi

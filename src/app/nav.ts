@@ -23,7 +23,7 @@ export const NAV: NavGroup[] = [
       ['Orders', 'orders', '☰'],
       ['Assignment', 'assign', '⇄'],
       ['Order intake', 'intake', '✉'],
-      ['Report generator', 'repgen', '✎'],
+      ['Commitment report', 'commitment', '✎'],
     ],
   },
   {

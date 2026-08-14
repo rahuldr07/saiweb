@@ -98,7 +98,7 @@ Six groups, twenty-two screens, plus the order detail and the account switcher.
 
 | Group | Screens |
 | --- | --- |
-| Production | My work · My payslips · How I'm doing · Dashboard · Orders (+ order detail) · Assignment · Order intake · Report generator |
+| Production | My work · My payslips · How I'm doing · Dashboard · Orders (+ order detail) · Assignment · Order intake · Commitment report |
 | Business | Leads · Invoicing |
 | HRMS | Attendance · Leave · Payroll · Payslips · Recruitment · Petty cash |
 | Reference | County coverage · Link monitor |
