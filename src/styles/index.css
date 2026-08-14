@@ -10,6 +10,32 @@
 /* The design toggles dark mode with `body.dark`, not the OS preference. */
 @custom-variant dark (&:where(body.dark, body.dark *));
 
+/*
+ * Additions that are not in the design sheet, kept here so design.css stays a
+ * faithful copy of it.
+ *
+ * The top bar is one non-wrapping row. It already ran past the edge of a phone
+ * before the back control was added, so the two things that can give way do:
+ * the crumb truncates, and the back control drops to its arrow.
+ */
+.top .crumb {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.backbtn .lbl {
+  margin-left: 6px;
+}
+@media (max-width: 820px) {
+  .top .clock {
+    display: none;
+  }
+  .backbtn .lbl {
+    display: none;
+  }
+}
+
 /* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */
 @theme {
   --color-nav: #131a2b;

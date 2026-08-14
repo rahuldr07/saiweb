@@ -11,7 +11,7 @@ import { Empty, Row, Rows } from '@/components/ui'
 const LOCAL_OFFSET_H = 9.5
 
 export function TopBar({ current }: { current: string }) {
-  const { me, tenant, theme, toggleTheme, navOpen, setNavOpen, roleLabel } = useSession()
+  const { me, tenant, theme, toggleTheme, navOpen, setNavOpen, roleLabel, can } = useSession()
   const { openModal, closeModal } = useUi()
   const navigate = useNavigate()
 
@@ -19,6 +19,14 @@ export function TopBar({ current }: { current: string }) {
   const worst = list.some((a) => a.sev === 'bad') ? 'var(--bad)' : 'var(--warn)'
   const label = ROUTE_LABEL[current]
   const crumb = label ? `${tenant.name} · ${label}` : tenant.name
+
+  /* Back goes to the dashboard from every screen — except for someone who cannot
+     see every order, since the dashboard is gated on that capability and would
+     only show them a refusal. They go to My work, which is their equivalent. */
+  const hasDash = can('all')
+  const target = hasDash ? '/dash' : '/mywork'
+  const targetLabel = hasDash ? 'dashboard' : 'my work'
+  const atTarget = target === `/${current}`
 
   const openAlerts = () =>
     openModal({
@@ -68,7 +76,19 @@ export function TopBar({ current }: { current: string }) {
         ☰
       </button>
 
-      <span className="gr" style={{ fontSize: '12.5px' }}>
+      {atTarget ? null : (
+        <button
+          className="btn g sm backbtn"
+          type="button"
+          aria-label={`Back to ${targetLabel}`}
+          title={`Back to ${targetLabel}`}
+          onClick={() => navigate({ to: target })}
+        >
+          ←<span className="lbl">{hasDash ? 'Dashboard' : 'My work'}</span>
+        </button>
+      )}
+
+      <span className="gr crumb" style={{ fontSize: '12.5px' }}>
         {crumb}
       </span>
 
