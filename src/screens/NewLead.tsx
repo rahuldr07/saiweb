@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
-  BackLink,
   Btn,
   Card,
   CardBody,
@@ -130,9 +129,8 @@ function NewLead() {
 
   return (
     <>
-      <BackLink to="/leads">Leads</BackLink>
-
       <PageHead
+        parent={{ to: '/leads', label: 'Leads' }}
         title="New lead"
         sub="A company we might work for, and the person to speak to about it."
       />

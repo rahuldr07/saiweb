@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useParams } from '@tanstack/react-router'
 import {
-  BackLink,
+  Banner,
   Btn,
   Card,
   CardBody,
@@ -14,6 +14,7 @@ import {
   PageHead,
   Rows,
   Seg,
+  Timeline,
 } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -102,9 +103,8 @@ function LeadDetail() {
 
   return (
     <>
-      <BackLink to="/leads">Leads</BackLink>
-
       <PageHead
+        parent={{ to: '/leads', label: 'Leads' }}
         title={found.co}
         sub={
           <>
@@ -126,14 +126,10 @@ function LeadDetail() {
       />
 
       {stale ? (
-        <Card style={{ marginBottom: 16 }}>
-          <CardBody>
-            <p className="warn" style={{ fontSize: '13.5px' }}>
-              ◷ Nothing has been recorded against this lead in {idle} days. Staleness is worked out from
-              the notes, so the way to clear it is to speak to them and say so here.
-            </p>
-          </CardBody>
-        </Card>
+        <Banner kind="r" icon="◷" title={`Nothing recorded for ${idle} days`}>
+          Staleness is worked out from the notes, so the way to clear it is to speak to them and say so
+          below.
+        </Banner>
       ) : null}
 
       <Card>
@@ -172,12 +168,12 @@ function LeadDetail() {
       </Card>
 
       <Card style={{ marginTop: 16 }}>
-        <CardHead title="Add a note" />
+        <CardHead
+          title="Timeline"
+          actions={<Chip kind="n">{sorted.length} note{sorted.length === 1 ? '' : 's'}</Chip>}
+        />
         <CardBody>
-          <Field
-            label="What happened"
-            hint="Notes are the record. The status above is a summary of them."
-          >
+          <Field label="Add a note" hint="Notes are the record. The status above is a summary of them.">
             <textarea
               className="inp"
               rows={3}
@@ -193,7 +189,7 @@ function LeadDetail() {
               }}
             />
           </Field>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 10 }}>
             <Btn onClick={submitNote} disabled={!draft.trim()}>
               Add note
             </Btn>
@@ -202,27 +198,21 @@ function LeadDetail() {
             </span>
           </div>
         </CardBody>
-      </Card>
 
-      <Card style={{ marginTop: 16 }}>
-        <CardHead title="Timeline" actions={<Chip kind="n">{sorted.length}</Chip>} />
         {sorted.length ? (
-          <Rows>
-            {sorted.map((n, i) => (
-              <div className="rw" key={`${n.at.getTime()}-${i}`}>
-                <span className="mono gr" style={{ fontSize: '10.5px', whiteSpace: 'nowrap' }}>
-                  {fmtDT(n.at)}
-                </span>
-                <span>
-                  <b>{whoName(n.w ?? n.who ?? '')}</b>
-                  <div className="sd">{n.t}</div>
-                </span>
-                <span />
-              </div>
-            ))}
-          </Rows>
+          <CardBody style={{ paddingTop: 0 }}>
+            <Timeline
+              entries={sorted.map((n, i) => ({
+                id: `${n.at.getTime()}-${i}`,
+                when: fmtDT(n.at),
+                who: whoName(n.w ?? n.who ?? ''),
+                what: n.t,
+                current: i === 0,
+              }))}
+            />
+          </CardBody>
         ) : (
-          <Empty>Nothing has been recorded against this lead yet.</Empty>
+          <Empty icon="✎">Nothing has been recorded against this lead yet.</Empty>
         )}
       </Card>
 

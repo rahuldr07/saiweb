@@ -2,13 +2,14 @@ import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import {
   Avatar,
-  BackLink,
   Bar,
   Banner,
+  Btn,
   Card,
   CardBody,
   CardHead,
   Chip,
+  Empty,
   KeyValues,
   Kpi,
   Kpis,
@@ -17,7 +18,7 @@ import {
   Rows,
   Tabs,
 } from '@/components/ui'
-import { SkeletonValue } from '@/components/async'
+import { SkeletonRows, SkeletonValue } from '@/components/async'
 import { useSession } from '@/state/session'
 import { AVAIL, STAFF } from '@/data/people'
 import { ROLELIST } from '@/data/org'
@@ -78,11 +79,23 @@ export default function PersonDetail() {
 
   const role = ROLELIST.find((r) => r.id === person.r)
 
+  /* Both come out of the history already fetched for the on-time tile, so this
+     costs nothing extra — and a person's page that shows only today is thin for
+     exactly the people who are on leave or between orders. */
+  const recent = [...mine].sort((a, b) => b.d.getTime() - a.d.getTime()).slice(0, 8)
+  const stageMix = Object.entries(
+    mine.reduce<Record<string, number>>((acc, d) => {
+      for (const [stage, who] of Object.entries(d.by)) {
+        if (who === person.id) acc[stage] = (acc[stage] ?? 0) + 1
+      }
+      return acc
+    }, {}),
+  ).sort((a, b) => b[1] - a[1])
+
   return (
     <>
-      <BackLink to="/company">Company</BackLink>
-
       <PageHead
+        parent={{ to: '/company', label: 'Company' }}
         title={person.n}
         sub={
           <>
@@ -174,16 +187,95 @@ export default function PersonDetail() {
               ))}
             </Rows>
           ) : (
-            <CardBody>
-              <p className="gr">
-                Nothing was placed with {isMe ? 'you' : person.n.split(' ')[0]} today.
-                {person.dep.length === 0
-                  ? ' They belong to no department, so the engine has no stage to give them.'
-                  : ''}
-              </p>
-            </CardBody>
+            <Empty
+              icon={person.dep.length === 0 ? '⊘' : '◷'}
+              action={
+                <Btn small onClick={() => navigate({ to: '/assign' })}>
+                  Open Assignment
+                </Btn>
+              }
+            >
+              {person.dep.length === 0
+                ? `${person.n.split(' ')[0]} belongs to no department, so the engine has no stage to give them.`
+                : person.avail !== 'ok'
+                  ? `Nothing was placed today — ${person.n.split(' ')[0]} is ${AVAIL[person.avail][0].toLowerCase()}, and the engine skips anyone unavailable.`
+                  : `Nothing was placed with ${isMe ? 'you' : person.n.split(' ')[0]} today.`}
+            </Empty>
           )}
         </Card>
+      ) : null}
+
+      {tab === 'Work' ? (
+        <div className="two" style={{ marginTop: 16 }}>
+          <Card>
+            <CardHead title="Recently delivered" />
+            {history.isPending ? (
+              <CardBody>
+                <SkeletonRows rows={4} cols={3} />
+              </CardBody>
+            ) : recent.length ? (
+              <Rows>
+                {recent.map((d) => (
+                  <div className="rw" key={d.id}>
+                    <span className={d.late ? 'bad' : 'ok'}>{d.late ? '⚑' : '✓'}</span>
+                    <span>
+                      <b className="mono">{d.id}</b>
+                      <div className="sd">
+                        {d.pr} · {d.cl} ·{' '}
+                        {Object.entries(d.by)
+                          .filter(([, who]) => who === person.id)
+                          .map(([stage]) => stage)
+                          .join(', ')}
+                      </div>
+                    </span>
+                    <span className="mono gr" style={{ fontSize: '11.5px' }}>
+                      {d.dk}
+                    </span>
+                  </div>
+                ))}
+              </Rows>
+            ) : (
+              <Empty icon="☰">Nothing delivered yet.</Empty>
+            )}
+          </Card>
+
+          <Card>
+            <CardHead
+              title="Usually works"
+              actions={mine.length ? <Chip kind="n">{mine.length} delivered</Chip> : undefined}
+            />
+            {history.isPending ? (
+              <CardBody>
+                <SkeletonRows rows={3} cols={2} />
+              </CardBody>
+            ) : stageMix.length ? (
+              <CardBody>
+                {stageMix.map(([stage, n]) => (
+                  <div key={stage} style={{ marginBottom: 12 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: '12.5px',
+                        marginBottom: 4,
+                      }}
+                    >
+                      <span>{stage}</span>
+                      <span className="mono gr">{n}</span>
+                    </div>
+                    <Bar value={n} max={stageMix[0][1]} />
+                  </div>
+                ))}
+                <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>
+                  Which stages {person.n.split(' ')[0]} has actually been given, across every delivered
+                  order — not the departments they are a member of.
+                </p>
+              </CardBody>
+            ) : (
+              <Empty icon="◷">No delivered orders on record yet.</Empty>
+            )}
+          </Card>
+        </div>
       ) : null}
 
       {tab === 'Coverage' ? (

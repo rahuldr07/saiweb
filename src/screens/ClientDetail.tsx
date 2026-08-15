@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import {
-  BackLink,
   Btn,
   Card,
   CardBody,
@@ -90,9 +89,8 @@ function ClientDetail() {
 
   return (
     <>
-      <BackLink to="/company">Company</BackLink>
-
       <PageHead
+        parent={{ to: '/company', label: 'Company' }}
         title={client.dn}
         sub={
           <>

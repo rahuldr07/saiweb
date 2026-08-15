@@ -43,16 +43,21 @@ export function Btn({
 }
 
 /**
- * The way back from a detail screen. Every one of them needs it and each was
- * spelling it out, so the arrow, the spacing and the ghost treatment live here
- * rather than being retyped with small differences.
+ * The parent of a detail screen, shown as an eyebrow above its title.
+ *
+ * This used to be a ghost button floating above the header, which put a second
+ * back control directly under the one the top bar already provides — two
+ * arrows, one above the other, pointing at different places. As an eyebrow it
+ * does the same job and also says where you are, which is what the space above
+ * a title is for.
  */
-export function BackLink({ to, children }: { to: string; children: ReactNode; }) {
+export function Parent({ to, children }: { to: string; children: ReactNode }) {
   const navigate = useNavigate()
   return (
-    <Btn variant="ghost" small style={{ marginBottom: 14 }} onClick={() => navigate({ to })}>
-      ← {children}
-    </Btn>
+    <button type="button" className="eyebrow" onClick={() => navigate({ to })}>
+      <i>←</i>
+      {children}
+    </button>
   )
 }
 
@@ -73,8 +78,8 @@ export function NotFoundRecord({
   const navigate = useNavigate()
   return (
     <>
-      <BackLink to={backTo}>{backLabel}</BackLink>
       <PageHead
+        parent={{ to: backTo, label: backLabel }}
         title={`That ${what} is not here`}
         sub="It may have been removed, or the link may be out of date."
       />
@@ -92,10 +97,22 @@ export function NotFoundRecord({
 
 /* ── page header ────────────────────────────────────────────────────────── */
 
-export function PageHead({ title, sub, actions }: { title: string; sub?: ReactNode; actions?: ReactNode }) {
+export function PageHead({
+  title,
+  sub,
+  actions,
+  parent,
+}: {
+  title: string
+  sub?: ReactNode
+  actions?: ReactNode
+  /** Where this screen sits, for a detail view reached from a register. */
+  parent?: { to: string; label: string }
+}) {
   return (
     <div className="hd">
-      <div>
+      <div style={{ minWidth: 0 }}>
+        {parent ? <Parent to={parent.to}>{parent.label}</Parent> : null}
         <h1 className="pg">{title}</h1>
         {sub ? <p className="sub">{sub}</p> : null}
       </div>
@@ -473,6 +490,40 @@ export function KeyValues({ rows }: { rows: [ReactNode, ReactNode][] }) {
         </div>
       ))}
     </dl>
+  )
+}
+
+/* ── timeline ───────────────────────────────────────────────────────────── */
+
+export interface TimelineEntry {
+  id: string
+  when: ReactNode
+  who: ReactNode
+  what: ReactNode
+  /** Marks the entry as the current one — the dot takes the accent. */
+  current?: boolean
+}
+
+/**
+ * Entries against a rail, newest first.
+ *
+ * The timestamp gets a column of its own because it is the thing being scanned:
+ * a reader looking for "when did we last speak to them" should not have to read
+ * the note to find the date.
+ */
+export function Timeline({ entries }: { entries: TimelineEntry[] }) {
+  return (
+    <div className="tl">
+      {entries.map((e) => (
+        <div className={`tl-e${e.current ? ' on' : ''}`} key={e.id}>
+          <div className="tl-when">{e.when}</div>
+          <div className="tl-body">
+            <div className="tl-who">{e.who}</div>
+            <div className="tl-what">{e.what}</div>
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
 

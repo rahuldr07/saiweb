@@ -478,11 +478,14 @@ h2.sec {
 .chip.pl::before { display: none; }
 
 /* ─── due pill ─── */
-.due { font-family: var(--mono); font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+/* Stacked rather than inline: in a narrow column the relative time used to wrap
+   under half the absolute one, so two rows of the same table disagreed about
+   where the value ended. */
+.due { font-family: var(--mono); font-size: 12.5px; font-weight: 600; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; line-height: 1.35; }
 .due.late { color: var(--bad); }
 .due.soon { color: var(--warn); }
 .due.ok { color: var(--ok); }
-.due .sub { font-family: Inter; font-size: 10.5px; font-weight: 400; color: var(--gr); }
+.due .sub { font-family: Inter; font-size: 10.5px; font-weight: 400; color: var(--gr); white-space: nowrap; }
 
 /* ─── assignee avatars ─── */
 .asg { display: flex; gap: 3px; }
@@ -879,6 +882,82 @@ main.anim > *:nth-child(n + 4) { animation-delay: 0.12s; }
   .frm { grid-template-columns: 1fr; }
   .hd { flex-direction: column; align-items: flex-start; gap: 12px; }
   .hd .r { width: 100%; flex-wrap: wrap; }
+}
+
+/* ─── the parent of a detail screen ───
+   A detail screen used to carry a ghost button back to its register, stacked
+   under the back control the top bar already provides. Two back buttons, one
+   above the other, pointing at different places. The parent belongs in the
+   header block instead: it says where you are as well as how to leave, which a
+   floating button does not. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--gr);
+  background: none;
+  border: none;
+  padding: 0 0 5px;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.eyebrow:hover { color: var(--brand); }
+.eyebrow i { font-style: normal; font-size: 12px; line-height: 1; }
+
+/* ─── timeline ───
+   Entries against a rail, so the eye follows one line down the page and the
+   timestamp has a column of its own. It was previously built out of `.rw`,
+   whose first column is 22px wide — a date does not fit in 22px, so the stamp
+   sat on top of the author's name. */
+.tl { display: flex; flex-direction: column; }
+.tl-e { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 14px; position: relative; }
+.tl-e > .tl-when {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--gr);
+  text-align: right;
+  padding: 14px 0;
+  white-space: nowrap;
+}
+.tl-e > .tl-body {
+  padding: 14px 0 14px 20px;
+  border-left: 1px solid var(--hair);
+  position: relative;
+  min-width: 0;
+}
+.tl-e:last-child > .tl-body { border-left-color: transparent; }
+.tl-e:last-child > .tl-body::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  height: 21px;
+  border-left: 1px solid var(--hair);
+}
+.tl-e > .tl-body::before {
+  content: '';
+  position: absolute;
+  left: -4.5px;
+  top: 20px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rail);
+  box-shadow: 0 0 0 3px var(--card);
+}
+.tl-e.on > .tl-body::before { background: var(--brand); }
+.tl-who { font-weight: 600; font-size: 13px; }
+.tl-what { font-size: 13.5px; color: var(--ink); margin-top: 2px; }
+@media (max-width: 640px) {
+  .tl-e { grid-template-columns: 1fr; gap: 0; }
+  .tl-e > .tl-when { text-align: left; padding: 12px 0 0; }
+  .tl-e > .tl-body { border-left: none; padding: 2px 0 14px; }
+  .tl-e > .tl-body::before, .tl-e:last-child > .tl-body::after { display: none; }
 }
 
 /* ─── loading placeholders ───
