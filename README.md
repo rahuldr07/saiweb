@@ -188,7 +188,14 @@ npm run build && npm run preview &
 npm run smoke     # every route renders, with no console errors
 npm run check     # navigation, form validation, and the writes that leave a trace
 npm run profile   # JS per route, longest task, total blocking time
+npm run shots     # screenshots of every screen, light and dark, desktop and phone
 ```
+
+`shots` earns its place: the last design pass found four defects by looking at
+the screens and none by reading the code — a timeline whose timestamps sat on
+top of the author's name, two back buttons stacked on each other, a screen that
+was mostly empty space, and a table column that wrapped on some rows and not
+others. None of those are visible in a diff.
 
 `smoke` and `check` answer different questions, and a screen can pass the first
 while being inert — one proves the route renders, the other proves the thing it

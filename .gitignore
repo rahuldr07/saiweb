@@ -22,3 +22,6 @@ drizzle/meta
 
 # Local smoke-test output
 smoke-results.txt
+
+# Design-review screenshots
+shots/

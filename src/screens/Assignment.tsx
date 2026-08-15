@@ -20,6 +20,8 @@ function Assignment() {
   const [tab, setTab] = useState<Tab>('Live')
 
   const { run: RUN, depts: DEPTS, worked: WORKED, totDone: TOT_DONE, totPend: TOT_PEND } = board()
+  /* Hoisted: it was being recomputed once per bar, over the same array. */
+  const peakHour = Math.max(...RUN.hourly.map((x) => x.n), 1)
   const todayExc = RUN.exc.filter((e) => e.today)
   const todayAssigns = RUN.assigns.filter((a) => a.today)
 
@@ -59,32 +61,38 @@ function Assignment() {
         <>
           <SectionHead>Arrivals by hour — today</SectionHead>
           <Card padded>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 140 }}>
-              {RUN.hourly.map((h) => {
-                const max = Math.max(...RUN.hourly.map((x) => x.n), 1)
-                return (
-                  <div key={h.hr} style={{ flex: 1, textAlign: 'center' }}>
+            {/* The bars carry their own figures. Nine columns of nearly equal
+                height say almost nothing on their own, and a value that only
+                appears on hover is invisible to anyone scanning — or to anyone
+                without a pointer. */}
+            <div className="hbars">
+              {RUN.hourly.map((h) => (
+                <div className="hbar" key={h.hr}>
+                  <div className="hbar-n mono">{h.n}</div>
+                  <div className="hbar-t">
                     <div
-                      title={`${h.hr}:00 — ${h.n} orders`}
-                      style={{
-                        height: `${(h.n / max) * 108}px`,
-                        background: 'var(--brand2)',
-                        borderRadius: '5px 5px 0 0',
-                      }}
+                      className={`hbar-f${h.n === peakHour ? ' peak' : ''}`}
+                      style={{ height: `${(h.n / peakHour) * 100}%` }}
                     />
-                    <div className="mono gr" style={{ fontSize: '10.5px', marginTop: 6 }}>
-                      {h.hr}
-                    </div>
                   </div>
-                )
-              })}
+                  <div className="hbar-l mono">{h.hr}</div>
+                </div>
+              ))}
             </div>
             <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-              {RUN.today.length} orders arrived today across {ASSIGN_STAGES.length} assignable stages.
+              {RUN.today.length} orders arrived today across {ASSIGN_STAGES.length} assignable stages, busiest
+              at {RUN.hourly.find((h) => h.n === peakHour)?.hr}:00.
             </p>
           </Card>
 
           <SectionHead>By person — who is holding what</SectionHead>
+          {/* Neither the bar nor the figure means anything without saying what
+              they measure, and both were unlabelled. */}
+          <p className="legend">
+            <span><i style={{ background: 'var(--ok)' }} />through their stage</span>
+            <span><i style={{ background: 'var(--warn)' }} />still in hand</span>
+            <span className="gr">the figure is finished of assigned</span>
+          </p>
           <Card>
             <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
               {WORKED.map((r) => (

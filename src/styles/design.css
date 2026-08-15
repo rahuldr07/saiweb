@@ -1001,3 +1001,36 @@ tr.clickable:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: -2px;
 }
+
+/* ─── hour bars ───
+   A column chart whose bars carry their own figures. The values used to live in
+   a title attribute, which is hover-only — invisible to anyone scanning the
+   screen, and to anyone without a pointer at all. */
+.hbars { display: flex; align-items: flex-end; gap: 8px; height: 150px; }
+.hbar { flex: 1; display: flex; flex-direction: column; height: 100%; }
+.hbar-n { font-size: 11px; color: var(--gr); text-align: center; margin-bottom: 4px; }
+.hbar-t { flex: 1; display: flex; align-items: flex-end; }
+.hbar-f {
+  width: 100%;
+  background: var(--brand2);
+  border-radius: 5px 5px 0 0;
+  min-height: 2px;
+  transition: height 0.25s ease;
+}
+.hbar-f.peak { background: var(--brand); }
+.hbar-l { font-size: 10.5px; color: var(--gr); text-align: center; margin-top: 6px; }
+
+/* ─── legend ───
+   Only worth the space when the same encoding repeats down a list; a one-off
+   mark should say what it means on itself instead. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--ink);
+  margin: -6px 0 10px;
+}
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; flex: none; }
