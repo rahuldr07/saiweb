@@ -98,13 +98,39 @@ npm run preview    # serve the production build on http://localhost:4173
 
 ### Deploying
 
-The front end is a static bundle. Two pieces of host configuration matter:
+Both halves ship together. [`vercel.json`](vercel.json) carries the routing and
+cache rules, and [`api/index.ts`](api/index.ts) hands the same Hono app to
+Vercel's fetch handler — one app, two entry points, so the routes and the
+authentication middleware are identical whether you run `npm run server` or
+deploy.
 
 - **SPA fallback.** TanStack Router uses real paths (`/orders`, `/payroll`), so
-  unmatched paths must rewrite to `/index.html` or every deep link 404s.
-- **Cache headers.** Serve `/assets/*` with
-  `Cache-Control: public, max-age=31536000, immutable` — every filename is
-  content-hashed — and `index.html` with `no-cache`.
+  unmatched paths rewrite to `/index.html` or every deep link 404s. `/api/*` is
+  excluded from that rewrite and routed to the function instead.
+- **Cache headers.** `/assets/*` is content-hashed, so it is `immutable` for a
+  year; `index.html` is `no-cache`; `/api/*` is `no-store`.
+
+The repository cannot supply the environment. These must be set in the Vercel
+project — **Settings → Environment Variables**, for the Production environment:
+
+| Variable | Value |
+| --- | --- |
+| `DATABASE_URL` | Owner connection. Used by `db:push`, `db:rls` and `db:seed`, not by the server. |
+| `APP_DATABASE_URL` | The `app_user` connection the function serves with. Owns nothing, bypasses nothing. |
+| `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
+| `APP_URL` | The deployment's own origin, e.g. `https://saiweb-sigma.vercel.app` |
+| `API_URL` | The same origin — the API is same-origin in production. |
+
+`APP_URL` and `API_URL` are not decoration: Better Auth checks the origin against
+`trustedOrigins`, and a mismatch fails sign-in with a message that sounds like a
+credential problem. Leave `VITE_API_URL` unset in production; it exists so the
+dev server knows where to proxy.
+
+Two things are deliberately absent. `VITE_DEMO_IDENTITY` should never be set in
+production — it is what re-enables the passwordless person picker. And the
+database itself has to exist before any of this works: run `db:push`, `db:rls`
+and `db:seed` against it once, from a machine that can reach it, using the owner
+connection string.
 
 ## What is in here
 
