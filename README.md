@@ -85,8 +85,24 @@ means writing the row every policy scopes against, so it runs as the owner.
 the role it creates and the role the server connects as cannot drift apart.
 
 The API answers on **http://localhost:8787** — check it with
-http://localhost:8787/api/health. The dev server proxies `/api` there, so the
+http://localhost:8787/api/health, which deliberately answers without a database
+so it can report on one that is down. The dev server proxies `/api` there, so the
 front end calls same-origin paths and there is no CORS in development.
+
+### Signing in
+
+`db:seed` creates a Better Auth account for every seeded person, so each role can
+be signed into and checked. **Any seeded email, password `titlecrm-dev`:**
+
+| Sign in as | Email | Sees |
+| --- | --- | --- |
+| Company admin | `harry.whitfield@keystoneabstract.com` | Everything — 18 nav items |
+| Lead | `ashok.s@keystoneabstract.com` | Every order, assignment; no pricing |
+| Production staff | `uma.sankar@keystoneabstract.com` | My work and the open screens — 8 nav items |
+
+One shared, obvious password on purpose: a seed that invents a different secret
+per person is a seed whose output has to be captured before it is usable. Set
+`SEED_PASSWORD` to override it, and never point this seed at real records.
 
 Other commands:
 

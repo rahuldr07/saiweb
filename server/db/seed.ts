@@ -9,7 +9,9 @@
  * against, so there is no scope to be inside while doing it — which is why the
  * owner holds `BYPASSRLS` and the server does not.
  */
+import { eq } from 'drizzle-orm'
 import { createDb, withTenantOn } from './connect'
+import { auth } from '../auth'
 import {
   assignmentRules,
   clients,
@@ -31,6 +33,9 @@ import { STAFF } from '../../src/data/people'
 import { PRODUCTS, COUNTIES, CLIENTS, LINKTYPES } from '../../src/data/catalog'
 import { LEVELS } from '../../src/data/org'
 import { BUDGET } from '../../src/data/budget'
+
+/** Development sign-in password, shared by every seeded account. Never for real records. */
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? 'titlecrm-dev'
 
 const url = process.env.DATABASE_URL
 if (!url) {
@@ -210,6 +215,36 @@ async function main() {
       )
 
       console.log(`  ${tenant.name}: ${personRows.length} people, ${countyRows.length} counties`)
+
+      /*
+       * Sign-in credentials.
+       *
+       * Without these the schema is complete and nobody can get in: `people` rows
+       * carry an email, but Better Auth keeps identity in its own tables and there
+       * was nothing writing to them. Every seeded person gets an account so each
+       * role can actually be signed into and checked.
+       *
+       * The password is deliberately one shared, obvious, development-only value —
+       * a seed that invents different secrets per person is a seed whose output
+       * has to be captured to be usable. Anything holding real records must not be
+       * seeded with it, which is why it is printed rather than hidden.
+       */
+      for (const p of personRows) {
+        const created = await auth.api
+          .signUpEmail({ body: { email: p.email, password: SEED_PASSWORD, name: p.name } })
+          .catch((e: unknown) => {
+            /* An existing address is fine — re-running the seed should not fail on
+               accounts that survived from the last run. */
+            const message = e instanceof Error ? e.message : String(e)
+            if (/exist/i.test(message)) return null
+            throw e
+          })
+        if (created?.user) {
+          await tx.update(people).set({ userId: created.user.id }).where(eq(people.id, p.id))
+        }
+      }
+
+      console.log(`  ${tenant.name}: ${personRows.length} sign-ins, password "${SEED_PASSWORD}"`)
     })
   }
 

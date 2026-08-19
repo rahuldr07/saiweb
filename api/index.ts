@@ -12,7 +12,7 @@
  */
 import { handle } from 'hono/vercel'
 import app from '../server/index'
-import { assertServerRoleIsSafe } from '../server/db/client'
+import { assertServerRoleIsSafe, isConfigured } from '../server/db/client'
 
 export const config = {
   runtime: 'nodejs',
@@ -32,6 +32,19 @@ const checkRole = () => (roleChecked ??= assertServerRoleIsSafe())
 const handler = handle(app)
 
 export default async function (req: Request): Promise<Response> {
+  /* The health check answers without a database on purpose: the thing that
+     decides whether to route traffic here cannot itself require the dependency
+     it is reporting on. Everything else waits for the role check. */
+  const { pathname } = new URL(req.url)
+  if (pathname === '/api/health') return handler(req)
+
+  if (!isConfigured()) {
+    return Response.json(
+      { error: 'APP_DATABASE_URL is not set on this deployment.' },
+      { status: 503 },
+    )
+  }
+
   try {
     await checkRole()
   } catch (e) {
