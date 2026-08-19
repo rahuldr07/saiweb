@@ -24,6 +24,62 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/*
+ * The signed-out shell. No sidebar and no top bar, so the page needs its own
+ * ground and a column that does not run the full 1360px the app content does.
+ */
+.authshell {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  justify-content: center;
+}
+.authshell .wrap {
+  max-width: 720px;
+  padding-top: clamp(48px, 12vh, 120px);
+}
+
+/*
+ * The filter bar is one row of controls with the search and selects pushed
+ * right. That group could not wrap, so a screen with four selects ran ~919px
+ * wide and took the whole page into horizontal scroll on a phone. It wraps now,
+ * and below the drawer breakpoint it stops being a right-aligned group at all:
+ * full width, each control free to shrink to something still usable.
+ */
+.fbar .sp {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+@media (max-width: 820px) {
+  .fbar .sp {
+    margin-left: 0;
+    width: 100%;
+  }
+  .fbar .inp {
+    flex: 1 1 190px;
+    min-width: 0;
+  }
+}
+@media (max-width: 560px) {
+  .fbar .sp {
+    gap: 7px;
+  }
+  /* One per row below this: two 150px controls plus a gap no longer fit. */
+  .fbar .inp {
+    flex: 1 1 100%;
+  }
+}
+
+/*
+ * The mobile menu button. `.top .ic` sets display:grid at (0,2,0) and beat
+ * `.burger { display: none }` at (0,1,0), so the hamburger sat in the top bar
+ * on desktop beside an already-visible sidebar. Matching the specificity is the
+ * fix; the design's own !important rule still wins below 820px.
+ */
+.top .ic.burger {
+  display: none;
+}
 .backbtn .lbl {
   margin-left: 6px;
 }

@@ -92,3 +92,33 @@ export interface Me {
 export const fetchMe = (tenantId: string | null) => api.get<Me>('/me', tenantId)
 export const fetchMemberships = (tenantId: string | null) =>
   api.get<Membership[]>('/memberships', tenantId)
+
+/* ── identity ───────────────────────────────────────────────────────────────
+ * Better Auth mounts its own handler at /api/auth/*, so these do not go through
+ * `request` — that helper adds the workspace header, and there is no workspace
+ * to name until a session exists.
+ */
+
+/** Signs in with email and password. Throws `ApiError` with the server's reason. */
+export async function startSession(email: string, password: string): Promise<void> {
+  const res = await fetch('/api/auth/sign-in/email', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!res.ok) {
+    const detail = await res
+      .json()
+      .then((b: { message?: string; error?: string }) => b.message ?? b.error)
+      .catch(() => null)
+    /* 404 means the API is not deployed at all, which is a different problem
+       from a wrong password and deserves to say so. */
+    if (res.status === 404) throw new ApiError(404, 'The sign-in service is not reachable.')
+    throw new ApiError(res.status, detail ?? 'That email and password did not match.')
+  }
+}
+
+export async function endSession(): Promise<void> {
+  await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' }).catch(() => null)
+}

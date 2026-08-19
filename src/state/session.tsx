@@ -1,10 +1,10 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { STAFF } from '@/data/people'
 import { TENANTS } from '@/data/org'
 import type { Person, Tenant } from '@/data/types'
 import { can as canFor, roleName } from '@/lib/permissions'
-import { fetchMe, fetchMemberships, type Membership } from '@/lib/api'
+import { endSession, fetchMe, fetchMemberships, type Membership } from '@/lib/api'
 import { DEMO_IDENTITY } from '@/lib/demo'
 
 /**
@@ -20,6 +20,16 @@ import { DEMO_IDENTITY } from '@/lib/demo'
  * is no server to ask. `authority` says which is in force rather than leaving it
  * to be guessed.
  */
+/**
+ * Whether this browser may see the application at all.
+ *
+ * `demo` exists because the seed build has no server to authenticate against.
+ * It is reachable only where `DEMO_IDENTITY` is on — development, or a build
+ * someone deliberately flagged. Any other build with no session is `anonymous`,
+ * and anonymous gets the sign-in screen rather than a workspace.
+ */
+export type AuthState = 'loading' | 'authenticated' | 'anonymous' | 'demo'
+
 interface SessionValue {
   me: Person
   tenant: Tenant
@@ -27,9 +37,11 @@ interface SessionValue {
   navOpen: boolean
   /** Where `can()` is getting its answer. */
   authority: 'server' | 'seed'
+  authState: AuthState
   /** The workspaces this person belongs to, once the server has said. */
   memberships: Membership[]
   signInAs: (id: string) => void
+  signOut: () => Promise<void>
   switchTenant: (id: string) => void
   toggleTheme: () => void
   setNavOpen: (open: boolean) => void
@@ -50,6 +62,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId] = useState(TENANTS[0].id)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [navOpen, setNavOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   /* Only send a workspace header once we hold a real id — before that the server
      falls back to whichever workspace the session is already inside. */
@@ -74,6 +87,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const serverCaps = me.data?.capabilities
   const authority: 'server' | 'seed' = serverCaps ? 'server' : 'seed'
+
+  /* A failed /api/me means one of two things, and they are not the same: there
+     is no server (the seed build), or there is one and this browser has no
+     session. Only the first is allowed to fall through to seed identity. */
+  const authState: AuthState = me.isPending
+    ? 'loading'
+    : me.isSuccess
+      ? 'authenticated'
+      : DEMO_IDENTITY
+        ? 'demo'
+        : 'anonymous'
 
   const seedMe = useMemo(() => STAFF.find((s) => s.id === meId) ?? STAFF[0], [meId])
 
@@ -117,6 +141,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setMeId(id)
   }, [])
 
+  /* Ends the server session, then clears every cached answer — capabilities and
+     workspace membership are per-person, so leaving them behind would show the
+     next person the previous one's board until each query happened to refetch. */
+  const signOut = useCallback(async () => {
+    await endSession()
+    await queryClient.resetQueries()
+  }, [queryClient])
+
   const value = useMemo<SessionValue>(
     () => ({
       me: person,
@@ -124,15 +156,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       theme,
       navOpen,
       authority,
+      authState,
       memberships: memberships.data ?? [],
       signInAs,
+      signOut,
       switchTenant: setTenantId,
       toggleTheme: () => setTheme((t) => (t === 'dark' ? 'light' : 'dark')),
       setNavOpen,
       can,
       roleLabel: me.data?.person ? roleName(person.r) : roleName(person.r),
     }),
-    [person, tenant, theme, navOpen, authority, memberships.data, signInAs, can, me.data],
+    [person, tenant, theme, navOpen, authority, authState, memberships.data, signInAs, signOut, can, me.data],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

@@ -10,7 +10,7 @@ import { useUi } from '@/state/ui'
 import { COVSTAGES, EVERYSTATE, stateName } from '@/lib/coverage'
 import { PRODUCTS } from '@/data/catalog'
 import { STAFF } from '@/data/people'
-import { RUN } from '@/lib/engine'
+import { board } from '@/lib/engine'
 import type { Gap } from '@/lib/coverage'
 
 /** A ticked/unticked run of pills with All and None beside the count. */
@@ -127,7 +127,7 @@ export function LevelsTab() {
   const gaps = coverageGaps()
   const eligible = STAFF.filter((x) => x.dep.some((d) => COVSTAGES.includes(d)) && x.active !== false)
   const ungraded = eligible.filter((x) => !personLevel(x.id))
-  const covExc = RUN.exc.filter((e) => e.today && e.why === 'coverage')
+  const covExc = board().run.exc.filter((e) => e.today && e.why === 'coverage')
 
   const showGaps = (kind: Gap['kind']) => {
     const list = gaps.filter((g) => g.kind === kind)

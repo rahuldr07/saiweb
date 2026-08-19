@@ -83,7 +83,19 @@ const routeTree = rootRoute.addChildren([
   screen('/onboard', () => import('./screens/Onboard')),
 
   /* Account */
-  screen('/signin', () => import('./screens/SignIn')),
+  /* The one public route. It carries where you were headed so signing in resumes it. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/signin',
+    validateSearch: (search: Record<string, unknown>): { next?: string } => {
+      const next = search.next
+      /* Only same-site paths — an absolute URL here would be an open redirect. */
+      return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//')
+        ? { next }
+        : {}
+    },
+    component: lazyRouteComponent(() => import('./screens/SignIn')),
+  }),
 ])
 
 export const router = createRouter({

@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { useUi } from '@/state/ui'
 import { useSession } from '@/state/session'
+import { RequireAuth } from '@/components/RequireAuth'
 
 /** `/orders/4192254-2` and `/orders` are both the Orders screen as far as the nav is concerned. */
 const routeIdOf = (pathname: string) => pathname.split('/').filter(Boolean)[0] ?? 'dash'
@@ -64,7 +65,7 @@ function Toast() {
 export function AppShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const current = routeIdOf(pathname)
-  const { setNavOpen } = useSession()
+  const { authState, setNavOpen } = useSession()
   const main = useRef<HTMLElement>(null)
 
   /* Each screen change scrolls to the top, re-runs the stagger, and closes the
@@ -79,22 +80,35 @@ export function AppShell() {
     el.classList.add('anim')
   }, [pathname, setNavOpen])
 
+  /* Somebody who is not signed in gets the page and nothing else — no sidebar,
+     no workspace name, no notification bell. The chrome names real people and
+     real companies, so it is not something to render around a login form. */
+  const signedIn = authState === 'authenticated' || authState === 'demo'
+
   return (
-    <>
-      <div className="app">
-        <Sidebar current={current} />
-        <div className="main">
-          <a href="#main" className="skip">
-            Skip to content
-          </a>
-          <TopBar current={current} />
-          <main className="wrap anim" id="main" ref={main} tabIndex={-1}>
+    <RequireAuth>
+      {signedIn ? (
+        <div className="app">
+          <Sidebar current={current} />
+          <div className="main">
+            <a href="#main" className="skip">
+              Skip to content
+            </a>
+            <TopBar current={current} />
+            <main className="wrap anim" id="main" ref={main} tabIndex={-1}>
+              <Outlet />
+            </main>
+          </div>
+        </div>
+      ) : (
+        <div className="authshell">
+          <main className="wrap" id="main" ref={main} tabIndex={-1}>
             <Outlet />
           </main>
         </div>
-      </div>
+      )}
       <Modal />
       <Toast />
-    </>
+    </RequireAuth>
   )
 }
