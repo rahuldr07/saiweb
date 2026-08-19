@@ -6,8 +6,10 @@ import { AVAIL, STAFF } from '@/data/people'
 import { ASSIGN_STAGES, RULES } from '@/data/org'
 import { EXCLUSION, board, type ExclusionReason } from '@/lib/engine'
 import { covSummary } from '@/lib/coverage'
+import { LevelsTab } from './assignment/LevelsTab'
+import { useLevels } from '@/state/levels'
 
-const TABS = ['Live', 'Exceptions', 'Capacity', 'Rules'] as const
+const TABS = ['Live', 'Exceptions', 'Capacity', 'Rules', 'Levels'] as const
 type Tab = (typeof TABS)[number]
 
 /**
@@ -22,6 +24,10 @@ function Assignment() {
   const { run: RUN, depts: DEPTS, worked: WORKED, totDone: TOT_DONE, totPend: TOT_PEND } = board()
   /* Hoisted: it was being recomputed once per bar, over the same array. */
   const peakHour = Math.max(...RUN.hourly.map((x) => x.n), 1)
+
+  const { coverageGaps } = useLevels()
+  const gapCount = coverageGaps().length
+
   const todayExc = RUN.exc.filter((e) => e.today)
   const todayAssigns = RUN.assigns.filter((a) => a.today)
 
@@ -51,7 +57,13 @@ function Assignment() {
 
       <div style={{ marginTop: 20 }}>
         <Tabs
-          tabs={TABS.map((t) => [t, t === 'Exceptions' ? todayExc.length || null : null] as [Tab, number | null])}
+          tabs={TABS.map(
+            (t) =>
+              [t, t === 'Exceptions' ? todayExc.length || null : t === 'Levels' ? gapCount || null : null] as [
+                Tab,
+                number | null,
+              ],
+          )}
           value={tab}
           onChange={setTab}
         />
@@ -251,6 +263,8 @@ function Assignment() {
           </Card>
         </>
       ) : null}
+
+      {tab === 'Levels' ? <LevelsTab /> : null}
 
       {tab === 'Rules' ? (
         <Card>

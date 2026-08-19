@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { router } from './router'
 import { SessionProvider } from './state/session'
 import { UiProvider } from './state/ui'
+import { LevelsProvider } from './state/levels'
 import './styles/index.css'
 
 const queryClient = new QueryClient({
@@ -25,7 +26,9 @@ createRoot(root).render(
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <UiProvider>
-          <RouterProvider router={router} />
+          <LevelsProvider>
+            <RouterProvider router={router} />
+          </LevelsProvider>
         </UiProvider>
       </SessionProvider>
     </QueryClientProvider>

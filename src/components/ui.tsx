@@ -321,15 +321,17 @@ export function Banner({
   title,
   children,
   actions,
+  style,
 }: {
-  kind?: 'b' | 'v' | 'r' | 'd'
+  kind?: 'b' | 'v' | 'r' | 'd' | 'n'
   icon?: string
   title?: ReactNode
   children?: ReactNode
   actions?: ReactNode
+  style?: CSSProperties
 }) {
   return (
-    <div className={`bnr ${kind}`}>
+    <div className={`bnr ${kind}`} style={style}>
       {icon ? <span className="bi">{icon}</span> : null}
       <div>
         {title ? <div className="bt">{title}</div> : null}
