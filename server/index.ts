@@ -65,8 +65,10 @@ export const start = () =>
   )
 
 /* Not started on import, so the tests can mount the same app without binding a
-   port or racing each other for one. */
-if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+   port or racing each other for one — and so the Vercel function, which imports
+   this module for its `app`, does not try to bind a port it has no business
+   binding. That entry runs the same role check on its first request instead. */
+if (process.env.NODE_ENV !== 'test' && !process.env.VITEST && !process.env.VERCEL) {
   start().catch((e: unknown) => {
     console.error(e instanceof Error ? e.message : e)
     process.exit(1)

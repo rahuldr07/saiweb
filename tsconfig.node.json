@@ -22,5 +22,5 @@
 
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
-  "include": ["vite.config.ts", "drizzle.config.ts", "server"]
+  "include": ["vite.config.ts", "drizzle.config.ts", "server", "api"]
 }

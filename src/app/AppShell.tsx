@@ -5,6 +5,7 @@ import { TopBar } from './TopBar'
 import { useUi } from '@/state/ui'
 import { useSession } from '@/state/session'
 import { RequireAuth } from '@/components/RequireAuth'
+import { TenantScope } from '@/components/TenantScope'
 
 /** `/orders/4192254-2` and `/orders` are both the Orders screen as far as the nav is concerned. */
 const routeIdOf = (pathname: string) => pathname.split('/').filter(Boolean)[0] ?? 'dash'
@@ -96,7 +97,9 @@ export function AppShell() {
             </a>
             <TopBar current={current} />
             <main className="wrap anim" id="main" ref={main} tabIndex={-1}>
-              <Outlet />
+              <TenantScope>
+                <Outlet />
+              </TenantScope>
             </main>
           </div>
         </div>
