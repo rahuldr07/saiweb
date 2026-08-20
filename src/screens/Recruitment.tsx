@@ -1,12 +1,15 @@
 import { useState } from 'react'
-import { Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Btn, Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
+import { useSession } from '@/state/session'
+import { useUi } from '@/state/ui'
 import { CANDIDATES, OPENINGS } from '@/data/hrms'
 import { fmtDate } from '@/lib/format'
-import type { ChipKind } from '@/data/types'
+import { NewOpening } from './hiring/NewOpening'
+import type { ChipKind, Opening } from '@/data/types'
 
-  const STAGE_KIND: Record<string, ChipKind> = {
+const STAGE_KIND: Record<string, ChipKind> = {
   Applied: 'n',
   Screened: 'b',
   Interview: 'r',
@@ -16,10 +19,30 @@ import type { ChipKind } from '@/data/types'
 
 /** Openings, and the candidate pipeline against each. */
 function Recruitment() {
+  const { me } = useSession()
+  const { openModal, closeModal, toast } = useUi()
   const [job, setJob] = useState('all')
+  /* Openings raised in this session, newest first, alongside the seeded ones. */
+  const [added, setAdded] = useState<Opening[]>([])
 
+  const openings = [...added, ...OPENINGS]
   const base = CANDIDATES.filter((c) => job === 'all' || c.job === job)
-  const openingOf = (id: string) => OPENINGS.find((o) => o.id === id)
+  const openingOf = (id: string) => openings.find((o) => o.id === id)
+
+  const raise = () =>
+    openModal({
+      title: 'New opening',
+      body: (
+        <NewOpening
+          raisedBy={me.n}
+          onSubmit={(opening) => {
+            setAdded((a) => [opening, ...a])
+            closeModal()
+            toast(`${opening.title} — ${opening.n} seat${opening.n === 1 ? '' : 's'} open`)
+          }}
+        />
+      ),
+    })
 
   const rows: DataRow[] = base.map((c) => ({
     id: c.id,
@@ -35,17 +58,18 @@ function Recruitment() {
     ],
   }))
 
-  const seats = OPENINGS.reduce((a, o) => a + o.n, 0)
+  const seats = openings.reduce((a, o) => a + o.n, 0)
 
   return (
     <>
       <PageHead
         title="Recruitment"
-        sub={`${OPENINGS.length} opening${OPENINGS.length === 1 ? '' : 's'} for ${seats} seats, and ${CANDIDATES.length} people in the pipeline.`}
+        actions={<Btn onClick={raise}>＋ New opening</Btn>}
+        sub={`${openings.length} opening${openings.length === 1 ? '' : 's'} for ${seats} seats, and ${CANDIDATES.length} people in the pipeline.`}
       />
 
       <Kpis>
-        <Kpi title="Open roles" value={OPENINGS.length} detail={`${seats} seats in total`} />
+        <Kpi title="Open roles" value={openings.length} detail={`${seats} seats in total`} />
         <Kpi title="In the pipeline" value={CANDIDATES.length} detail="across every stage" />
         <Kpi
           title="At interview"
@@ -61,9 +85,9 @@ function Recruitment() {
 
       <SectionHead>Openings</SectionHead>
       <Card>
-        <CardHead title={`${OPENINGS.length} live`} />
+        <CardHead title={`${openings.length} live`} />
         <Rows>
-          {OPENINGS.map((o) => {
+          {openings.map((o) => {
             const mine = CANDIDATES.filter((c) => c.job === o.id)
             return (
               <div className="rw" key={o.id}>
@@ -96,7 +120,7 @@ function Recruitment() {
             onChange: setJob,
             options: [
               ['all', 'All openings'],
-              ...OPENINGS.map((o) => [o.id, o.title] as [string, string]),
+              ...openings.map((o) => [o.id, o.title] as [string, string]),
             ],
           },
         ]}
