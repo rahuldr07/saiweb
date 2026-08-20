@@ -25,7 +25,7 @@ const shots = [
   ['dash-dark', '/dash', 1440, true],
   ['orders', '/orders', 1440, false],
   ['assignment', '/assign', 1440, false],
-  ['performance', '/performance', 1440, false],
+  ['reports', '/reports', 1440, false],
   ['company', '/company', 1440, false],
   ['person', '/staff/pd', 1440, false],
   ['person-dark', '/staff/pd', 1440, true],

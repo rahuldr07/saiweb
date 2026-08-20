@@ -226,6 +226,53 @@ export interface Order {
   done?: boolean
   /** Why the clock is paused, when it is. */
   flag?: string
+
+  /* Taken at intake. Optional because the seeded register predates the form. */
+  /** The client's own file number for this matter. */
+  ref?: string
+  buyer?: string
+  seller?: string
+  /** Instructions to the searcher, carried through verbatim. */
+  instr?: string
+  parcel?: string
+  /** Effective date, MM/DD/YYYY. Legally material, so it is stored as typed. */
+  eff?: string
+}
+
+/**
+ * Turnaround tiers. Priority halves the SLA, rush quarters it, and each carries
+ * an uplift on the fee — so the promise and the price move together.
+ */
+export interface Tier {
+  id: string
+  n: string
+  /** Multiplier on the SLA hours. */
+  mult: number
+  /** Fee uplift in USD. */
+  up: number
+}
+
+/**
+ * One message in the order mailbox.
+ *
+ * Nothing here is an order yet. The reader fills what it can from the message
+ * and its attachments; a person confirms before any of it becomes work.
+ */
+export interface MailItem {
+  /** Sender, as "Name · CLIENT". */
+  f: string
+  /** Subject line, as it arrived. */
+  s: string
+  t: Date
+  /** Attachment labels, filename and size as the mail client reports them. */
+  at: string[]
+  /** What was read out of the message: [field, value]. */
+  x: [string, string][]
+  st: 'ready' | 'dupe' | 'attach'
+  /** Why this looks like a duplicate, when it does. */
+  dupe?: string
+  /** The order this message matches, for the "attach" case. */
+  match?: string
 }
 
 export interface Update {

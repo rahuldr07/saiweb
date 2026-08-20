@@ -9,8 +9,9 @@
  */
 import { ASSIGN_STAGES } from '@/data/org'
 import { BUDGET } from '@/data/budget'
+import { hrs } from '@/lib/format'
 import { now } from '@/lib/clock'
-import type { Order } from '@/data/types'
+import type { Order, Tier } from '@/data/types'
 
 export interface SlaRule {
   cl: string
@@ -30,16 +31,62 @@ export const SLA: SlaRule[] = [
   { cl: '—  (default)', pr: 'Any', h: 24 },
 ]
 
-const isDefaultRule = (r: SlaRule) => r.cl.startsWith('—')
+/** No client named on it — the row that applies when nothing more specific does. */
+export const isDefaultRule = (r: SlaRule) => r.cl.startsWith('—')
 
-export const slaHours = (o: Pick<Order, 'cl' | 'pr'>): number => {
-  const r =
-    SLA.find((x) => x.cl === o.cl && x.pr === o.pr) ??
-    SLA.find((x) => x.cl === o.cl && x.pr === 'Any') ??
-    SLA.find((x) => x.pr === o.pr && isDefaultRule(x)) ??
-    SLA.find(isDefaultRule)
-  return r ? r.h : 24
+/**
+ * The rule that applies, not just the hours it yields.
+ *
+ * One lookup, deliberately. The design had two — the register asked one question
+ * and the new-order form asked another, and they answered differently for the
+ * three 48-hour products, so an order quoted at intake changed its due date the
+ * moment it was created. Whichever number is right, it has to be the same number
+ * on both screens, so both now come through here.
+ */
+export function slaRuleFor(client: string, product: string): SlaRule {
+  return (
+    SLA.find((x) => x.cl === client && x.pr === product) ??
+    SLA.find((x) => x.cl === client && x.pr === 'Any') ??
+    SLA.find((x) => x.pr === product && isDefaultRule(x)) ??
+    SLA.find(isDefaultRule) ?? { cl: '—  (default)', pr: 'Any', h: 24 }
+  )
 }
+
+export const slaHours = (o: Pick<Order, 'cl' | 'pr'>): number => slaRuleFor(o.cl, o.pr).h
+
+/* ── turnaround tiers ───────────────────────────────────────────────────── */
+
+/**
+ * What the client is paying for when they ask for it sooner.
+ *
+ * Priority halves the SLA and rush quarters it, each with an uplift on the fee,
+ * so the promise and the price move together — a shorter deadline that cost the
+ * same would just be a worse version of the standard one.
+ */
+export const TIERS: Tier[] = [
+  { id: 'standard', n: 'Standard', mult: 1, up: 0 },
+  { id: 'priority', n: 'Priority', mult: 0.5, up: 4 },
+  { id: 'rush', n: 'Rush', mult: 0.25, up: 9 },
+]
+
+export const tierOf = (id: string): Tier => TIERS.find((t) => t.id === id) ?? TIERS[0]
+
+export interface Due {
+  /** Hours from now, after the tier is applied. */
+  h: number
+  at: Date
+  /** The SLA before the tier moved it. */
+  base: number
+}
+
+/** The due date a client, product and tier would produce, from now. */
+export function dueFor(client: string, product: string, tier: string): Due {
+  const base = slaRuleFor(client, product).h
+  const h = Math.max(1, Math.round(base * tierOf(tier).mult))
+  return { h, at: hrs(h), base }
+}
+
+/* ── stage budgets ──────────────────────────────────────────────────────── */
 
 export const sharesFor = (pr: string): Record<string, number> =>
   BUDGET.over.find((x) => x.pr === pr)?.shares ?? BUDGET.base
