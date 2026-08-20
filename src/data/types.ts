@@ -432,6 +432,17 @@ export interface LeaveType {
   d: string
 }
 
+/** What the approver was told when a request left a department short. */
+export interface LeaveClash {
+  dep: string
+  left: number
+  team: number
+  /** Who else is already off across those dates. */
+  who: string[]
+  /** How the applicant says the department will manage. */
+  cover: string
+}
+
 export interface Leave {
   id: string
   who: string
@@ -443,6 +454,15 @@ export interface Leave {
   reason: string
   by: string | null
   at: Date | null
+
+  /* Set when the request came through the form, so the approver reads the same
+     judgement the applicant was shown rather than re-deriving it. */
+  half?: boolean
+  clash?: LeaveClash | null
+  /** Days of notice given, when it was less than the policy expects. */
+  shortNotice?: number | null
+  /** Days beyond the balance, which become unpaid. */
+  overBalance?: number | null
 }
 
 export interface LeavePolicy {

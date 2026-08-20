@@ -1,197 +1,456 @@
-import { useState } from 'react'
-import { Banner, Btn, Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
-import { DataTable, type DataRow } from '@/components/DataTable'
+import { useReducer, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { Avatar, Btn, Card, Chip, Kpi, Kpis, Label, PageHead, Seg } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { LEAVE, LEAVETYPES, LEAVEPOLICY, LVSTATUS } from '@/data/hrms'
-import type { Leave } from '@/data/types'
-import { fmtDate } from '@/lib/format'
-import { whoName } from '@/lib/permissions'
+import { LEAVE, LEAVEPOLICY, LEAVETYPES, LVSTATUS } from '@/data/hrms'
+import { STAFF } from '@/data/people'
 import { leaveBalance } from '@/lib/payroll'
-import { RequestLeave } from './leave/RequestLeave'
+import { CLASHRULES, approvesFor, leaveCheck, managerOf } from '@/lib/leave'
+import { whoName } from '@/lib/permissions'
+import { fmtDate } from '@/lib/format'
+import { now } from '@/lib/clock'
+import { ApplyLeave } from './leave/RequestLeave'
+import { LeavePolicy } from './leave/LeavePolicy'
+import type { Leave } from '@/data/types'
 
-const typeName = (k: string) => LEAVETYPES.find((t) => t.k === k)?.n ?? k
+/**
+ * Leave.
+ *
+ * Balances are earned minus taken, computed from the requests below rather than
+ * stored — so a request and a balance cannot drift apart, and changing a quota
+ * moves everyone's balance at once.
+ *
+ * Which screen you get depends on what you can see. Somebody without "all" sees
+ * their own requests and their own balances; an approver sees the company's, with
+ * the ones that are actually theirs to decide called out — the rest belong to
+ * another approver and are shown for context, not for action.
+ */
 
-/** Requests, balances, and — for anyone who approves — the queue waiting on them. */
-export default function LeaveScreen() {
+const COLS = '170px 140px 190px 70px 1fr 170px'
+
+/** How many rows before the table stops and says how many there were. */
+const PAGE = 40
+
+const r2 = (n: number) => Math.round(n * 100) / 100
+
+function LeaveScreen() {
+  const navigate = useNavigate()
   const { me, can } = useSession()
   const { toast, openModal, closeModal } = useUi()
-  const [decided, setDecided] = useState<Record<string, 'approved' | 'rejected'>>({})
-  /* Requests made in this session, newest first, alongside the seeded ones. */
-  const [added, setAdded] = useState<Leave[]>([])
 
-  const canApprove = can('all') || can('people')
-  const all = [...added, ...LEAVE]
-  const scope = canApprove ? all : all.filter((l) => l.who === me.id)
+  const [, changed] = useReducer((n: number) => n + 1, 0)
+  const [filter, setFilter] = useState('pending')
+  const [sub, setSub] = useState<'Requests' | 'Policy'>('Requests')
 
-  const bal = leaveBalance(me.id)
+  /* "Mine" is not a preference — it is what someone who cannot see every order
+     is entitled to see, so the whole screen reshapes around it. */
+  const mine = !can('all')
+  const scope = mine ? LEAVE.filter((l) => l.who === me.id) : LEAVE
+  const rows = filter === 'all' ? scope : scope.filter((l) => l.st === filter)
 
-  const request = () =>
+  const balance = leaveBalance(me.id)
+  const manager = managerOf(me)
+  const reportsToMe = approvesFor(me.id)
+  const waitingOnMe = LEAVE.filter((l) => l.st === 'pending' && reportsToMe.some((x) => x.id === l.who))
+  const pendingAll = LEAVE.filter((l) => l.st === 'pending')
+
+  const decide = (id: string, st: 'approved' | 'rejected') => {
+    const l = LEAVE.find((x) => x.id === id)
+    if (!l) return
+    l.st = st
+    l.by = me.n
+    l.at = now()
+    changed()
+    toast(`${whoName(l.who)} — ${st === 'approved' ? 'approved' : 'declined'}`)
+  }
+
+  /**
+   * Cancelling.
+   *
+   * Leave that has already started is refused here on purpose: cancelling it
+   * would rewrite attendance already counted, and possibly a payslip already
+   * issued. That belongs in an attendance correction, where it is recorded.
+   */
+  const cancel = (l: Leave) => {
+    const started = l.from < now()
+    const type = LEAVETYPES.find((t) => t.k === l.type)
     openModal({
-      title: 'Request leave',
+      title: started ? 'That leave has already started' : 'Cancel this leave?',
+      body: started ? (
+        <>
+          <p style={{ fontSize: '13.5px' }}>
+            It began on {fmtDate(l.from)}. Cancelling it now would rewrite attendance that has already
+            been counted, and possibly a payslip that has already gone out.
+          </p>
+          <p className="gr" style={{ fontSize: '12.5px' }}>
+            Raise it as an attendance correction instead, so the change is recorded rather than silently
+            applied.
+          </p>
+        </>
+      ) : (
+        <>
+          <p style={{ fontSize: '13.5px' }}>
+            {l.days} day{l.days === 1 ? '' : 's'} of {type?.n ?? l.type} from {fmtDate(l.from)}.
+          </p>
+          <p className="gr" style={{ fontSize: '12.5px' }}>
+            The balance goes straight back. Whoever approved it is not told automatically — worth a word
+            if it was hard to arrange cover.
+          </p>
+        </>
+      ),
+      footer: started ? (
+        <>
+          <Btn variant="ghost" onClick={closeModal}>
+            Close
+          </Btn>
+          <Btn
+            onClick={() => {
+              closeModal()
+              navigate({ to: '/attend' })
+            }}
+          >
+            Attendance
+          </Btn>
+        </>
+      ) : (
+        <>
+          <Btn variant="ghost" onClick={closeModal}>
+            Keep it
+          </Btn>
+          <Btn
+            onClick={() => {
+              l.st = 'cancelled'
+              closeModal()
+              changed()
+              toast('Cancelled — balance restored')
+            }}
+          >
+            Cancel the leave
+          </Btn>
+        </>
+      ),
+    })
+  }
+
+  const apply = () =>
+    openModal({
+      title: 'Apply for leave',
       body: (
-        <RequestLeave
-          meId={me.id}
-          balances={bal}
-          onSubmit={(leave) => {
-            setAdded((a) => [leave, ...a])
+        <ApplyLeave
+          personId={me.id}
+          onSent={(msg) => {
             closeModal()
-            toast(`${leave.days} day${leave.days === 1 ? '' : 's'} requested — awaiting approval`)
+            changed()
+            toast(msg)
           }}
+          onCancel={closeModal}
         />
       ),
     })
-  const statusOf = (id: string, fallback: Leave['st']): Leave['st'] => decided[id] ?? fallback
-  const pending = scope.filter((l) => statusOf(l.id, l.st) === 'pending')
 
-  const decide = (id: string, verdict: 'approved' | 'rejected') => {
-    setDecided((d) => ({ ...d, [id]: verdict }))
-    toast(verdict === 'approved' ? 'Leave approved' : 'Leave declined')
+  const subSwitch = can('people') ? (
+    <Seg
+      options={[
+        ['Requests', 'Requests'],
+        ['Policy', 'Policy'],
+      ]}
+      value={sub}
+      onChange={setSub}
+    />
+  ) : null
+
+  if (sub === 'Policy') {
+    return (
+      <>
+        <PageHead
+          title="Leave"
+          sub={`The rules every request is judged against · ${LEAVETYPES.length} types`}
+          actions={subSwitch}
+        />
+        <LeavePolicy onChanged={changed} />
+      </>
+    )
   }
 
-  const open = (id: string) => {
-    const l = scope.find((x) => x.id === id)
-    if (!l) return
-    const status = statusOf(l.id, l.st)
-    openModal({
-      title: `${whoName(l.who)} — ${typeName(l.type)}`,
-      body: (
-        <Rows>
-          <div className="rw">
-            <span className="gr">·</span>
-            <span>
-              <b>
-                {fmtDate(l.from)} → {fmtDate(l.to)}
-              </b>
-              <div className="sd">
-                {l.days} day{l.days === 1 ? '' : 's'} · {l.reason || 'no reason given'}
-              </div>
-            </span>
-            <span>
-              <Chip kind={LVSTATUS[status][1]}>{LVSTATUS[status][0]}</Chip>
-            </span>
-          </div>
-          {l.by ? (
-            <div className="rw">
-              <span className="gr">·</span>
-              <span>
-                <b>Decided by</b>
-                <div className="sd">{l.by}</div>
-              </span>
-              <span />
-            </div>
-          ) : null}
-        </Rows>
-      ),
-      footer:
-        canApprove && status === 'pending' ? (
-          <>
-            <Btn variant="danger" onClick={() => decide(l.id, 'rejected')}>
-              Decline
-            </Btn>
-            <Btn onClick={() => decide(l.id, 'approved')}>Approve</Btn>
-          </>
-        ) : undefined,
-    })
-  }
+  /* Requests that would take a department below cover — before a decision, and
+     after one. The second group is the one worth arranging cover for now. */
+  const risky = LEAVE.filter((l) => l.st === 'pending' && l.clash)
+  const approvedSoon = LEAVE.filter((l) => l.st === 'approved' && l.from > now())
+    .map((l) => ({ l, c: leaveCheck(l.who, l.type, l.days, l.from, l.to).cover }))
+    .filter((x) => x.c && x.c.left < LEAVEPOLICY.minCover)
 
-  const rows: DataRow[] = scope.map((l) => {
-    const status = statusOf(l.id, l.st)
-    return {
-      id: l.id,
-      k: status,
-      onClick: () => open(l.id),
-      search: `${whoName(l.who)} ${typeName(l.type)} ${l.reason}`,
-      c: [
-        { v: whoName(l.who) },
-        { v: typeName(l.type) },
-        { v: `${fmtDate(l.from)} → ${fmtDate(l.to)}`, mono: true },
-        { v: String(l.days), mono: true },
-        { v: LVSTATUS[status][0], chip: LVSTATUS[status][1] },
-        { v: l.reason || '—' },
-      ],
-    }
-  })
+  const filters: [string, string][] = [
+    ['pending', 'Waiting'],
+    ['approved', 'Approved'],
+    ['rejected', 'Declined'],
+    ['all', 'All'],
+  ]
 
   return (
     <>
       <PageHead
         title="Leave"
         sub={
-          canApprove
-            ? 'Every request, and the balances behind them.'
-            : 'Your requests and what you have left.'
+          mine
+            ? manager
+              ? `Your requests and balances · approved by ${manager.n}`
+              : 'Your requests and balances'
+            : `${waitingOnMe.length} waiting on you · ${pendingAll.length} across the company`
         }
-        actions={<Btn onClick={request}>＋ Request leave</Btn>}
+        actions={
+          <>
+            {subSwitch}
+            <Btn onClick={apply}>Apply for leave</Btn>
+          </>
+        }
       />
 
-      {canApprove && pending.length ? (
-        <Banner kind="r" icon="◷" title={`${pending.length} request${pending.length === 1 ? '' : 's'} awaiting a decision`}>
-          Notice is {LEAVEPOLICY.noticeDays} days, and a department may not drop below {LEAVEPOLICY.minCover}{' '}
-          person on cover.
-        </Banner>
+      <Kpis>
+        {LEAVETYPES.filter((t) => t.annual > 0 || t.k === 'co').map((t) => {
+          const b = balance[t.k]
+          return (
+            <Kpi
+              key={t.k}
+              title={t.n}
+              value={<span className={b.left ? '' : 'warn'}>{b.left}</span>}
+              detail={`${b.taken} taken${b.pending ? ` · ${b.pending} pending` : ''}${t.annual ? ` of ${b.earned} earned` : ''}`}
+            />
+          )
+        })}
+      </Kpis>
+      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        Balances are earned minus taken, computed from the requests below — not a number anyone typed
+        in. {mine ? '' : 'Shown for you; open a person to see theirs.'}
+      </p>
+
+      {!mine && (risky.length || approvedSoon.length) ? (
+        <div className="bnr d" style={{ marginTop: 14 }}>
+          <span className="bi">⚑</span>
+          <div>
+            <div className="bt">
+              {risky.length + approvedSoon.length} thing
+              {risky.length + approvedSoon.length === 1 ? '' : 's'} would leave a department below cover
+            </div>
+            {risky.length ? (
+              <>
+                <b>{risky.length} waiting on a decision:</b>{' '}
+                {risky.map((l) => `${whoName(l.who)} — ${l.clash?.dep} down to ${l.clash?.left}`).join(' · ')}.
+              </>
+            ) : null}
+            {approvedSoon.length ? (
+              <>
+                <br />
+                <b>{approvedSoon.length} already approved:</b>{' '}
+                {approvedSoon.map((x) => `${whoName(x.l.who)} from ${fmtDate(x.l.from)}`).join(' · ')}.
+                Worth arranging cover now rather than on the day.
+              </>
+            ) : null}
+            <div className="bs">
+              The policy asks for at least {LEAVEPOLICY.minCover} working per department, and is set to “
+              {CLASHRULES[LEAVEPOLICY.clashRule][0].toLowerCase()}”.
+            </div>
+          </div>
+          <div className="ba">
+            <Btn variant="ghost" small onClick={() => setSub('Policy')}>
+              The policy
+            </Btn>
+          </div>
+        </div>
       ) : null}
 
-      <SectionHead>My balances</SectionHead>
-      <Kpis>
-        {LEAVETYPES.map((t) => (
-          <Kpi
-            key={t.k}
-            title={t.n}
-            value={<span className="mono">{bal[t.k].left}</span>}
-            detail={`${bal[t.k].taken} taken of ${bal[t.k].earned} earned`}
-          />
-        ))}
-      </Kpis>
-
-      <SectionHead>{canApprove ? 'Every leave request' : 'My requests'}</SectionHead>
-      <DataTable
-        noun="requests"
-        min={960}
-        search="Search a person or reason"
-        pills={[
-          { key: 'all', label: 'All', count: scope.length },
-          { key: 'pending', label: 'Awaiting approval', count: pending.length, urgent: true },
-          {
-            key: 'approved',
-            label: 'Approved',
-            count: scope.filter((l) => statusOf(l.id, l.st) === 'approved').length,
-          },
-          {
-            key: 'rejected',
-            label: 'Declined',
-            count: scope.filter((l) => statusOf(l.id, l.st) === 'rejected').length,
-          },
-        ]}
-        cols={[
-          { l: 'Person', w: 170 },
-          { l: 'Type', w: 150 },
-          { l: 'Dates', w: 210 },
-          { l: 'Days', w: 80 },
-          { l: 'Status', w: 160 },
-          { l: 'Reason', w: 200, f: 1.4 },
-        ]}
-        rows={rows}
-        emptyText="No leave requests match this filter."
-      />
-
-      <Card style={{ marginTop: 20 }}>
-        <CardHead title="How leave works here" />
-        <Rows>
-          {LEAVETYPES.map((t) => (
-            <div className="rw" key={t.k}>
-              <span className="gr">·</span>
-              <span>
-                <b>{t.n}</b>
-                <div className="sd">{t.d}</div>
-              </span>
-              <span className="mono gr" style={{ fontSize: '11.5px' }}>
-                {t.annual}/yr
-              </span>
+      {!mine && waitingOnMe.length ? (
+        <div className="bnr r" style={{ marginTop: 14 }}>
+          <span className="bi">◷</span>
+          <div>
+            <div className="bt">
+              {waitingOnMe.length} request{waitingOnMe.length === 1 ? '' : 's'}{' '}
+              {waitingOnMe.length === 1 ? 'is' : 'are'} yours to decide
             </div>
-          ))}
-        </Rows>
+            {reportsToMe.length} people report to you:{' '}
+            {reportsToMe.slice(0, 6).map((x) => x.n).join(', ')}
+            {reportsToMe.length > 6 ? ' and others' : ''}. Everyone else’s requests are shown too, but
+            they belong to another approver.
+          </div>
+        </div>
+      ) : null}
+
+      <div className="fbar" style={{ marginTop: 16 }}>
+        {filters.map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            className={`pill ${filter === key ? 'on' : ''}`}
+            aria-pressed={filter === key}
+            onClick={() => setFilter(key)}
+          >
+            {label}
+            <span className="n">
+              {key === 'all' ? scope.length : scope.filter((l) => l.st === key).length}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {rows.length ? (
+        <>
+          <Card>
+            <div className="tsc">
+              <div style={{ minWidth: 900 }}>
+                <div className="trow h" style={{ gridTemplateColumns: COLS }}>
+                  <span>{mine ? 'Type' : 'Who'}</span>
+                  <span>{mine ? 'Dates' : 'Type'}</span>
+                  <span>{mine ? 'Reason' : 'Dates'}</span>
+                  <span>Days</span>
+                  <span>{mine ? 'Status' : 'Reason'}</span>
+                  <span>Decision</span>
+                </div>
+                <div className="tb">
+                  {rows.slice(0, PAGE).map((l) => {
+                    const t = LEAVETYPES.find((x) => x.k === l.type)
+                    const chip = t ? <Chip kind={t.c}>{t.n}</Chip> : <Chip>{l.type}</Chip>
+                    const owner = STAFF.find((x) => x.id === l.who)
+                    const approver = managerOf(owner)
+                    return (
+                      <div className="trow" style={{ gridTemplateColumns: COLS }} key={l.id}>
+                        <div className="cell">
+                          {mine ? (
+                            chip
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <Avatar name={whoName(l.who)} />
+                              <div className="v">{whoName(l.who)}</div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="cell">
+                          {mine ? (
+                            <div className="v mono" style={{ fontSize: '12.5px' }}>
+                              {fmtDate(l.from)}
+                            </div>
+                          ) : (
+                            chip
+                          )}
+                        </div>
+                        <div className="cell">
+                          <div className="v" style={{ fontSize: '12.5px' }}>
+                            {mine ? l.reason : `${fmtDate(l.from)} → ${fmtDate(l.to)}`}
+                          </div>
+                        </div>
+                        <div className="cell">
+                          <div className="v mono">{l.days}</div>
+                        </div>
+                        <div className="cell">
+                          {mine ? (
+                            <Chip kind={LVSTATUS[l.st][1]}>{LVSTATUS[l.st][0]}</Chip>
+                          ) : (
+                            <div className="v" style={{ fontSize: '12.5px' }}>
+                              {l.reason}
+                            </div>
+                          )}
+                          {l.clash ? (
+                            <>
+                              <div className="s bad">
+                                {l.clash.dep} down to {l.clash.left} of {l.clash.team}
+                                {l.clash.who.length ? ` · with ${l.clash.who.join(', ')}` : ''}
+                              </div>
+                              {l.clash.cover ? <div className="s">They say: {l.clash.cover}</div> : null}
+                            </>
+                          ) : null}
+                          {l.shortNotice !== null && l.shortNotice !== undefined ? (
+                            <div className="s warn">
+                              {l.shortNotice === 0 ? 'starting today' : `${l.shortNotice} days notice`}
+                            </div>
+                          ) : null}
+                          {l.overBalance ? (
+                            <div className="s warn">{r2(l.overBalance)} beyond balance — unpaid</div>
+                          ) : null}
+                        </div>
+                        <div className="cell">
+                          {l.st === 'pending' ? (
+                            can('assign') ? (
+                              <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                {approver?.id === me.id ? null : (
+                                  <span className="gr" style={{ fontSize: '11.5px' }}>
+                                    {approver?.n ?? '—'}
+                                  </span>
+                                )}
+                                <Btn variant="ghost" small onClick={() => decide(l.id, 'rejected')}>
+                                  Decline
+                                </Btn>
+                                <Btn small onClick={() => decide(l.id, 'approved')}>
+                                  Approve
+                                </Btn>
+                              </span>
+                            ) : (
+                              <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <Chip kind="r">Awaiting approval</Chip>
+                                <Btn variant="ghost" small onClick={() => cancel(l)}>
+                                  Cancel
+                                </Btn>
+                              </span>
+                            )
+                          ) : l.st === 'approved' && l.who === me.id && l.from > now() ? (
+                            <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <Chip kind="v">Approved</Chip>
+                              <Btn variant="ghost" small onClick={() => cancel(l)}>
+                                Cancel
+                              </Btn>
+                            </span>
+                          ) : (
+                            <>
+                              <div className="v" style={{ fontSize: '12.5px' }}>
+                                <Chip kind={LVSTATUS[l.st][1]}>{LVSTATUS[l.st][0]}</Chip>
+                              </div>
+                              {l.by ? <div className="s">{l.by}</div> : null}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </Card>
+          {rows.length > PAGE ? (
+            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              Showing the {PAGE} most recent of {rows.length}.
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <Card padded>
+          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            Nothing {filter === 'all' ? 'at all' : 'in this state'}.
+          </p>
+        </Card>
+      )}
+
+      <Card padded style={{ marginTop: 18 }}>
+        <Label>How each type behaves</Label>
+        {LEAVETYPES.map((t) => (
+          <div className="rw" key={t.k} style={{ padding: '9px 0' }}>
+            <span>
+              <Chip kind={t.c}>{t.n}</Chip>
+            </span>
+            <span>
+              <div className="sd">{t.d}</div>
+            </span>
+            <span className="mono gr" style={{ fontSize: '11.5px' }}>
+              {t.annual ? `${t.annual} a year` : 'earned'}
+            </span>
+          </div>
+        ))}
+        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          Anything taken beyond the balance becomes unpaid leave, and shows on the payslip as a
+          deduction rather than disappearing.
+        </p>
       </Card>
     </>
   )
 }
+
+/* No capability gate: `NAVPERM.leave` is null, so everybody reaches this — the
+   screen itself narrows to your own requests when you cannot see the company's. */
+export default LeaveScreen
