@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Banner, Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
+import { Banner, Btn, Card, Chip, Empty, Label } from '@/components/ui'
 import { FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
 import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
 import { median } from '@/lib/metrics'
 import { QC_CRITERIA, QC_RULES, QC_SCALE, ratedPeople, stageWorkOf, standing } from '@/lib/quality'
 import { STAFF } from '@/data/people'
+import { QcTeamFocus } from './QcTeamFocus'
+import { QcStaffDetail } from './QcStaffDetail'
 import { fmtDate } from '@/lib/format'
 import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
@@ -23,14 +25,27 @@ export function Quality({ deliveries, log }: { deliveries: Delivery[]; log: QcEn
           </button>
         ))}
       </div>
-      {sub === 'How scoring works' ? <ScoringConfig /> : <Scores deliveries={deliveries} log={log} />}
+      {sub === 'How scoring works' ? (
+        <ScoringConfig />
+      ) : (
+        <Scores deliveries={deliveries} log={log} onOpenRules={() => setSub('How scoring works')} />
+      )}
     </>
   )
 }
 
-function Scores({ deliveries, log }: { deliveries: Delivery[]; log: QcEntry[] }) {
+function Scores({
+  deliveries,
+  log,
+  onOpenRules,
+}: {
+  deliveries: Delivery[]
+  log: QcEntry[]
+  onOpenRules: () => void
+}) {
   const [range, setRange] = useState<RangeState>(DEFAULT_RANGE)
   const [focus, setFocus] = useState('all')
+  const [person, setPerson] = useState<string | null>(null)
 
   const r = resolveRange(range)
   const dels = useMemo(() => deliveries.filter((x) => inRange(x.d, r)), [deliveries, r])
@@ -86,6 +101,23 @@ function Scores({ deliveries, log }: { deliveries: Delivery[]; log: QcEntry[] })
     .sort((a, b) => a[1].rate - b[1].rate)
   const stageTotal = twp.reduce((a, x) => a + x.c, 0)
 
+  if (person) {
+    return (
+      <>
+        <RangeBar id="q" value={range} onChange={setRange} />
+        <QcStaffDetail
+          name={person}
+          rows={rows}
+          range={r}
+          teamAvg={overall}
+          people={people}
+          tw={tw}
+          onBack={() => setPerson(null)}
+        />
+      </>
+    )
+  }
+
   return (
     <>
       <RangeBar id="q" value={range} onChange={setRange} />
@@ -139,54 +171,19 @@ function Scores({ deliveries, log }: { deliveries: Delivery[]; log: QcEntry[] })
         ]}
       />
 
-      {focus === 'defects' && defects.length ? (
-        <>
-          <SectionHead>Every defect in range</SectionHead>
-          <Card>
-            <div className="tsc">
-              <table className="mat" style={{ minWidth: 900 }}>
-                <thead>
-                  <tr>
-                    <th>Rated</th>
-                    <th>Order</th>
-                    <th>Stage</th>
-                    <th>Who did it</th>
-                    <th>Rated by</th>
-                    <th style={{ textAlign: 'right' }}>Score</th>
-                    <th>What came off</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {defects.map((x, i) => (
-                    <tr key={`${x.order}-${i}`}>
-                      <td className="mono">{x.dk}</td>
-                      <td className="mono">{x.order}</td>
-                      <td>{x.stage}</td>
-                      <td>
-                        <b>{x.onName}</b>
-                      </td>
-                      <td className="gr">{x.byName}</td>
-                      <td className="n">{x.avg.toFixed(2)}</td>
-                      <td>
-                        {x.crit ? (
-                          <>
-                            <b>{x.crit}</b> — {x.note}
-                          </>
-                        ) : (
-                          <span className="gr">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
-            A defect is any axis at 3 or below. The reason is recorded with it, because a score without one
-            teaches nobody anything.
-          </p>
-        </>
+      {focus !== 'all' ? (
+        <QcTeamFocus
+          focus={focus}
+          dels={dels}
+          rows={rows}
+          defects={defects}
+          range={r}
+          people={people}
+          overall={overall}
+          onBack={() => setFocus('all')}
+          onOpenPerson={setPerson}
+          onOpenRules={onOpenRules}
+        />
       ) : null}
 
       {focus === 'all' ? (
@@ -265,7 +262,7 @@ function Scores({ deliveries, log }: { deliveries: Delivery[]; log: QcEntry[] })
                     const t = p.tw
                     const sd = t ? standing(p.o, t.vsPeers, overall) : null
                     return (
-                      <tr key={p.n}>
+                      <tr key={p.n} className="clk" onClick={() => setPerson(p.n)}>
                         <td>
                           <b>{p.n}</b>
                           {STAFF.some((x) => x.n === p.n) ? null : (

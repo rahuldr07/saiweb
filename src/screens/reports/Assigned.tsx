@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Banner, Card, Chip, SectionHead } from '@/components/ui'
+import { Banner, Btn, Card, Chip, SectionHead } from '@/components/ui'
 import { DayPicker } from './DayPicker'
 import { board } from '@/lib/engine'
 import { ASSIGN_STAGES } from '@/data/org'
@@ -12,7 +12,7 @@ import { now } from '@/lib/clock'
 const val = (n: number) => (n ? <b className="mono">{n}</b> : <span className="gr">—</span>)
 
 /** Who got what, by department, broken down by product. */
-export function Assigned() {
+export function Assigned({ onOpenStaff }: { onOpenStaff: () => void }) {
   const { run } = board()
   const navigate = useNavigate()
   const [day, setDay] = useState(() => fmtDate(now()))
@@ -33,6 +33,7 @@ export function Assigned() {
         kind="b"
         icon="◔"
         title={`${as.length} assignments across ${ASSIGN_STAGES.length} departments — ${scope}`}
+        actions={<Btn onClick={onOpenStaff}>Per-person detail</Btn>}
       >
         Every order passes through each department, so one order appears once per row of stages. A person
         listed with no orders was eligible but not needed.

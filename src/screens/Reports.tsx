@@ -30,7 +30,20 @@ type Tab = (typeof TABS)[number]
  */
 function Reports() {
   const [tab, setTab] = useState<Tab>('Received')
+  /* Set when arriving from a By-staff department tile, so the department tab
+     opens on that department rather than on the whole floor. */
+  const [dept, setDept] = useState<string | undefined>()
   const { toast } = useUi()
+
+  const openDept = (d: string) => {
+    setDept(d)
+    setTab('By department')
+  }
+
+  const pickTab = (t: Tab) => {
+    if (t !== 'By department') setDept(undefined)
+    setTab(t)
+  }
 
   /* Only the history-backed tabs pay for the fetch. */
   const needsHistory = tab === 'Turnaround' || tab === 'Quality'
@@ -123,12 +136,12 @@ function Reports() {
         }
       />
 
-      <Tabs tabs={[...TABS]} value={tab} onChange={setTab} />
+      <Tabs tabs={[...TABS]} value={tab} onChange={pickTab} />
 
       {tab === 'Received' ? <Received /> : null}
-      {tab === 'Assigned' ? <Assigned /> : null}
-      {tab === 'By staff' ? <ByStaff /> : null}
-      {tab === 'By department' ? <ByDepartment /> : null}
+      {tab === 'Assigned' ? <Assigned onOpenStaff={() => pickTab('By staff')} /> : null}
+      {tab === 'By staff' ? <ByStaff onOpenDept={openDept} /> : null}
+      {tab === 'By department' ? <ByDepartment key={dept ?? 'all'} initial={dept} /> : null}
 
       {tab === 'Turnaround' ? (
         loading ? (

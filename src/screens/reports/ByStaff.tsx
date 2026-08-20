@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Avatar, Btn, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusKpis } from '@/components/FocusKpis'
+import { WorkFocus } from './WorkFocus'
 import { board } from '@/lib/engine'
 import { ASSIGN_STAGES } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
@@ -10,7 +11,7 @@ import { AVAIL, STAFF } from '@/data/people'
 const COLS = '180px 150px 1fr 90px 90px 90px'
 
 /** Staff workload: the whole roster, then one person at a time. */
-export function ByStaff() {
+export function ByStaff({ onOpenDept }: { onOpenDept: (d: string) => void }) {
   const { run, work, worked, totDone, totPend } = board()
   const navigate = useNavigate()
   const [sel, setSel] = useState('all')
@@ -88,6 +89,10 @@ export function ByStaff() {
           ]}
         />
 
+        {focus !== 'all' ? (
+          <WorkFocus focus={focus} mode="staff" onBack={() => setFocus('all')} />
+        ) : (
+          <>
         <SectionHead>Everyone — completed against pending</SectionHead>
         <FlexTable
           cols={COLS}
@@ -136,6 +141,7 @@ export function ByStaff() {
                 key={d}
                 title={d}
                 value={dn + pd}
+                onClick={() => onOpenDept(d)}
                 detail={
                   <>
                     <span className="ok">{dn} done</span> <span className="gr">·</span>{' '}
@@ -146,6 +152,8 @@ export function ByStaff() {
             )
           })}
         </Kpis>
+          </>
+        )}
       </>
     )
   }

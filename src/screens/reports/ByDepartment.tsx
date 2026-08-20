@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Banner, Btn, Card, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusKpis } from '@/components/FocusKpis'
+import { WorkFocus } from './WorkFocus'
 import { board } from '@/lib/engine'
 import { AVAIL, STAFF } from '@/data/people'
 import { whoName } from '@/lib/permissions'
@@ -10,10 +11,10 @@ import { whoName } from '@/lib/permissions'
 const capTone = (pct: number) => (pct >= 95 ? 'var(--bad)' : pct >= 80 ? 'var(--warn)' : 'var(--ok)')
 
 /** Departmental workload: the whole floor, then one department at a time. */
-export function ByDepartment() {
+export function ByDepartment({ initial }: { initial?: string }) {
   const { run, depts, dwork } = board()
   const navigate = useNavigate()
-  const [sel, setSel] = useState('all')
+  const [sel, setSel] = useState(initial ?? 'all')
   const [focus, setFocus] = useState('all')
   const [itemFilter, setItemFilter] = useState('all')
 
@@ -100,6 +101,10 @@ export function ByDepartment() {
           ]}
         />
 
+        {focus !== 'all' ? (
+          <WorkFocus focus={focus} mode="dept" onBack={() => setFocus('all')} />
+        ) : (
+          <>
         <SectionHead>Every department — completed against pending</SectionHead>
         <FlexTable
           cols="150px 110px 1fr 85px 85px 85px 130px"
@@ -159,6 +164,8 @@ export function ByDepartment() {
           Doc Req shows no tasks because it is an exception branch — work only enters it when an order needs a
           document, so it is never part of the automatic pass.
         </p>
+          </>
+        )}
       </>
     )
   }
