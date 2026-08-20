@@ -49,11 +49,6 @@ function Payslips() {
           </div>
         </Rows>
       ),
-      footer: (
-        <Btn variant="ghost" onClick={() => toast(`${r.mn} payslip queued`)}>
-          Download
-        </Btn>
-      ),
     })
 
   const rows: DataRow[] = all.map((r) => ({

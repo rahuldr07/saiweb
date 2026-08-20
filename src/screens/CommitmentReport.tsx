@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Btn, Card, CardHead, Chip, Field, Form, KeyValues, PageHead, Rows, SectionHead, Tabs } from '@/components/ui'
-import { useUi } from '@/state/ui'
+import { Card, CardHead, Chip, Field, Form, KeyValues, PageHead, Rows, SectionHead, Tabs } from '@/components/ui'
 import { ORDERS } from '@/data/production'
 import { PRODUCTS } from '@/data/catalog'
 import { STAGES } from '@/data/org'
@@ -12,7 +11,6 @@ type Tab = (typeof TABS)[number]
 
 /** Produce the client deliverable from a completed order. */
 export default function CommitmentReport() {
-  const { toast } = useUi()
   const [tab, setTab] = useState<Tab>('Capture')
   const [orderId, setOrderId] = useState(ORDERS[ORDERS.length - 1].id)
   const [vesting, setVesting] = useState('Sara J. Bahorik and Michael Bahorik, husband and wife')
@@ -35,14 +33,6 @@ export default function CommitmentReport() {
       <PageHead
         title="Commitment report"
         sub="The commitment a client receives, built from the completed order’s own fields."
-        actions={
-          <>
-            <Btn variant="ghost" onClick={() => toast(`${o.id} — DOCX queued`)}>
-              Export DOCX
-            </Btn>
-            <Btn onClick={() => toast(`${o.id} — PDF queued`)}>Export PDF</Btn>
-          </>
-        }
       />
 
       <Tabs tabs={[...TABS]} value={tab} onChange={setTab} />

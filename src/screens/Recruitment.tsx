@@ -1,13 +1,12 @@
 import { useState } from 'react'
-import { Btn, Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
-import { useUi } from '@/state/ui'
 import { CANDIDATES, OPENINGS } from '@/data/hrms'
 import { fmtDate } from '@/lib/format'
 import type { ChipKind } from '@/data/types'
 
-const STAGE_KIND: Record<string, ChipKind> = {
+  const STAGE_KIND: Record<string, ChipKind> = {
   Applied: 'n',
   Screened: 'b',
   Interview: 'r',
@@ -17,7 +16,6 @@ const STAGE_KIND: Record<string, ChipKind> = {
 
 /** Openings, and the candidate pipeline against each. */
 function Recruitment() {
-  const { toast } = useUi()
   const [job, setJob] = useState('all')
 
   const base = CANDIDATES.filter((c) => job === 'all' || c.job === job)
@@ -44,7 +42,6 @@ function Recruitment() {
       <PageHead
         title="Recruitment"
         sub={`${OPENINGS.length} opening${OPENINGS.length === 1 ? '' : 's'} for ${seats} seats, and ${CANDIDATES.length} people in the pipeline.`}
-        actions={<Btn onClick={() => toast('New opening')}>＋ New opening</Btn>}
       />
 
       <Kpis>

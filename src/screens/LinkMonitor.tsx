@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { Banner, Btn, Kpi, Kpis, PageHead } from '@/components/ui'
+import { Banner, Kpi, Kpis, PageHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
-import { useUi } from '@/state/ui'
 import { LINKCHECK } from '@/data/catalog'
 import { LSTATE, allLinks, brokenLinks, linkStats, nextLinkCheck } from '@/lib/derived'
 import { ALLSTATES, stateName } from '@/lib/coverage'
@@ -14,7 +13,7 @@ import type { LinkStatus } from '@/data/types'
  * an order its SLA, so the states are explicit rather than a boolean.
  */
 export default function LinkMonitor() {
-  const { toast } = useUi()
+
   const [state, setState] = useState('all')
   const [pill, setPill] = useState('all')
 
@@ -42,7 +41,6 @@ export default function LinkMonitor() {
       <PageHead
         title="Link monitor"
         sub={`${stats.types} sources across ${stats.total / stats.types} counties. Last checked ${fmtDT(LINKCHECK.last)}.`}
-        actions={<Btn onClick={() => toast('Re-checking every county link')}>Re-check now</Btn>}
       />
 
       {stats.bad ? (

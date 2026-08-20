@@ -16,14 +16,14 @@ import { useDeliveries } from '@/lib/useDeliveries'
 import { hh } from '@/lib/sla'
 import { csvName, downloadCSV } from '@/lib/csv'
 
-const TABS = ['Turnaround', 'By client', 'By product', 'By department'] as const
+const TABS = ['Turnaround', 'By client', 'By product'] as const
 type Tab = (typeof TABS)[number]
 
 /**
  * How the company is delivering against what it promised: on-time rate, where
- * the hours go stage by stage, and the same question asked of each client,
- * product and department. The personal equivalent is "How I'm doing", which
- * compares a person to their own target and never to a colleague.
+ * the hours go stage by stage, and the same question asked of each client and
+ * product. The personal equivalent is "How I'm doing", which compares a person
+ * to their own target and never to a colleague.
  *
  * Every table here exports.
  */
@@ -31,7 +31,7 @@ function Performance() {
   const { toast } = useUi()
   const [tab, setTab] = useState<Tab>('Turnaround')
 
-  const { run: RUN, depts: DEPTS } = board()
+  const { run: RUN } = board()
 
   /* 374 KB of history, fetched when this screen opens rather than shipped with
      the route. Every figure below is derived from it, so they arrive together. */
@@ -66,26 +66,21 @@ function Performance() {
 
   const exportTab = () => {
     const data =
-      tab === 'By department'
+      tab === 'Turnaround'
         ? [
-            ['Department', 'Available', 'Capacity', 'Carrying', 'Done today', 'Still open', 'Unplaced'],
-            ...DEPTS.map((d) => [d.d, d.avail, d.cap, d.load, d.done, d.pend, d.unplaced]),
+            ['Stage', 'Average hours'],
+            ...stageAvg.map((s) => [s.stage, Math.round(s.avg * 100) / 100]),
           ]
-        : tab === 'Turnaround'
-          ? [
-              ['Stage', 'Average hours'],
-              ...stageAvg.map((s) => [s.stage, Math.round(s.avg * 100) / 100]),
-            ]
-          : [
-              [tab === 'By client' ? 'Client' : 'Product', 'Delivered', 'Late', 'On time %', 'Average hours'],
-              ...rows.map((g) => [
-                g.key,
-                g.n,
-                g.late,
-                (((g.n - g.late) / g.n) * 100).toFixed(1),
-                Math.round((g.hrs / g.n) * 100) / 100,
-              ]),
-            ]
+        : [
+            [tab === 'By client' ? 'Client' : 'Product', 'Delivered', 'Late', 'On time %', 'Average hours'],
+            ...rows.map((g) => [
+              g.key,
+              g.n,
+              g.late,
+              (((g.n - g.late) / g.n) * 100).toFixed(1),
+              Math.round((g.hrs / g.n) * 100) / 100,
+            ]),
+          ]
     const out = downloadCSV(csvName(`report-${tab.toLowerCase().replace(/\s+/g, '-')}`), data)
     toast(`${out.name} — ${out.rows.length - 1} rows`)
   }
@@ -196,43 +191,8 @@ function Performance() {
         </Card>
       ) : null}
 
-      {tab === 'By department' ? (
-        <Card padded>
-          <CardHead title="Workload today" />
-          <div className="tsc">
-            <table className="mat">
-              <thead>
-                <tr>
-                  <th>Department</th>
-                  <th style={{ textAlign: 'right' }}>Available</th>
-                  <th style={{ textAlign: 'right' }}>Room</th>
-                  <th style={{ textAlign: 'right' }}>Carrying</th>
-                  <th style={{ textAlign: 'right' }}>Done</th>
-                  <th style={{ textAlign: 'right' }}>Open</th>
-                  <th style={{ textAlign: 'right' }}>Unplaced</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DEPTS.map((d) => (
-                  <tr key={d.d}>
-                    <td>{d.d}</td>
-                    <td className="n">
-                      {d.avail}/{d.staff.length}
-                    </td>
-                    <td className="n">{d.cap}</td>
-                    <td className="n">{d.load}</td>
-                    <td className="n">{d.done}</td>
-                    <td className="n">{d.pend}</td>
-                    <td className="n" style={d.unplaced ? { color: 'var(--bad)' } : undefined}>
-                      {d.unplaced}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      ) : null}
+      {/* Departmental workload lives on Assignment → Capacity, where it can be
+          acted on. Two screens reporting the same figures only ever drift. */}
     </>
   )
 }

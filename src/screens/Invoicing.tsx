@@ -108,12 +108,9 @@ function Invoicing() {
         title="Invoicing"
         sub="One invoice per client per month, drawn from delivered orders at that client’s rate card."
         actions={
-          <>
-            <Btn variant="ghost" onClick={exportInvoices}>
-              Export CSV
-            </Btn>
-            <Btn onClick={() => toast('Generating this month’s invoices')}>＋ Generate month</Btn>
-          </>
+          <Btn variant="ghost" onClick={exportInvoices}>
+            Export CSV
+          </Btn>
         }
       />
 

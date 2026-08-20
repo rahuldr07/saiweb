@@ -8,20 +8,41 @@ import type { Leave } from '@/data/types'
 import { fmtDate } from '@/lib/format'
 import { whoName } from '@/lib/permissions'
 import { leaveBalance } from '@/lib/payroll'
+import { RequestLeave } from './leave/RequestLeave'
 
 const typeName = (k: string) => LEAVETYPES.find((t) => t.k === k)?.n ?? k
 
 /** Requests, balances, and — for anyone who approves — the queue waiting on them. */
 export default function LeaveScreen() {
   const { me, can } = useSession()
-  const { toast, openModal } = useUi()
+  const { toast, openModal, closeModal } = useUi()
   const [decided, setDecided] = useState<Record<string, 'approved' | 'rejected'>>({})
+  /* Requests made in this session, newest first, alongside the seeded ones. */
+  const [added, setAdded] = useState<Leave[]>([])
 
   const canApprove = can('all') || can('people')
-  const scope = canApprove ? LEAVE : LEAVE.filter((l) => l.who === me.id)
+  const all = [...added, ...LEAVE]
+  const scope = canApprove ? all : all.filter((l) => l.who === me.id)
+
+  const bal = leaveBalance(me.id)
+
+  const request = () =>
+    openModal({
+      title: 'Request leave',
+      body: (
+        <RequestLeave
+          meId={me.id}
+          balances={bal}
+          onSubmit={(leave) => {
+            setAdded((a) => [leave, ...a])
+            closeModal()
+            toast(`${leave.days} day${leave.days === 1 ? '' : 's'} requested — awaiting approval`)
+          }}
+        />
+      ),
+    })
   const statusOf = (id: string, fallback: Leave['st']): Leave['st'] => decided[id] ?? fallback
   const pending = scope.filter((l) => statusOf(l.id, l.st) === 'pending')
-  const bal = leaveBalance(me.id)
 
   const decide = (id: string, verdict: 'approved' | 'rejected') => {
     setDecided((d) => ({ ...d, [id]: verdict }))
@@ -101,7 +122,7 @@ export default function LeaveScreen() {
             ? 'Every request, and the balances behind them.'
             : 'Your requests and what you have left.'
         }
-        actions={<Btn onClick={() => toast('New leave request')}>＋ Request leave</Btn>}
+        actions={<Btn onClick={request}>＋ Request leave</Btn>}
       />
 
       {canApprove && pending.length ? (

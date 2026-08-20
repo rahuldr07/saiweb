@@ -1,4 +1,4 @@
-import { Btn, Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { PAYMONTHS, PAYRUNS } from '@/data/hrms'
@@ -7,7 +7,7 @@ import { inr, leaveBalance, payslipOf, structureOf, ytd } from '@/lib/payroll'
 /** A person's own payslip history. No comparison to anyone else appears here. */
 export default function MyPayslips() {
   const { me } = useSession()
-  const { toast, openModal } = useUi()
+  const { openModal } = useUi()
 
   if (!me.ctc) {
     return (
@@ -59,11 +59,6 @@ export default function MyPayslips() {
             <span className="mono ok">{inr(s.net)}</span>
           </div>
         </Rows>
-      ),
-      footer: (
-        <Btn variant="ghost" onClick={() => toast(`${mn} payslip queued`)}>
-          Download
-        </Btn>
       ),
     })
   }

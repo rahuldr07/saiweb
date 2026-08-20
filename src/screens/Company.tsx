@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Avatar, Btn, Card, CardHead, Chip, Field, Form, KeyValues, PageHead, Rows, Tabs } from '@/components/ui'
+import { Avatar, Card, CardHead, Chip, Field, Form, KeyValues, PageHead, Rows, Tabs } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
-import { useUi } from '@/state/ui'
 import { COTABS, DEPTLIST, PERMS, ROLELIST, STAGES } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
 import { CLIENTS, PRODUCTS } from '@/data/catalog'
@@ -16,7 +15,7 @@ import { roleName } from '@/lib/permissions'
 /** Tenant settings: profile, people, clients, departments, roles and turnaround. */
 function Company() {
   const { tenant } = useSession()
-  const { toast } = useUi()
+
   const navigate = useNavigate()
   const [tab, setTab] = useState<string>(COTABS[0])
 
@@ -49,9 +48,6 @@ function Company() {
               </select>
             </Field>
           </Form>
-          <div style={{ marginTop: 16 }}>
-            <Btn onClick={() => toast('Company profile saved')}>Save</Btn>
-          </div>
         </Card>
       ) : null}
 
