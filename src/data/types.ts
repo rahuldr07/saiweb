@@ -343,6 +343,83 @@ export interface Lead {
   notes: LeadNote[]
 }
 
+/* ── time and attendance ────────────────────────────────────────────────── */
+
+/**
+ * One person's marks for one day.
+ *
+ * Made by a person rather than generated, which is the point: a punch is a claim
+ * about where somebody was, so it records the place and how sure the device was.
+ */
+export interface DayMark {
+  /** HH:MM. */
+  in: string
+  out: string | null
+  /** Minutes after the shift start, past the grace period. Zero when on time. */
+  late: number
+  shift: string
+  where: string
+  outWhere?: string
+  /** Inside a known site's radius. */
+  inside: boolean
+  /** Metres of GPS accuracy, when the device gave one. */
+  acc: number | null
+  breakIn?: string | null
+  breakOut?: string | null
+  breakMins?: number
+}
+
+/** A claim that the clock got a day wrong. Approving one moves a payslip. */
+export interface Regularisation {
+  id: string
+  who: string
+  d: Date
+  /** What the system recorded. */
+  was: string
+  /** What they say happened. */
+  ask: string
+  st: 'pending' | 'approved' | 'rejected'
+}
+
+export interface Swap {
+  id: string
+  from: string
+  to: string
+  /** MM/DD/YYYY */
+  d: string
+  why: string
+  st: 'pending' | 'approved' | 'rejected'
+  by?: string
+}
+
+export interface LateMark {
+  id: string
+  who: string
+  d: Date
+  dk: string
+  shift: string
+  /** Shift start, HH:MM. */
+  due: string
+  /** When they actually punched. */
+  at: string
+  mins: number
+  why: string | null
+  /** Waived marks stay in the log and the export; they stop counting. */
+  waived: boolean
+}
+
+export type PunchKind = 'in' | 'out' | 'break out' | 'break in'
+
+export interface Punch {
+  who: string
+  d: string
+  t: string
+  kind: PunchKind
+  where: string
+  inside: boolean
+  acc?: number | null
+}
+
 /* ── HRMS ───────────────────────────────────────────────────────────────── */
 
 export interface LeaveType {
