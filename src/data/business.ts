@@ -547,3 +547,6 @@ export const LEADS: Lead[] = [
 
 export const STALE_WARN: number = 14
 
+/** Red, not amber. A month with nothing recorded is a lead nobody is chasing. */
+export const STALE_BAD: number = 30
+

@@ -5,7 +5,7 @@
  */
 import { COUNTIES, LINKTYPES, BADSTATES, LINKCHECK } from '@/data/catalog'
 import { ORDERS } from '@/data/production'
-import { LEADS, STALE_WARN } from '@/data/business'
+import { LEADS, STALE_BAD, STALE_WARN } from '@/data/business'
 import { LEAVE } from '@/data/hrms'
 import { STAFF } from '@/data/people'
 import { DEPTLIST } from '@/data/org'
@@ -34,6 +34,20 @@ export const leadAge = (l: Lead) => days(lastTouch(l))
 
 export const isStale = (l: Lead) =>
   !['won', 'lost', 'notnow'].includes(l.st) && leadAge(l) >= STALE_WARN
+
+/**
+ * How overdue a lead is, as the register colours it.
+ *
+ * Won, lost and "not now" are left alone — they are not waiting on anybody, so
+ * coding them by age would be scolding you about work that is finished.
+ */
+export type Staleness = 'ok' | 'warn' | 'bad'
+
+export const staleness = (l: Lead): Staleness => {
+  if (['won', 'lost', 'notnow'].includes(l.st)) return 'ok'
+  const age = leadAge(l)
+  return age >= STALE_BAD ? 'bad' : age >= STALE_WARN ? 'warn' : 'ok'
+}
 
 /** Flagged by a person, or gone quiet on its own. */
 export const needsFollowUp = (l: Lead) => !['won', 'lost'].includes(l.st) && (l.flag || isStale(l))
