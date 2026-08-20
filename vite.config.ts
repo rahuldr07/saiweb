@@ -38,7 +38,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    /* 5173 unless the environment names one, so two checkouts — or two agent
+       sessions — can run dev servers side by side without editing this file. */
+    port: Number(process.env.PORT ?? 5173),
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL ?? 'http://localhost:8787',

@@ -19,9 +19,9 @@ const BASE = process.env.SMOKE_URL ?? 'http://localhost:4173'
 
 const routes = [
   '/dash', '/orders', '/assign', '/attend', '/payroll', '/counties', '/linkcheck',
-  '/performance', '/company', '/leads', '/billing', '/mywork', '/intake',
+  '/reports', '/company', '/leads', '/billing', '/mywork', '/intake',
   '/commitment', '/leave', '/payslips', '/hiring', '/petty', '/integ', '/onboard',
-  '/signin', '/myperf', '/mypay',
+  '/signin', '/myperf', '/mypay', '/orders/new',
   /* Detail screens, reached from a register row. */
   '/staff/pd', '/clients/MGR', '/leads/l1', '/leads/new',
   /* And the not-found path each of them has to handle. */

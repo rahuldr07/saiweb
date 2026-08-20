@@ -44,6 +44,8 @@ const routeTree = rootRoute.addChildren([
       typeof s.pill === 'string' ? { pill: s.pill } : {},
     component: lazyRouteComponent(() => import('./screens/Orders')),
   }),
+  /* Static before dynamic, so "new" is the form and not an order id. */
+  screen('/orders/new', () => import('./screens/NewOrder')),
   screen('/orders/$orderId', () => import('./screens/OrderDetail')),
   screen('/mywork', () => import('./screens/MyWork')),
   screen('/mypay', () => import('./screens/MyPayslips')),

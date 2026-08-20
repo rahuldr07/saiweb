@@ -457,6 +457,94 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
   }
 }
 
+/* ── previewing one order ───────────────────────────────────────────────── */
+
+/** Enough of an order for the rules to judge it, before it exists. */
+export type Candidate = Pick<Arrival, 'pr' | 'st' | 'cl'> & { co?: string | null }
+
+export type PreviewSlot = { who: string; err?: undefined } | { who?: undefined; err: string }
+
+/**
+ * Who would take each stage of an order that has not been placed yet.
+ *
+ * The same rules in the same order as `runDay`, against a copy of today's load,
+ * so nothing is committed — the intake form can show who would pick it up while
+ * the address is still being typed. It commits only when the order is created.
+ *
+ * Coverage is applied here even though the design's own preview skipped it: the
+ * form asks for a county two panels above this, and a preview that ignored the
+ * answer would name somebody the real run would then rule out.
+ */
+export function previewAssign(
+  o: Candidate,
+  load: Record<string, number>,
+  overrides: Partial<RunContext> = {},
+): Record<string, PreviewSlot> {
+  const cx: RunContext = { ...defaultContext(), ...overrides }
+  const at = { ...load }
+  const onOrder: Record<string, string> = {}
+  const out: Record<string, PreviewSlot> = {}
+
+  for (const stage of cx.assignStages) {
+    let pool = cx.staff.filter((s) => s.dep.includes(stage))
+    if (!pool.length) {
+      out[stage] = { err: 'nobody in the department' }
+      continue
+    }
+
+    for (const r of cx.rules.filter((x) => x.k === 'route' && x.on && x.cond)) {
+      if (ruleMatches(r, o as Arrival, stage)) pool = pool.filter((s) => r.pool?.includes(s.id))
+    }
+    if (!pool.length) {
+      out[stage] = { err: 'a routing rule left nobody' }
+      continue
+    }
+
+    if (ruleOn('r6', cx.rules) && cx.covStages.includes(stage)) {
+      pool = pool.filter((x) => cx.coversPlace(x.id, o.st, o.co ?? null))
+      if (!pool.length) {
+        out[stage] = { err: `nobody covers ${o.co ?? o.st}` }
+        continue
+      }
+    }
+
+    if (ruleOn('r7', cx.rules) && cx.covStages.includes(stage)) {
+      pool = pool.filter((x) => cx.coversProduct(x.id, o.pr))
+      if (!pool.length) {
+        out[stage] = { err: `nobody here works ${o.pr}` }
+        continue
+      }
+    }
+
+    if (ruleOn('r2', cx.rules)) pool = pool.filter((s) => s.avail === 'ok' && s.active !== false)
+    if (!pool.length) {
+      out[stage] = { err: 'nobody available' }
+      continue
+    }
+
+    if (ruleOn('r3', cx.rules)) pool = pool.filter((s) => (at[s.id] ?? 0) < s.cap)
+    if (!pool.length) {
+      out[stage] = { err: 'everyone at their target' }
+      continue
+    }
+
+    const paired = cx.pairs[stage]
+    if (ruleOn('r4', cx.rules) && paired) pool = pool.filter((s) => onOrder[paired] !== s.id)
+    if (!pool.length) {
+      out[stage] = { err: 'would be self-review' }
+      continue
+    }
+
+    pool.sort((a, b) => (at[a.id] ?? 0) / a.cap - (at[b.id] ?? 0) / b.cap)
+    const p = pool[0]
+    at[p.id] = (at[p.id] ?? 0) + 1
+    onOrder[stage] = p.id
+    out[stage] = { who: p.id }
+  }
+
+  return out
+}
+
 /* ── progress ───────────────────────────────────────────────────────────── */
 
 /**

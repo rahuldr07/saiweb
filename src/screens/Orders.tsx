@@ -139,7 +139,7 @@ export default function Orders() {
             <Btn variant="ghost" onClick={exportOrders}>
               Export
             </Btn>
-            <Btn onClick={() => navigate({ to: '/intake' })}>＋ New order</Btn>
+            <Btn onClick={() => navigate({ to: '/orders/new' })}>＋ New order</Btn>
           </>
         }
       />

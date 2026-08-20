@@ -1,199 +1,151 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Banner, Btn, Card, CardHead, Field, Form, PageHead, ReadOnly } from '@/components/ui'
+import { Btn, Card, CardBody, CardHead, Chip, Empty, KeyValues, Label, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
+import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { CLIENTS, COUNTIES, PRODUCTS } from '@/data/catalog'
-import { ALLSTATES, countiesIn, stateName } from '@/lib/coverage'
-import { TZ, fmtDT, money } from '@/lib/format'
-import { now } from '@/lib/clock'
+import { MAILBOX, MAIL_STATE } from '@/data/intake'
+import { TZ, fmtDT } from '@/lib/format'
+import type { MailItem } from '@/data/types'
 
 /**
- * New order entry. The due date is computed from the product's SLA, and the
- * county is validated against coverage — we cannot promise work in a county we
- * do not cover.
+ * Order intake — the mailbox, not a form.
+ *
+ * Orders arrive as email, so this starts with what landed. Each message is read
+ * for the fields it obviously carries; nothing here creates anything. The two
+ * ways out are the two ways an order really begins: settle what the mailbox
+ * watches, or type one in by hand.
  */
-function Intake() {
-  const { toast } = useUi()
+
+/** The address the client actually writes to. */
+const mailboxAddress = (tenantName: string) =>
+  `orders@${tenantName.toLowerCase().replace(/[^a-z]/g, '')}.titlecrm.com`
+
+function MailCard({ m }: { m: MailItem }) {
   const navigate = useNavigate()
+  const { toast } = useUi()
+  const [label, kind] = MAIL_STATE[m.st]
 
-  const [client, setClient] = useState(CLIENTS[0].n)
-  const [product, setProduct] = useState(PRODUCTS[0].id)
-  const [state, setState] = useState(ALLSTATES()[0])
-  const [county, setCounty] = useState(countiesIn(ALLSTATES()[0])[0] ?? '')
-  const [address, setAddress] = useState('')
-  const [notes, setNotes] = useState('')
-  const [paste, setPaste] = useState('')
+  /* Neither action creates an order, and both say what they did instead — the
+     mailbox is the record, so "dismissed" has to mean it stayed there. */
+  const keep = () => toast('Kept as a duplicate — no order created')
+  const dismiss = () => toast('Dismissed — it stays in the mailbox, not in the queue')
 
-  const prod = PRODUCTS.find((p) => p.id === product) ?? PRODUCTS[0]
-  const due = useMemo(() => new Date(now().getTime() + prod.h * 3600000), [prod.h])
-  const covered = COUNTIES.some((c) => c.n === county && c.st === state)
+  return (
+    <Card style={{ marginBottom: 13 }}>
+      <CardHead
+        title={
+          <div>
+            <h2 style={{ fontSize: '14.5px', margin: 0 }}>{m.s}</h2>
+            <div className="gr" style={{ fontSize: '12.5px', marginTop: 2 }}>
+              {m.f} · {fmtDT(m.t)} {TZ}
+            </div>
+          </div>
+        }
+        actions={<Chip kind={kind}>{label}</Chip>}
+      />
 
-  const submit = () => {
-    if (!address.trim()) {
-      toast('The property address is needed')
-      return
-    }
-    if (!covered) {
-      toast(`${county}, ${state} is not on the coverage register`)
-      return
-    }
-    toast(`Order taken — ${prod.id} in ${county}, ${state}, due ${fmtDT(due)}`)
-    navigate({ to: '/orders' })
-  }
+      {m.dupe ? (
+        <div
+          style={{
+            padding: '11px 20px',
+            background: 'var(--badsoft)',
+            borderBottom: '1px solid #F3CFCF',
+            fontSize: '12.5px',
+            color: 'var(--bad)',
+            fontWeight: 500,
+          }}
+        >
+          ⚠ {m.dupe}
+        </div>
+      ) : null}
 
-  /* A pasted email is parsed for the fields it obviously contains; anything it
-     does not carry stays as it was, rather than being blanked. */
-  const parse = () => {
-    const text = paste
-    const addr = /(?:property|address)\s*[:-]\s*(.+)/i.exec(text)?.[1]?.trim()
-    const co = /county\s*[:-]\s*([A-Za-z .'-]+)/i.exec(text)?.[1]?.trim()
-    const stMatch = /\b(?:state\s*[:-]\s*)?([A-Z]{2})\b/.exec(text)?.[1]
-    const pr = PRODUCTS.find((p) => new RegExp(`\\b${p.id}\\b`, 'i').test(text))
-    if (addr) setAddress(addr)
-    if (stMatch && ALLSTATES().includes(stMatch)) {
-      setState(stMatch)
-      setCounty(countiesIn(stMatch)[0] ?? '')
-    }
-    if (co && COUNTIES.some((c) => c.n.toLowerCase() === co.toLowerCase())) setCounty(co)
-    if (pr) setProduct(pr.id)
-    toast(addr || co || pr ? 'Read what it could from the email' : 'Nothing recognisable in that text')
-  }
+      <CardBody>
+        {m.at.length ? (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 13 }}>
+            {m.at.map((a) => (
+              <span
+                key={a}
+                className="chip pl n"
+                style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}
+              >
+                📎 {a}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <Label>Read from the message</Label>
+        <KeyValues rows={m.x.map(([k, v]) => [k, v])} />
+
+        <div style={{ display: 'flex', gap: 8, marginTop: 15, flexWrap: 'wrap' }}>
+          {m.st === 'ready' ? (
+            <Btn onClick={() => navigate({ to: '/orders/new' })}>Review &amp; create order</Btn>
+          ) : m.st === 'attach' && m.match ? (
+            <Btn
+              variant="ghost"
+              onClick={() => navigate({ to: '/orders/$orderId', params: { orderId: m.match! } })}
+            >
+              Attach to {m.match}
+            </Btn>
+          ) : (
+            <Btn variant="ghost" onClick={keep}>
+              Keep as duplicate
+            </Btn>
+          )}
+          <Btn variant="ghost" onClick={dismiss}>
+            Dismiss
+          </Btn>
+        </div>
+      </CardBody>
+    </Card>
+  )
+}
+
+function Intake() {
+  const { tenant } = useSession()
+  const navigate = useNavigate()
+  const mails = useMemo(() => MAILBOX(), [])
 
   return (
     <>
       <PageHead
         title="Order intake"
-        sub="One order at a time, or paste the client’s email and let it read what it can."
+        sub={`Mail arriving at ${mailboxAddress(tenant.name)}`}
+        actions={
+          <>
+            <Btn variant="ghost" onClick={() => navigate({ to: '/integ' })}>
+              Mailbox settings
+            </Btn>
+            <Btn onClick={() => navigate({ to: '/orders/new' })}>＋ Manual order</Btn>
+          </>
+        }
       />
 
-      {!covered ? (
-        <Banner kind="d" icon="⚑" title={`${county || 'That county'}, ${state} is not covered`}>
-          Add it under County coverage first. Taking an order we cannot search is a promise we cannot keep.
-        </Banner>
-      ) : null}
-
-      <Card padded>
-        <CardHead title="The order" />
-        <Form>
-          <Field label="Client">
-            <select className="inp" value={client} onChange={(e) => setClient(e.target.value)}>
-              {CLIENTS.filter((c) => c.active !== false).map((c) => (
-                <option key={c.n} value={c.n}>
-                  {c.n}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Product" hint={`${prod.h}h SLA · ${money(prod.fee)}`}>
-            <select className="inp" value={product} onChange={(e) => setProduct(e.target.value)}>
-              {PRODUCTS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.id} — {p.n}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="State">
-            <select
-              className="inp"
-              value={state}
-              onChange={(e) => {
-                setState(e.target.value)
-                setCounty(countiesIn(e.target.value)[0] ?? '')
-              }}
-            >
-              {ALLSTATES().map((s) => (
-                <option key={s} value={s}>
-                  {s} — {stateName(s)}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="County" hint="Validated against the coverage register.">
-            <select className="inp" value={county} onChange={(e) => setCounty(e.target.value)}>
-              {countiesIn(state).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Due">
-            <ReadOnly>
-              <span className="mono">
-                {fmtDT(due)} {TZ}
-              </span>
-            </ReadOnly>
-          </Field>
-
-          <Field label="Fee">
-            <ReadOnly>
-              <span className="mono">{money(prod.fee)}</span>
-            </ReadOnly>
-          </Field>
-
-          <div className="fld" style={{ gridColumn: '1/-1' }}>
-            <label htmlFor="in-addr">Property address</label>
-            <input
-              className="inp"
-              id="in-addr"
-              value={address}
-              placeholder="118 Sara Ln, Johnstown"
-              onChange={(e) => setAddress(e.target.value)}
-            />
+      {/* Written out rather than passed through `Banner`, which puts its body in
+          the small grey sub-line. This one has a body *and* a sub, the way the
+          design states the rule and then the reason for it. */}
+      <div className="bnr b">
+        <span className="bi">✉</span>
+        <div>
+          <div className="bt">Nothing is created automatically</div>
+          We read the message and its attachments and fill the order for you. A person confirms before
+          it becomes work.
+          <div className="bs">
+            An address misread from an email is the failure this step exists to prevent.
           </div>
-
-          <div className="fld" style={{ gridColumn: '1/-1' }}>
-            <label htmlFor="in-notes">Special instructions</label>
-            <textarea
-              className="inp"
-              id="in-notes"
-              value={notes}
-              placeholder="Anything the searcher needs to know before starting"
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-        </Form>
-
-        <div style={{ marginTop: 16, display: 'flex', gap: 9 }}>
-          <Btn onClick={submit}>Take the order</Btn>
-          <Btn
-            variant="ghost"
-            onClick={() => {
-              setAddress('')
-              setNotes('')
-              toast('Cleared')
-            }}
-          >
-            Clear
-          </Btn>
         </div>
-      </Card>
+      </div>
 
-      <Card padded style={{ marginTop: 16 }}>
-        <CardHead title="Paste an email" />
-        <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 12px' }}>
-          Most orders arrive as email. Paste one and the fields above fill in with whatever it can be read
-          from — nothing is guessed, and anything it cannot find is left alone.
-        </p>
-        <textarea
-          className="inp"
-          value={paste}
-          placeholder={'Property: 118 Sara Ln, Johnstown\nCounty: Cambria\nState: PA\nProduct: COS'}
-          onChange={(e) => setPaste(e.target.value)}
-          style={{ minHeight: 120 }}
-        />
-        <div style={{ marginTop: 12 }}>
-          <Btn variant="ghost" onClick={parse}>
-            Read it
-          </Btn>
-        </div>
-      </Card>
+      {mails.length ? (
+        mails.map((m) => <MailCard key={m.s} m={m} />)
+      ) : (
+        <Card>
+          <Empty icon="✓" action={<Btn small onClick={() => navigate({ to: '/orders/new' })}>Manual order</Btn>}>
+            Nothing waiting. New mail to {mailboxAddress(tenant.name)} appears here.
+          </Empty>
+        </Card>
+      )}
     </>
   )
 }

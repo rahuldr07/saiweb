@@ -48,7 +48,7 @@ function Dashboard() {
             <Btn variant="ghost" onClick={() => navigate({ to: '/reports' })}>
               Reports
             </Btn>
-            <Btn onClick={() => navigate({ to: '/intake' })}>＋ New order</Btn>
+            <Btn onClick={() => navigate({ to: '/orders/new' })}>＋ New order</Btn>
           </>
         }
       />

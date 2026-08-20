@@ -13,7 +13,7 @@ import { chromium } from 'playwright'
 
 const BASE = process.env.SMOKE_URL ?? 'http://localhost:4173'
 const routes = process.env.PROFILE_ROUTES?.split(',') ?? [
-  '/dash', '/orders', '/performance', '/assign', '/company', '/payroll',
+  '/dash', '/orders', '/reports', '/assign', '/company', '/payroll',
 ]
 
 const launchOptions = {
