@@ -24,7 +24,7 @@ import {
 import { STAFF } from '@/data/people'
 import { pad } from './format'
 import { now } from '@/lib/clock'
-import type { Person } from '@/data/types'
+import type { Person, RunState } from '@/data/types'
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -136,6 +136,9 @@ export interface Payslip {
   p: Person
   mn: string
   st: Structure
+  /** Unpaid days from attendance alone, which is what the register shows. */
+  lopDays: number
+  /** Those, plus any part of the month before they joined. */
   unpaid: number
   lopAmt: number
   earn: [string, number][]
@@ -211,6 +214,7 @@ export function payslipOf(p: Person, mn: string): Payslip {
     p,
     mn,
     st,
+    lopDays: a.lop,
     unpaid,
     lopAmt,
     earn,
@@ -318,3 +322,67 @@ export function settlement(p: Person, lastDay?: Date) {
 
   return { lines, yrs, total: lines.reduce((a2, l) => a2 + l[1], 0), st, bal }
 }
+
+/* ── the month as a whole ───────────────────────────────────────────────── */
+
+export interface PayTotals {
+  list: Payslip[]
+  gross: number
+  ded: number
+  net: number
+  /** Employee provident fund. */
+  pf: number
+  /** Employer's own contribution, which is a cost rather than a deduction. */
+  erpf: number
+  esi: number
+  pt: number
+  tds: number
+  grat: number
+  /** Anyone with unpaid days — the thing to check before approving. */
+  lop: Payslip[]
+}
+
+/**
+ * Every payslip for a month, and what they add up to.
+ *
+ * Built by running the same `payslipOf` the individual payslip screen runs, so
+ * the register and a person's own slip cannot disagree. There is no stored
+ * total anywhere — change a salary or a day of attendance and this moves.
+ */
+export function payTotals(mn: string): PayTotals {
+  const list = paidStaff().map((p) => payslipOf(p, mn))
+  const sum = (f: (x: Payslip) => number) => list.reduce((a, x) => a + f(x), 0)
+  return {
+    list,
+    gross: sum((x) => x.gross),
+    ded: sum((x) => x.totalDed),
+    net: sum((x) => x.net),
+    pf: sum((x) => x.epf),
+    erpf: sum((x) => x.st.epfEr),
+    esi: sum((x) => x.esi),
+    pt: sum((x) => x.pt),
+    tds: sum((x) => x.tds),
+    grat: sum((x) => x.st.grat),
+    lop: list.filter((x) => x.unpaid > 0),
+  }
+}
+
+/**
+ * Which step the run is waiting on.
+ *
+ * The gaps are deliberate: locking attendance completes both Attendance and
+ * Compute, because computing is what locking is for. A strip that advanced one
+ * box per state would claim Compute had not happened when it had.
+ */
+export const stepIndex = (state: string): number =>
+  ({ draft: 0, locked: 2, approved: 4, paid: 5 })[state] ?? 0
+
+/** What the run can be moved to next, and what that button says. */
+export const nextRunAction = (state: string): [label: string, to: RunState] | null =>
+  state === 'draft'
+    ? ['Lock attendance', 'locked']
+    : state === 'locked'
+      ? ['Approve payroll', 'approved']
+      : state === 'approved'
+        ? ['Publish payslips', 'paid']
+        : null
