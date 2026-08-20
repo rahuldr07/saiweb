@@ -13,7 +13,6 @@ src/data/people.ts   linguist-generated
 src/data/deliveries.json linguist-generated
 src/data/production.ts linguist-generated
 src/data/quality-log.json linguist-generated
-src/data/deliveries.json  linguist-generated
 
 # Binary-ish artefacts that should never be diffed as text.
 *.png binary
