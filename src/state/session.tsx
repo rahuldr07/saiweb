@@ -30,6 +30,19 @@ import { DEMO_IDENTITY } from '@/lib/demo'
  */
 export type AuthState = 'loading' | 'authenticated' | 'anonymous' | 'demo'
 
+/**
+ * Whether the sign-in screen will take anything you type.
+ *
+ * With no API there is no password to be wrong, so the form cannot do the one
+ * thing it looks like it does. Rather than hide the screen — which is what
+ * skipping the gate entirely amounts to — it stays, accepts any credentials, and
+ * says so on itself. The gate is then real in shape and honest about being open,
+ * which is the only defensible version of this while the data is fictional.
+ *
+ * The moment the API answers, `startSession` decides instead and this is unused.
+ */
+export const OPEN_SIGN_IN = DEMO_IDENTITY
+
 interface SessionValue {
   me: Person
   tenant: Tenant
@@ -41,6 +54,8 @@ interface SessionValue {
   /** The workspaces this person belongs to, once the server has said. */
   memberships: Membership[]
   signInAs: (id: string) => void
+  /** Accepts anything, and only exists while there is no API to ask. */
+  signInWithoutServer: () => void
   signOut: () => Promise<void>
   switchTenant: (id: string) => void
   toggleTheme: () => void
@@ -63,6 +78,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [navOpen, setNavOpen] = useState(false)
   const queryClient = useQueryClient()
+
+  /* Survives a refresh, dies with the tab — long enough to use the app, short
+     enough that it is obviously not a real session. */
+  const [signedInLocally, setSignedInLocally] = useState(
+    () => sessionStorage.getItem('demo-signed-in') === '1',
+  )
 
   /* Only send a workspace header once we hold a real id — before that the server
      falls back to whichever workspace the session is already inside. */
@@ -90,12 +111,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   /* A failed /api/me means one of two things, and they are not the same: there
      is no server (the seed build), or there is one and this browser has no
-     session. Only the first is allowed to fall through to seed identity. */
+     session. Neither opens the application on its own — with no server you are
+     still anonymous until you go through the sign-in screen, which is what makes
+     the gate visible rather than skipped. */
   const authState: AuthState = me.isPending
     ? 'loading'
     : me.isSuccess
       ? 'authenticated'
-      : DEMO_IDENTITY
+      : OPEN_SIGN_IN && signedInLocally
         ? 'demo'
         : 'anonymous'
 
@@ -141,10 +164,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setMeId(id)
   }, [])
 
+  const signInWithoutServer = useCallback(() => {
+    sessionStorage.setItem('demo-signed-in', '1')
+    setSignedInLocally(true)
+  }, [])
+
   /* Ends the server session, then clears every cached answer — capabilities and
      workspace membership are per-person, so leaving them behind would show the
      next person the previous one's board until each query happened to refetch. */
   const signOut = useCallback(async () => {
+    sessionStorage.removeItem('demo-signed-in')
+    setSignedInLocally(false)
     await endSession()
     await queryClient.resetQueries()
   }, [queryClient])
@@ -159,6 +189,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       authState,
       memberships: memberships.data ?? [],
       signInAs,
+      signInWithoutServer,
       signOut,
       switchTenant: setTenantId,
       toggleTheme: () => setTheme((t) => (t === 'dark' ? 'light' : 'dark')),
@@ -166,7 +197,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       can,
       roleLabel: me.data?.person ? roleName(person.r) : roleName(person.r),
     }),
-    [person, tenant, theme, navOpen, authority, authState, memberships.data, signInAs, signOut, can, me.data],
+    [person, tenant, theme, navOpen, authority, authState, memberships.data, signInAs, signInWithoutServer, signOut, can, me.data],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>
