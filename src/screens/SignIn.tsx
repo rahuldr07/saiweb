@@ -192,10 +192,12 @@ export default function SignIn() {
 
       <Assumption title="Demonstration sign-in">{DEMO_IDENTITY_NOTE}</Assumption>
 
-      {credentials}
+      {/* Only when signed out. Offering a sign-in form to somebody already signed
+          in asks them to do the one thing they have just done. */}
+      {authState === 'anonymous' ? credentials : null}
 
       <h2 className="sec">
-        {authState === 'anonymous' ? 'Or sign in as a seeded person' : 'Or take the place of a seeded person'}
+        {authState === 'anonymous' ? 'Or sign in as a seeded person' : 'Take the place of a seeded person'}
       </h2>
 
       {byRole.map(({ role, people }) => (
