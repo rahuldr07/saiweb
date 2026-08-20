@@ -236,6 +236,11 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
         const trace: TraceStep[] = []
 
         for (const stage of ASSIGN_STAGES) {
+          /* Where this stage's reasoning starts. `trace` accumulates across the
+             whole order so `o.trace` can still be read as one narrative, but a
+             snapshot taken for a single stage must begin here — otherwise the
+             Search QC card explains itself using the steps that chose Search. */
+          const from = trace.length
           let pool: Person[] = STAFF.filter((s) => s.dep.includes(stage))
           trace.push({ r: 'r1', left: pool.length, note: `${pool.length} in ${stage}` })
           bump(fired, 'r1')
@@ -248,7 +253,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
               today: o.today,
               why: 'no-dept',
               t: `Nobody belongs to ${stage}`,
-              trace: trace.slice(),
+              trace: trace.slice(from),
             })
             continue
           }
@@ -271,7 +276,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
               today: o.today,
               why: 'no-dept',
               t: `A routing rule left nobody eligible`,
-              trace: trace.slice(),
+              trace: trace.slice(from),
             })
             continue
           }
@@ -303,7 +308,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
                 why: 'coverage',
                 t: `Nobody in ${stage} covers ${o.co}, ${o.st}`,
                 near: stateOnly.map((x) => x.id),
-                trace: trace.slice(),
+                trace: trace.slice(from),
               })
               continue
             }
@@ -333,7 +338,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
                 why: 'coverage',
                 t: `Nobody in ${stage} who covers ${o.st} works ${o.pr}`,
                 near: placeOK.map((x) => x.id),
-                trace: trace.slice(),
+                trace: trace.slice(from),
               })
               continue
             }
@@ -356,7 +361,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
               today: o.today,
               why: 'unavailable',
               t: `Everyone eligible for ${stage} is on leave or off shift`,
-              trace: trace.slice(),
+              trace: trace.slice(from),
             })
             continue
           }
@@ -378,7 +383,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
               today: o.today,
               why: 'capacity',
               t: `Everyone eligible for ${stage} is at their daily target`,
-              trace: trace.slice(),
+              trace: trace.slice(from),
             })
             continue
           }
@@ -407,7 +412,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
               today: o.today,
               why: 'self',
               t: `The only person with room did the ${paired}`,
-              trace: trace.slice(),
+              trace: trace.slice(from),
             })
             continue
           }
@@ -418,7 +423,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
           trace.push({ r: 'r8', left: 1, note: `emptiest — ${p.n} at ${load[p.id]}/${p.cap}` })
           load[p.id]++
           onOrder[stage] = p.id
-          assigns.push({ o, stage, who: p.id, hr: slot.hr, dk: day.dk, today: o.today, trace: trace.slice() })
+          assigns.push({ o, stage, who: p.id, hr: slot.hr, dk: day.dk, today: o.today, trace: trace.slice(from) })
         }
 
         o.plan = onOrder
