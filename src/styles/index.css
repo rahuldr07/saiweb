@@ -92,6 +92,23 @@
   }
 }
 
+/*
+ * A KPI tile may not widen its own grid track.
+ *
+ * `.kpis` asks for `minmax(168px, 1fr)`, but a grid item's automatic minimum is
+ * its content, so one long unbreakable figure — $126,194.60 in 26px mono on the
+ * invoicing screen — pushes the track past 168px and the row past the viewport.
+ * Every other screen's figures are short enough that it never showed. Letting the
+ * tile shrink, and the figure wrap rather than dictate, keeps the row inside the
+ * phone without touching the sizes anywhere it already fitted.
+ */
+.kpi {
+  min-width: 0;
+}
+.kpi .v {
+  overflow-wrap: anywhere;
+}
+
 /* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */
 @theme {
   --color-nav: #131a2b;

@@ -1,13 +1,13 @@
+import { useNavigate } from '@tanstack/react-router'
 import { Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
 import { useSession } from '@/state/session'
-import { useUi } from '@/state/ui'
 import { PAYMONTHS, PAYRUNS } from '@/data/hrms'
 import { inr, leaveBalance, payslipOf, structureOf, ytd } from '@/lib/payroll'
 
 /** A person's own payslip history. No comparison to anyone else appears here. */
 export default function MyPayslips() {
   const { me } = useSession()
-  const { openModal } = useUi()
+  const navigate = useNavigate()
 
   if (!me.ctc) {
     return (
@@ -27,42 +27,10 @@ export default function MyPayslips() {
   const year = ytd(me, latest)
   const bal = leaveBalance(me.id)
 
-  const open = (mn: string) => {
-    const s = payslipOf(me, mn)
-    openModal({
-      title: `${mn} — ${me.n}`,
-      body: (
-        <Rows>
-          {s.earn.map(([k, v]) => (
-            <div className="rw" key={k}>
-              <span className="gr">+</span>
-              <span>
-                <b>{k}</b>
-              </span>
-              <span className="mono">{inr(v)}</span>
-            </div>
-          ))}
-          {s.ded.map(([k, v]) => (
-            <div className="rw" key={k}>
-              <span className="bad">−</span>
-              <span>
-                <b>{k}</b>
-              </span>
-              <span className="mono bad">{inr(v)}</span>
-            </div>
-          ))}
-          <div className="rw">
-            <span className="ok">=</span>
-            <span>
-              <b>Net pay</b>
-            </span>
-            <span className="mono ok">{inr(s.net)}</span>
-          </div>
-        </Rows>
-      ),
-    })
-  }
-
+  /* Opens the payslip itself. A modal that restates half of one is a second
+     version of the document to keep right. */
+  const open = (mn: string) =>
+    navigate({ to: '/payslips/$personId', params: { personId: me.id }, search: { m: mn } })
   return (
     <>
       <PageHead title="My payslips" sub={`${me.n} · ${me.dep.join(', ') || 'No department'}`} />

@@ -24,7 +24,7 @@ import {
 import { STAFF } from '@/data/people'
 import { pad } from './format'
 import { now } from '@/lib/clock'
-import type { Person } from '@/data/types'
+import type { Loan, Person, RunState } from '@/data/types'
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -132,10 +132,30 @@ export const loanFor = (id: string) => LOANS.find((l) => l.who === id && l.paid 
 
 /* ── one payslip ────────────────────────────────────────────────────────── */
 
+/** The attendance a payslip was computed against, as the slip itself states it. */
+export interface PayslipAttendance {
+  days: number
+  working: number
+  paidLeave: number
+  lop: number
+}
+
 export interface Payslip {
   p: Person
   mn: string
   st: Structure
+  /** The month's attendance, so the slip can show what it divided by. */
+  a: PayslipAttendance
+  /** Gross for one working day, which is what an unpaid day costs. */
+  perDay: number
+  /** Advance instalment recovered this month, and the loan behind it. */
+  emi: number
+  loan: Loan | null
+  /** Arrears paid this month, taxed in the month they are paid. */
+  arr: number
+  /** Unpaid days from attendance alone, which is what the register shows. */
+  lopDays: number
+  /** Those, plus any part of the month before they joined. */
   unpaid: number
   lopAmt: number
   earn: [string, number][]
@@ -211,6 +231,12 @@ export function payslipOf(p: Person, mn: string): Payslip {
     p,
     mn,
     st,
+    a: { days: a.days, working: a.working, paidLeave: a.paidLeave, lop: a.lop },
+    perDay,
+    emi,
+    loan: ln ?? null,
+    arr,
+    lopDays: a.lop,
     unpaid,
     lopAmt,
     earn,
@@ -317,4 +343,105 @@ export function settlement(p: Person, lastDay?: Date) {
   if (advance) lines.push(['Advance outstanding, recovered', advance])
 
   return { lines, yrs, total: lines.reduce((a2, l) => a2 + l[1], 0), st, bal }
+}
+
+/* ── the month as a whole ───────────────────────────────────────────────── */
+
+export interface PayTotals {
+  list: Payslip[]
+  gross: number
+  ded: number
+  net: number
+  /** Employee provident fund. */
+  pf: number
+  /** Employer's own contribution, which is a cost rather than a deduction. */
+  erpf: number
+  esi: number
+  pt: number
+  tds: number
+  grat: number
+  /** Anyone with unpaid days — the thing to check before approving. */
+  lop: Payslip[]
+}
+
+/**
+ * Every payslip for a month, and what they add up to.
+ *
+ * Built by running the same `payslipOf` the individual payslip screen runs, so
+ * the register and a person's own slip cannot disagree. There is no stored
+ * total anywhere — change a salary or a day of attendance and this moves.
+ */
+export function payTotals(mn: string): PayTotals {
+  const list = paidStaff().map((p) => payslipOf(p, mn))
+  const sum = (f: (x: Payslip) => number) => list.reduce((a, x) => a + f(x), 0)
+  return {
+    list,
+    gross: sum((x) => x.gross),
+    ded: sum((x) => x.totalDed),
+    net: sum((x) => x.net),
+    pf: sum((x) => x.epf),
+    erpf: sum((x) => x.st.epfEr),
+    esi: sum((x) => x.esi),
+    pt: sum((x) => x.pt),
+    tds: sum((x) => x.tds),
+    grat: sum((x) => x.st.grat),
+    lop: list.filter((x) => x.unpaid > 0),
+  }
+}
+
+/**
+ * Which step the run is waiting on.
+ *
+ * The gaps are deliberate: locking attendance completes both Attendance and
+ * Compute, because computing is what locking is for. A strip that advanced one
+ * box per state would claim Compute had not happened when it had.
+ */
+export const stepIndex = (state: string): number =>
+  ({ draft: 0, locked: 2, approved: 4, paid: 5 })[state] ?? 0
+
+/** What the run can be moved to next, and what that button says. */
+export const nextRunAction = (state: string): [label: string, to: RunState] | null =>
+  state === 'draft'
+    ? ['Lock attendance', 'locked']
+    : state === 'locked'
+      ? ['Approve payroll', 'approved']
+      : state === 'approved'
+        ? ['Publish payslips', 'paid']
+        : null
+
+/**
+ * An amount in words, the way an Indian payslip states it.
+ *
+ * Crore, lakh, thousand — not the western grouping — because that is what the
+ * line under the net figure is for: somebody reading the slip aloud, or checking
+ * the figure has not lost a digit.
+ */
+export function words(n: number): string {
+  const ones = [
+    '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+    'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen',
+    'Eighteen', 'Nineteen',
+  ]
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+  const two = (x: number): string =>
+    x < 20 ? ones[x] : tens[Math.floor(x / 10)] + (x % 10 ? ` ${ones[x % 10]}` : '')
+  const three = (x: number): string =>
+    x > 99 ? `${ones[Math.floor(x / 100)]} Hundred${x % 100 ? ` ${two(x % 100)}` : ''}` : two(x)
+
+  const v = Math.round(n)
+  if (!v) return 'Zero'
+  const cr = Math.floor(v / 10000000)
+  const lk = Math.floor((v % 10000000) / 100000)
+  const th = Math.floor((v % 100000) / 1000)
+  const rest = v % 1000
+  return (
+    [
+      cr ? `${three(cr)} Crore` : '',
+      lk ? `${three(lk)} Lakh` : '',
+      th ? `${three(th)} Thousand` : '',
+      rest ? three(rest) : '',
+    ]
+      .filter(Boolean)
+      .join(' ') + ' Only'
+  )
 }

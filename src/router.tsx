@@ -66,6 +66,15 @@ const routeTree = rootRoute.addChildren([
   screen('/leave', () => import('./screens/LeaveScreen')),
   screen('/payroll', () => import('./screens/Payroll')),
   screen('/payslips', () => import('./screens/Payslips')),
+  /* One person's payslip for one month. The month rides in the URL so a link to
+     a slip is a link to that slip, not to whichever month is current. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/payslips/$personId',
+    validateSearch: (s: Record<string, unknown>): { m?: string } =>
+      typeof s.m === 'string' ? { m: s.m } : {},
+    component: lazyRouteComponent(() => import('./screens/PayslipDetail')),
+  }),
   screen('/hiring', () => import('./screens/Recruitment')),
   screen('/petty', () => import('./screens/PettyCash')),
 

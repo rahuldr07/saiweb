@@ -7,6 +7,7 @@ import { SessionProvider } from './state/session'
 import { UiProvider } from './state/ui'
 import { LevelsProvider } from './state/levels'
 import { RulesProvider } from './state/rules'
+import { TimeclockProvider } from './state/timeclock'
 import './styles/index.css'
 
 const queryClient = new QueryClient({
@@ -29,7 +30,9 @@ createRoot(root).render(
         <UiProvider>
           <LevelsProvider>
             <RulesProvider>
-              <RouterProvider router={router} />
+              <TimeclockProvider>
+                <RouterProvider router={router} />
+              </TimeclockProvider>
             </RulesProvider>
           </LevelsProvider>
         </UiProvider>
