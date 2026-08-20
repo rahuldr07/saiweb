@@ -2,6 +2,7 @@ import { Btn, Card, Chip, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useNotBuilt } from '@/components/notBuilt'
 import { CONNECTORS } from '@/data/integrations'
+import { csvName, downloadCSV } from '@/lib/csv'
 
 /**
  * Connect what you already run.
@@ -48,6 +49,14 @@ function ConnectorIcon({ children }: { children: string }) {
 function Integrations() {
   const notBuilt = useNotBuilt()
 
+  /* What the screen knows, in the format that does work: which connectors exist,
+     what each is for, whether it is on, and what turning it on would take. */
+  const exportConnectors = () =>
+    downloadCSV(csvName('integrations'), [
+      ['Connector', 'What it does', 'Status', 'What connecting it needs'],
+      ...CONNECTORS.map((c) => [c.n, c.d, c.connected ? 'Connected' : 'Not connected', c.needs]),
+    ])
+
   return (
     <>
       <PageHead title="Integrations" sub="Connect what you already run. Everything is optional." />
@@ -67,7 +76,7 @@ function Integrations() {
               small
               variant={c.connected ? 'ghost' : 'primary'}
               style={{ marginTop: 10 }}
-              onClick={() => notBuilt(`${VERB[c.cta] ?? 'Connecting'} ${c.n}`, c.needs)}
+              onClick={() => notBuilt(`${VERB[c.cta] ?? 'Connecting'} ${c.n}`, c.needs, exportConnectors)}
             >
               {c.cta}
             </Btn>
