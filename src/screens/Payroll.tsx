@@ -91,6 +91,10 @@ function Payroll() {
 
   const openPerson = (id: string) => navigate({ to: '/staff/$personId', params: { personId: id } })
 
+  /* The month travels with it, so a slip opened from June's run is June's slip. */
+  const openPayslip = (id: string) =>
+    navigate({ to: '/payslips/$personId', params: { personId: id }, search: { m: month } })
+
   const setState = (to: RunState) => {
     run.state = to
     if (to === 'paid') run.published = true
@@ -438,7 +442,7 @@ function Payroll() {
                       title={`${x.p.n} — ${x.lopDays} unpaid day${x.lopDays === 1 ? '' : 's'}`}
                       detail={`${inr(x.lopAmt)} withheld from a gross of ${inr(x.st.gross)}. Confirm the days are right before this becomes a payslip.`}
                       action="Payslip"
-                      onAction={() => navigate({ to: '/payslips' })}
+                      onAction={() => openPayslip(x.p.id)}
                     />
                   ))}
                 </div>
@@ -479,9 +483,9 @@ function Payroll() {
                       className="trow"
                       role="button"
                       tabIndex={0}
-                      onClick={() => openPerson(x.p.id)}
+                      onClick={() => openPayslip(x.p.id)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') openPerson(x.p.id)
+                        if (e.key === 'Enter') openPayslip(x.p.id)
                       }}
                       style={{ gridTemplateColumns: REGISTER_COLS }}
                     >

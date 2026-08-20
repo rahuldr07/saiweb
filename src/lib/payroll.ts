@@ -24,7 +24,7 @@ import {
 import { STAFF } from '@/data/people'
 import { pad } from './format'
 import { now } from '@/lib/clock'
-import type { Person, RunState } from '@/data/types'
+import type { Loan, Person, RunState } from '@/data/types'
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -132,10 +132,27 @@ export const loanFor = (id: string) => LOANS.find((l) => l.who === id && l.paid 
 
 /* ── one payslip ────────────────────────────────────────────────────────── */
 
+/** The attendance a payslip was computed against, as the slip itself states it. */
+export interface PayslipAttendance {
+  days: number
+  working: number
+  paidLeave: number
+  lop: number
+}
+
 export interface Payslip {
   p: Person
   mn: string
   st: Structure
+  /** The month's attendance, so the slip can show what it divided by. */
+  a: PayslipAttendance
+  /** Gross for one working day, which is what an unpaid day costs. */
+  perDay: number
+  /** Advance instalment recovered this month, and the loan behind it. */
+  emi: number
+  loan: Loan | null
+  /** Arrears paid this month, taxed in the month they are paid. */
+  arr: number
   /** Unpaid days from attendance alone, which is what the register shows. */
   lopDays: number
   /** Those, plus any part of the month before they joined. */
@@ -214,6 +231,11 @@ export function payslipOf(p: Person, mn: string): Payslip {
     p,
     mn,
     st,
+    a: { days: a.days, working: a.working, paidLeave: a.paidLeave, lop: a.lop },
+    perDay,
+    emi,
+    loan: ln ?? null,
+    arr,
     lopDays: a.lop,
     unpaid,
     lopAmt,
@@ -386,3 +408,40 @@ export const nextRunAction = (state: string): [label: string, to: RunState] | nu
       : state === 'approved'
         ? ['Publish payslips', 'paid']
         : null
+
+/**
+ * An amount in words, the way an Indian payslip states it.
+ *
+ * Crore, lakh, thousand — not the western grouping — because that is what the
+ * line under the net figure is for: somebody reading the slip aloud, or checking
+ * the figure has not lost a digit.
+ */
+export function words(n: number): string {
+  const ones = [
+    '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+    'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen',
+    'Eighteen', 'Nineteen',
+  ]
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+  const two = (x: number): string =>
+    x < 20 ? ones[x] : tens[Math.floor(x / 10)] + (x % 10 ? ` ${ones[x % 10]}` : '')
+  const three = (x: number): string =>
+    x > 99 ? `${ones[Math.floor(x / 100)]} Hundred${x % 100 ? ` ${two(x % 100)}` : ''}` : two(x)
+
+  const v = Math.round(n)
+  if (!v) return 'Zero'
+  const cr = Math.floor(v / 10000000)
+  const lk = Math.floor((v % 10000000) / 100000)
+  const th = Math.floor((v % 100000) / 1000)
+  const rest = v % 1000
+  return (
+    [
+      cr ? `${three(cr)} Crore` : '',
+      lk ? `${three(lk)} Lakh` : '',
+      th ? `${three(th)} Thousand` : '',
+      rest ? three(rest) : '',
+    ]
+      .filter(Boolean)
+      .join(' ') + ' Only'
+  )
+}

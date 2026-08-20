@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Btn, PageHead, Rows } from '@/components/ui'
+import { useNavigate } from '@tanstack/react-router'
+import { Btn, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
@@ -9,7 +10,8 @@ import { csvName, downloadCSV } from '@/lib/csv'
 
 /** Every payslip across people and months — the register, not one person's history. */
 function Payslips() {
-  const { toast, openModal } = useUi()
+  const navigate = useNavigate()
+  const { toast } = useUi()
   const [month, setMonth] = useState('all')
   const people = paidStaff()
 
@@ -17,39 +19,10 @@ function Payslips() {
     people.map((p) => ({ mn, p, slip: payslipOf(p, mn), run: PAYRUNS[mn] })),
   ).filter((r) => month === 'all' || r.mn === month)
 
+  /* Rows open the payslip itself rather than a summary of it. A modal that
+     restates half a payslip is a second version of the document to keep right. */
   const open = (r: (typeof all)[number]) =>
-    openModal({
-      title: `${r.p.n} — ${r.mn}`,
-      body: (
-        <Rows>
-          {r.slip.earn.map(([k, v]) => (
-            <div className="rw" key={k}>
-              <span className="gr">+</span>
-              <span>
-                <b>{k}</b>
-              </span>
-              <span className="mono">{inr(v)}</span>
-            </div>
-          ))}
-          {r.slip.ded.map(([k, v]) => (
-            <div className="rw" key={k}>
-              <span className="bad">−</span>
-              <span>
-                <b>{k}</b>
-              </span>
-              <span className="mono bad">{inr(v)}</span>
-            </div>
-          ))}
-          <div className="rw">
-            <span className="ok">=</span>
-            <span>
-              <b>Net pay</b>
-            </span>
-            <span className="mono ok">{inr(r.slip.net)}</span>
-          </div>
-        </Rows>
-      ),
-    })
+    navigate({ to: '/payslips/$personId', params: { personId: r.p.id }, search: { m: r.mn } })
 
   const rows: DataRow[] = all.map((r) => ({
     id: `${r.mn}|${r.p.id}`,
