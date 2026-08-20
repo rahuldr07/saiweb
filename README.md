@@ -48,7 +48,7 @@ Every screen deep-links, so you can go straight to one:
 | Payroll | http://localhost:5173/payroll |
 | County coverage | http://localhost:5173/counties |
 | Link monitor | http://localhost:5173/linkcheck |
-| Performance | http://localhost:5173/performance |
+| Reports | http://localhost:5173/reports |
 | Company | http://localhost:5173/company |
 | Switch user | http://localhost:5173/signin |
 
@@ -162,7 +162,7 @@ from a register row — order, person, client, lead, and the new-lead form.
 | Business | Leads (+ lead detail · new lead) · Invoicing |
 | HRMS | Attendance · Leave · Payroll · Payslips · Recruitment · Petty cash |
 | Reference | County coverage · Link monitor |
-| Insight | Performance |
+| Insight | Reports |
 | Configure | Integrations · Company · Add a company |
 
 ### Layout

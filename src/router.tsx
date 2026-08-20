@@ -72,7 +72,7 @@ const routeTree = rootRoute.addChildren([
   screen('/linkcheck', () => import('./screens/LinkMonitor')),
 
   /* Insight */
-  screen('/performance', () => import('./screens/Performance')),
+  screen('/reports', () => import('./screens/Reports')),
 
   /* People — reached from the Company roster and from an order's assignment strip. */
   screen('/staff/$personId', () => import('./screens/PersonDetail')),

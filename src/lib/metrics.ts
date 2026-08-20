@@ -35,11 +35,23 @@ export function onTime30(deliveries: Delivery[]): OnTime {
   }
 }
 
+/**
+ * The middle value, averaging the two middles on an even count.
+ *
+ * Used rather than the mean throughout the reports: a handful of orders that
+ * stalled on a doc request drags a mean somewhere no actual order sits, and the
+ * gap between the two is itself the finding — which is why the turnaround tab
+ * shows both.
+ */
+export function median(xs: number[]): number {
+  if (!xs.length) return 0
+  const s = [...xs].sort((a, b) => a - b)
+  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2
+}
+
 /** Median end-to-end turnaround, in hours. */
 export function medianTurnaround(deliveries: Delivery[]): number {
-  if (!deliveries.length) return 0
-  const xs = deliveries.map((d) => d.hrs).sort((a, b) => a - b)
-  return xs[Math.floor(xs.length / 2)]
+  return median(deliveries.map((d) => d.hrs))
 }
 
 export interface Grouped {

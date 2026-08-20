@@ -45,8 +45,8 @@ function Dashboard() {
         sub={`Everything live in ${tenant.name} right now.`}
         actions={
           <>
-            <Btn variant="ghost" onClick={() => navigate({ to: '/performance' })}>
-              Performance
+            <Btn variant="ghost" onClick={() => navigate({ to: '/reports' })}>
+              Reports
             </Btn>
             <Btn onClick={() => navigate({ to: '/intake' })}>＋ New order</Btn>
           </>
@@ -98,7 +98,7 @@ function Dashboard() {
               target {ONTIMETARGET}%
             </span>
           }
-          onClick={() => navigate({ to: '/performance' })}
+          onClick={() => navigate({ to: '/reports' })}
         />
       </Kpis>
 
@@ -197,20 +197,20 @@ function Dashboard() {
           title="Received"
           value={RUN.today.length}
           detail={`${fmtDate(now())} · every client`}
-          onClick={() => navigate({ to: '/performance' })}
+          onClick={() => navigate({ to: '/reports' })}
         />
         <Kpi
           title="Delivered"
           value={<span className="ok">{delivered}</span>}
           detail="through every department"
-          onClick={() => navigate({ to: '/performance' })}
+          onClick={() => navigate({ to: '/reports' })}
         />
         <Kpi
           title="Still moving"
           value={<span className="warn">{moving}</span>}
           tone="warn"
           detail="somewhere in the pipeline"
-          onClick={() => navigate({ to: '/performance' })}
+          onClick={() => navigate({ to: '/reports' })}
         />
         <Kpi
           title="Could not be placed"
