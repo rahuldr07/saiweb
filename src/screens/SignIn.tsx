@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Avatar, Assumption, Banner, Btn, Card, CardHead, Chip, PageHead } from '@/components/ui'
-import { OPEN_SIGN_IN, useSession } from '@/state/session'
+import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { STAFF, AVAIL } from '@/data/people'
 import { ROLELIST } from '@/data/org'
@@ -21,7 +21,7 @@ import { ApiError, startSession } from '@/lib/api'
  * and an impersonation anywhere else, so it is never in a default build.
  */
 export default function SignIn() {
-  const { me, authState, signInAs, signInWithoutServer, signOut, can } = useSession()
+  const { me, authState, signInAs, signOut, can } = useSession()
   const { toast } = useUi()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -45,23 +45,6 @@ export default function SignIn() {
       await queryClient.resetQueries()
       navigate({ to: next ?? '/dash', replace: true })
     } catch (err) {
-      /*
-       * A wrong password and an absent service are different failures and must
-       * not be treated alike. If the API answered *about these credentials*, that
-       * is the answer — say so. Anything else (no service, a proxy with nothing
-       * behind it, a crash) means nothing judged the password, so the open
-       * sign-in takes over.
-       *
-       * Listed as "rejected" rather than "unreachable" on purpose: the set of
-       * ways a service can fail to answer is open-ended, and every one of them
-       * that got mistaken for a bad password would lock the door with no key.
-       */
-      const rejected = err instanceof ApiError && [400, 401, 403, 422].includes(err.status)
-      if (OPEN_SIGN_IN && !rejected) {
-        signInWithoutServer()
-        navigate({ to: next ?? '/dash', replace: true })
-        return
-      }
       setError(err instanceof ApiError ? err.message : 'Could not reach the sign-in service.')
     } finally {
       setBusy(false)
@@ -103,12 +86,6 @@ export default function SignIn() {
         <Btn type="submit" disabled={busy}>
           {busy ? 'Signing in…' : 'Sign in'}
         </Btn>
-        {OPEN_SIGN_IN ? (
-          <p className="gr" style={{ fontSize: '11.5px', margin: 0 }}>
-            No database is connected yet, so any email and password will get you in. Every record inside is
-            fictional. This stops the moment the database is.
-          </p>
-        ) : null}
       </form>
     </Card>
   )
@@ -154,9 +131,6 @@ export default function SignIn() {
   const pick = (id: string) => {
     const person = STAFF.find((s) => s.id === id)
     signInAs(id)
-    /* Choosing a person is also a way through the gate, or picking one while
-       signed out would set who you are and leave you on this screen. */
-    signInWithoutServer()
     toast(`Signed in as ${person?.n} — ${roleName(person?.r ?? 'staff')}`)
     navigate({ to: person && ROLELIST.find((r) => r.id === person.r)?.p.includes('all') ? '/dash' : '/mywork' })
   }
