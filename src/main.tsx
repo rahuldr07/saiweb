@@ -6,6 +6,7 @@ import { router } from './router'
 import { SessionProvider } from './state/session'
 import { UiProvider } from './state/ui'
 import { LevelsProvider } from './state/levels'
+import { RulesProvider } from './state/rules'
 import './styles/index.css'
 
 const queryClient = new QueryClient({
@@ -27,7 +28,9 @@ createRoot(root).render(
       <SessionProvider>
         <UiProvider>
           <LevelsProvider>
-            <RouterProvider router={router} />
+            <RulesProvider>
+              <RouterProvider router={router} />
+            </RulesProvider>
           </LevelsProvider>
         </UiProvider>
       </SessionProvider>
