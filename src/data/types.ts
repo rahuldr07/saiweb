@@ -152,6 +152,23 @@ export interface County {
   links: Record<string, CountyLink>
 }
 
+/**
+ * One thing this workspace can be connected to. All optional — an integration
+ * that is off means that step is done by hand, not that anything is broken.
+ */
+export interface Connector {
+  k: string
+  /** Typographic glyph, as everywhere else in the shell. */
+  icon: string
+  n: string
+  d: string
+  /** The label on the button — Connect, Configure, or Set up. */
+  cta: string
+  connected?: boolean
+  /** What connecting it would actually require, said out loud rather than faked. */
+  needs: string
+}
+
 export interface LinkType {
   k: string
   n: string
