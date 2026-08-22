@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Avatar, Btn, Card, Chip, Empty, Kpi, Kpis, Label, SectionHead } from '@/components/ui'
+import { Avatar, Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
+import { FocusHead, FocusKpis } from '@/components/FocusKpis'
+import { QcDefects, QcMarks, QcOverBudget } from './QcFocus'
 import { ASSIGN_STAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { median } from '@/lib/metrics'
@@ -36,6 +39,8 @@ export function QcStaffDetail({
   tw: StageWorkResult
   onBack: () => void
 }) {
+  /* Which of the four figures is being looked into. */
+  const [focus, setFocus] = useState('all')
   const navigate = useNavigate()
   const mine = rows.filter((x) => x.onName === name).sort((a, b) => +b.d - +a.d)
   const me = people.find((p) => p.n === name)
@@ -180,28 +185,67 @@ export function QcStaffDetail({
         </div>
       </Card>
 
-      <Kpis style={{ marginTop: 16 }}>
-        <Kpi title="Quality" value={me.o.toFixed(2)} detail={`${mine.length} ratings`} />
-        <Kpi
-          title="Defects"
-          value={<span className={defects.length ? 'bad' : 'ok'}>{defects.length}</span>}
-          tone={defects.length ? 'alert' : undefined}
-          detail="a 3 or below"
-        />
-        <Kpi
-          title="Inside budget"
-          value={t ? <span className={t.onBudget >= 70 ? 'ok' : 'warn'}>{t.onBudget}%</span> : '—'}
-          tone={t && t.onBudget < 70 ? 'warn' : undefined}
-          detail={t ? `${t.c - t.over} of ${t.c} stages` : 'no stage work in range'}
-        />
-        <Kpi
-          title="Late deliveries they overran on"
-          value={t ? <span className={t.causedLate ? 'bad' : 'ok'}>{t.causedLate}</span> : '—'}
-          tone={t && t.causedLate ? 'alert' : undefined}
-          detail={t ? 'their stage went over on a late order' : ''}
-        />
-      </Kpis>
+      {/* Each tile opens the list it counts — a number you cannot get behind is
+          a number you have to take on trust. */}
+      <FocusKpis
+        focus={focus}
+        onFocus={setFocus}
+        cards={[
+          {
+            key: 'all',
+            title: 'Quality',
+            value: me.o.toFixed(2),
+            detail: `${mine.length} ratings`,
+            count: mine.length,
+          },
+          {
+            key: 'defects',
+            title: 'Defects',
+            value: <span className={defects.length ? 'bad' : 'ok'}>{defects.length}</span>,
+            tone: defects.length ? 'alert' : undefined,
+            detail: 'a 3 or below',
+            count: defects.length,
+          },
+          {
+            key: 'over',
+            title: 'Inside budget',
+            value: t ? <span className={t.onBudget >= 70 ? 'ok' : 'warn'}>{t.onBudget}%</span> : '—',
+            tone: t && t.onBudget < 70 ? 'warn' : undefined,
+            detail: t ? `${t.c - t.over} of ${t.c} stages` : 'no stage work in range',
+            count: t ? t.over : 0,
+          },
+          {
+            key: 'late',
+            title: 'Late deliveries they overran on',
+            value: t ? <span className={t.causedLate ? 'bad' : 'ok'}>{t.causedLate}</span> : '—',
+            tone: t && t.causedLate ? 'alert' : undefined,
+            detail: t ? 'their stage went over on a late order' : '',
+            count: t ? t.causedLate : 0,
+          },
+        ]}
+      />
 
+      {focus !== 'all' ? (
+        <>
+          <FocusHead
+            title={
+              focus === 'defects'
+                ? `Showing the ${defects.length} rating${defects.length === 1 ? '' : 's'} that logged a defect`
+                : focus === 'over'
+                  ? `Showing the ${t?.over ?? 0} stage${t?.over === 1 ? '' : 's'} that went over budget`
+                  : `Showing the ${t?.causedLate ?? 0} late deliver${t?.causedLate === 1 ? 'y' : 'ies'} their stage overran on`
+            }
+            onBack={() => setFocus('all')}
+          >
+            Everything above is unchanged — only the list below is filtered.
+          </FocusHead>
+
+          {focus === 'defects' ? <QcDefects defects={defects} /> : null}
+          {focus === 'over' && t ? <QcOverBudget work={t} lateOnly={false} /> : null}
+          {focus === 'late' && t ? <QcOverBudget work={t} lateOnly /> : null}
+        </>
+      ) : (
+        <>
       <div className="two" style={{ marginTop: 16 }}>
         <Card padded>
           <Label>Where the marks come off</Label>
@@ -244,39 +288,42 @@ export function QcStaffDetail({
           ) : null}
         </Card>
 
-        <Card padded>
-          <Label>Who did the rating</Label>
-          {raterRows.map((x) => (
-            <div
-              key={x.n}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '150px 1fr 110px',
-                gap: 12,
-                alignItems: 'center',
-                padding: '6px 0',
-                fontSize: '12.5px',
-              }}
-            >
-              <span>
-                <b>{x.n}</b>
-              </span>
-              <span className="bar">
-                <i style={{ width: `${Math.round((x.c / mine.length) * 100)}%`, background: 'var(--brand2)' }} />
-              </span>
-              <span className="mono" style={{ textAlign: 'right' }}>
-                {x.c} · avg {x.avg.toFixed(2)}
-              </span>
-            </div>
-          ))}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-            {raterRows.length > 1 &&
-            Math.max(...raterRows.map((x) => x.avg)) - Math.min(...raterRows.map((x) => x.avg)) > 0.2
-              ? `Worth noticing: their raters do not agree with each other — ${raterRows[0].n} averages ${raterRows[0].avg.toFixed(2)} while another averages ${Math.min(...raterRows.map((x) => x.avg)).toFixed(2)}. On a flat scale, who checks the work can matter more than who did it.`
-              : 'Their raters are broadly consistent with one another, so the score is more likely about the work than about who checked it.'}
-          </p>
-        </Card>
+        <QcMarks ratings={mine} />
+
       </div>
+
+      <Card padded>
+        <Label>Who did the rating</Label>
+        {raterRows.map((x) => (
+          <div
+            key={x.n}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '190px 1fr 110px',
+              gap: 12,
+              alignItems: 'center',
+              padding: '6px 0',
+              fontSize: '12.5px',
+            }}
+          >
+            <span>
+              <b>{x.n}</b>
+            </span>
+            <span className="bar">
+              <i style={{ width: `${Math.round((x.c / mine.length) * 100)}%`, background: 'var(--brand2)' }} />
+            </span>
+            <span className="mono" style={{ textAlign: 'right' }}>
+              {x.c} · avg {x.avg.toFixed(2)}
+            </span>
+          </div>
+        ))}
+        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          {raterRows.length > 1 &&
+          Math.max(...raterRows.map((x) => x.avg)) - Math.min(...raterRows.map((x) => x.avg)) > 0.2
+            ? `Worth noticing: their raters do not agree with each other — ${raterRows[0].n} averages ${raterRows[0].avg.toFixed(2)} while another averages ${Math.min(...raterRows.map((x) => x.avg)).toFixed(2)}. On a flat scale, who checks the work can matter more than who did it.`
+            : 'Their raters are broadly consistent with one another, so the score is more likely about the work than about who checked it.'}
+        </p>
+      </Card>
 
       {topReasons.length ? (
         <>
@@ -434,6 +481,8 @@ export function QcStaffDetail({
           </FlexRow>
         ))}
       </FlexTable>
+        </>
+      )}
     </>
   )
 }

@@ -121,8 +121,75 @@ export function PageHead({
   )
 }
 
-export function SectionHead({ children }: { children: ReactNode }) {
-  return <h2 className="sec">{children}</h2>
+export function SectionHead({ children, id }: { children: ReactNode; id?: string }) {
+  return (
+    <h2 className="sec" id={id}>
+      {children}
+    </h2>
+  )
+}
+
+/**
+ * Take someone to a section already on the page rather than duplicating it
+ * elsewhere. The brief highlight is what says "this, here" — without it the page
+ * simply jumps and the reader has to work out what moved.
+ */
+export function focusSection(id: string) {
+  const el = document.getElementById(id)
+  if (!el) return
+  el.scrollIntoView({ block: 'start', behavior: 'smooth' })
+  el.classList.add('lit')
+  setTimeout(() => el.classList.remove('lit'), 1500)
+}
+
+/**
+ * The header a tab body opens with: a sentence saying what you are looking at,
+ * and the controls that act on it, on one borderless line.
+ *
+ * This is the design's `secHead`. It is not a heading — the page already has
+ * one — which is why the text is a grey sub-line rather than an `<h2>`, and why
+ * the actions have somewhere to sit without a card wrapping them.
+ */
+export function SecHead({ sub, actions }: { sub: ReactNode; actions?: ReactNode }) {
+  return (
+    <div className="ch" style={{ border: 'none', padding: '2px 0 15px', alignItems: 'flex-start' }}>
+      <div className="gr" style={{ fontSize: '12.5px', maxWidth: '70ch' }}>
+        {sub}
+      </div>
+      {actions ? <div className="r">{actions}</div> : null}
+    </div>
+  )
+}
+
+/**
+ * A page head that is not the page's head.
+ *
+ * The workload views are whole screens in their own right and also live inside
+ * a Reports tab. Rendered there, their title has to step down to a section
+ * heading — one page, one `<h1>` — which is what the design's `wHead` does.
+ */
+export function EmbedHead({
+  title,
+  sub,
+  actions,
+}: {
+  title: string
+  sub?: ReactNode
+  actions?: ReactNode
+}) {
+  return (
+    <div className="ch" style={{ border: 'none', padding: '2px 0 14px' }}>
+      <div>
+        <h2 style={{ margin: 0, fontSize: '17px' }}>{title}</h2>
+        {sub ? (
+          <div className="gr" style={{ fontSize: '12.5px', marginTop: 3 }}>
+            {sub}
+          </div>
+        ) : null}
+      </div>
+      {actions ? <div className="r">{actions}</div> : null}
+    </div>
+  )
 }
 
 /* ── cards ──────────────────────────────────────────────────────────────── */
@@ -181,18 +248,27 @@ export function Kpis({ children, style }: { children: ReactNode; style?: CSSProp
 export function Kpi({
   title,
   value,
+  valueTone,
   detail,
+  detailTone,
   tone,
   icon,
+  hint,
   onClick,
   selected,
   flat,
 }: {
   title: string
   value: ReactNode
+  /** Colours the figure itself — the design's `vc`. */
+  valueTone?: 'ok' | 'warn' | 'bad'
   detail?: ReactNode
+  /** Colours the detail line, replacing its default grey — the design's `dc`. */
+  detailTone?: 'ok' | 'warn' | 'bad'
   tone?: 'alert' | 'warn'
   icon?: string
+  /** Tooltip for a clickable tile, saying what opening it will do. */
+  hint?: string
   onClick?: () => void
   selected?: boolean
   /** Drop the card treatment — the design's `stat` variant, for a bare run of figures. */
@@ -216,6 +292,10 @@ export function Kpi({
     ? {
         role: 'button',
         tabIndex: 0,
+        title: hint,
+        /* A tile that focuses the report is a toggle, and says so. Tiles that
+           merely navigate leave it unset rather than claiming a state. */
+        ...(selected === undefined ? {} : { 'aria-pressed': selected }),
         onClick,
         onKeyDown: (e: React.KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -232,8 +312,9 @@ export function Kpi({
         {title}
         {icon ? <span className="i">{icon}</span> : null}
       </div>
-      <div className="v">{value}</div>
-      {detail ? <div className="d">{detail}</div> : null}
+      <div className={`v${valueTone ? ' ' + valueTone : ''}`}>{value}</div>
+      {/* The detail line is grey unless the tile colours it. */}
+      {detail ? <div className={`d ${detailTone ?? 'gr'}`}>{detail}</div> : null}
     </div>
   )
 }
@@ -262,7 +343,8 @@ export function Avatar({
   name?: string | null
   self?: boolean
   title?: string
-  onClick?: () => void
+  /** Takes the event so a strip inside a clickable row can stop the bubble. */
+  onClick?: (e: React.MouseEvent) => void
   style?: CSSProperties
 }) {
   const cls = `ava${name ? '' : ' none'}${self ? ' self' : ''}`
@@ -333,9 +415,12 @@ export function Banner({
   return (
     <div className={`bnr ${kind}`} style={style}>
       {icon ? <span className="bi">{icon}</span> : null}
+      {/* The body sits bare, at the banner's own 13.5px. `.bs` is the design's
+          trailing sub-line — dimmer and smaller — so a caller that wants one
+          writes it, rather than every banner body being demoted to it. */}
       <div>
         {title ? <div className="bt">{title}</div> : null}
-        {children ? <div className="bs">{children}</div> : null}
+        {children}
       </div>
       {actions ? <div className="ba">{actions}</div> : null}
     </div>
@@ -372,6 +457,43 @@ export function Empty({
       <p>{children}</p>
       {action}
     </div>
+  )
+}
+
+/* ── select ─────────────────────────────────────────────────────────────── */
+
+/**
+ * The design's `.inp` select. Every register filter is one of these, so the
+ * accessible name, the controlled value and the `[value, label]` option shape
+ * live here rather than being spelled out at each call site.
+ */
+export function Select({
+  label,
+  value,
+  options,
+  onChange,
+  style,
+}: {
+  label: string
+  value: string
+  options: [string, string][]
+  onChange: (v: string) => void
+  style?: CSSProperties
+}) {
+  return (
+    <select
+      className="inp"
+      aria-label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      style={style}
+    >
+      {options.map(([v, l]) => (
+        <option key={v} value={v}>
+          {l}
+        </option>
+      ))}
+    </select>
   )
 }
 

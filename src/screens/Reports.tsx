@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { Btn, PageHead, Tabs } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { LoadFailed } from '@/components/async'
@@ -12,7 +13,7 @@ import { Turnaround } from './reports/Turnaround'
 import { ByStaff } from './reports/ByStaff'
 import { ByDepartment } from './reports/ByDepartment'
 import { Quality } from './reports/Quality'
-import { board } from '@/lib/engine'
+import { useReportExporter } from './reports/useReportExport'
 
 /** The design's own tab order — what came in, then where it went, then how it went. */
 const TABS = ['Received', 'Assigned', 'Turnaround', 'By staff', 'By department', 'Quality'] as const
@@ -29,19 +30,33 @@ type Tab = (typeof TABS)[number]
  * together, not because the data is.
  */
 function Reports() {
-  const [tab, setTab] = useState<Tab>('Received')
+  /* Orders' "Workload report" arrives here with the filter it was showing. */
+  const { tab: tabParam, sw, dw } = useSearch({ from: '/reports' })
+  const isTab = (t?: string): t is Tab => !!t && (TABS as readonly string[]).includes(t)
+
+  const [tab, setTab] = useState<Tab>(isTab(tabParam) ? tabParam : 'Received')
   /* Set when arriving from a By-staff department tile, so the department tab
      opens on that department rather than on the whole floor. */
-  const [dept, setDept] = useState<string | undefined>()
+  const [dept, setDept] = useState<string | undefined>(dw === 'all' ? undefined : dw)
+  /* Set when arriving from a department's people table, so By staff opens on
+     that person rather than on the whole floor. */
+  const [person, setPerson] = useState<string | undefined>(sw === 'all' ? undefined : sw)
   const { toast } = useUi()
 
   const openDept = (d: string) => {
     setDept(d)
+    setPerson(undefined)
     setTab('By department')
+  }
+
+  const openStaff = (id: string) => {
+    setPerson(id)
+    setTab('By staff')
   }
 
   const pickTab = (t: Tab) => {
     if (t !== 'By department') setDept(undefined)
+    if (t !== 'By staff') setPerson(undefined)
     setTab(t)
   }
 
@@ -50,59 +65,13 @@ function Reports() {
   const history = useDeliveries()
   const qc = useQcLog()
 
+  /* The tab registers what it is showing; the button just downloads it. That
+     way a filtered report and its file cannot disagree. */
+  const exporter = useReportExporter()
   const exportTab = () => {
-    const { run, depts, worked } = board()
-    const data: (string | number)[][] =
-      tab === 'By department'
-        ? [
-            ['Department', 'Available', 'Capacity', 'Carrying', 'Done today', 'Still open', 'Unplaced'],
-            ...depts.map((d) => [d.d, d.avail, d.cap, d.load, d.done, d.pend, d.unplaced]),
-          ]
-        : tab === 'By staff'
-          ? [
-              ['Staff', 'Departments', 'Done', 'Pending', 'Total'],
-              ...worked.map((w) => [w.s.n, w.s.dep.join(' / '), w.done, w.pend, w.tot]),
-            ]
-          : tab === 'Assigned'
-            ? [
-                ['Order', 'Stage', 'Who', 'Client', 'Product', 'Day'],
-                ...run.assigns.map((a) => [a.o.id, a.stage, a.who, a.o.cl, a.o.pr, a.dk]),
-              ]
-            : tab === 'Quality'
-              ? [
-                  ['Rated', 'Order', 'Stage', 'Who did it', 'Rated by', 'Accuracy', 'Completeness', 'Formatting', 'Average', 'Reason'],
-                  ...(qc.data ?? []).map((x) => [
-                    x.dk,
-                    x.order,
-                    x.stage,
-                    x.onName,
-                    x.byName,
-                    x.acc,
-                    x.comp,
-                    x.fmt,
-                    x.avg.toFixed(2),
-                    x.note ?? '',
-                  ]),
-                ]
-              : tab === 'Turnaround'
-                ? [
-                    ['Delivered', 'Order', 'Client', 'Product', 'Promise (h)', 'Took (h)', 'Late'],
-                    ...(history.data ?? []).map((x) => [
-                      x.dk,
-                      x.id,
-                      x.cl,
-                      x.pr,
-                      x.slaH,
-                      Math.round(x.hrs * 100) / 100,
-                      x.late ? 'yes' : 'no',
-                    ]),
-                  ]
-                : [
-                    ['Order', 'Arrived', 'Client', 'Product', 'State', 'County', 'Day'],
-                    ...run.orders.map((o) => [o.id, `${o.hr}:00`, o.cl, o.pr, o.st, o.co, o.dk]),
-                  ]
-
-    const out = downloadCSV(csvName(`report-${tab.toLowerCase().replace(/\s+/g, '-')}`), data)
+    if (!exporter) return
+    const { name, rows } = exporter()
+    const out = downloadCSV(csvName(name), rows)
     toast(`${out.name} — ${out.rows.length - 1} rows`)
   }
 
@@ -130,7 +99,7 @@ function Reports() {
         title="Reports"
         sub="Everything about the day in one place — what came in, who it went to, how fast, and how good."
         actions={
-          <Btn variant="ghost" onClick={exportTab} disabled={loading}>
+          <Btn variant="ghost" onClick={exportTab} disabled={loading || !exporter}>
             Export
           </Btn>
         }
@@ -140,8 +109,12 @@ function Reports() {
 
       {tab === 'Received' ? <Received /> : null}
       {tab === 'Assigned' ? <Assigned onOpenStaff={() => pickTab('By staff')} /> : null}
-      {tab === 'By staff' ? <ByStaff onOpenDept={openDept} /> : null}
-      {tab === 'By department' ? <ByDepartment key={dept ?? 'all'} initial={dept} /> : null}
+      {tab === 'By staff' ? (
+        <ByStaff key={person ?? 'all'} initial={person} onOpenDept={openDept} />
+      ) : null}
+      {tab === 'By department' ? (
+        <ByDepartment key={dept ?? 'all'} initial={dept} onOpenStaff={openStaff} />
+      ) : null}
 
       {tab === 'Turnaround' ? (
         loading ? (

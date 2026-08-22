@@ -65,7 +65,19 @@ const routeTree = rootRoute.addChildren([
   screen('/attend', () => import('./screens/Attendance')),
   screen('/leave', () => import('./screens/LeaveScreen')),
   screen('/payroll', () => import('./screens/Payroll')),
-  screen('/payslips', () => import('./screens/Payslips')),
+  /* The register's view state lives in the URL, so returning from a payslip
+     lands back on the tab, month and person you left — and so a particular view
+     can be sent to somebody. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/payslips',
+    validateSearch: (s: Record<string, unknown>): { tab?: string; m?: string; p?: string } => ({
+      ...(typeof s.tab === 'string' ? { tab: s.tab } : {}),
+      ...(typeof s.m === 'string' ? { m: s.m } : {}),
+      ...(typeof s.p === 'string' ? { p: s.p } : {}),
+    }),
+    component: lazyRouteComponent(() => import('./screens/Payslips')),
+  }),
   /* One person's payslip for one month. The month rides in the URL so a link to
      a slip is a link to that slip, not to whichever month is current. */
   createRoute({
@@ -79,18 +91,47 @@ const routeTree = rootRoute.addChildren([
   screen('/petty', () => import('./screens/PettyCash')),
 
   /* Reference */
-  screen('/counties', () => import('./screens/Counties')),
+  /* The link monitor's tiles hand the coverage screen a filter, so it lives in
+     the URL rather than in the screen — one register, two ways in. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/counties',
+    validateSearch: (s: Record<string, unknown>): { f?: string } =>
+      typeof s.f === 'string' ? { f: s.f } : {},
+    component: lazyRouteComponent(() => import('./screens/Counties')),
+  }),
   screen('/linkcheck', () => import('./screens/LinkMonitor')),
 
   /* Insight */
-  screen('/reports', () => import('./screens/Reports')),
+  /* Orders hands the workload report the staff member or department it is
+     filtered to, so "Workload report" lands on the answer rather than on the
+     whole floor. All three are optional — /reports on its own still opens on
+     Received. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/reports',
+    validateSearch: (s: Record<string, unknown>): { tab?: string; sw?: string; dw?: string } => ({
+      ...(typeof s.tab === 'string' ? { tab: s.tab } : {}),
+      ...(typeof s.sw === 'string' ? { sw: s.sw } : {}),
+      ...(typeof s.dw === 'string' ? { dw: s.dw } : {}),
+    }),
+    component: lazyRouteComponent(() => import('./screens/Reports')),
+  }),
 
   /* People — reached from the Company roster and from an order's assignment strip. */
   screen('/staff/$personId', () => import('./screens/PersonDetail')),
 
   /* Configure */
   screen('/integ', () => import('./screens/Integrations')),
-  screen('/company', () => import('./screens/Company')),
+  /* Reports links straight at Company → Turnaround & SLA, where the stage
+     budgets it is complaining about are set, so the tab is nameable. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/company',
+    validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+      typeof s.tab === 'string' ? { tab: s.tab } : {},
+    component: lazyRouteComponent(() => import('./screens/Company')),
+  }),
   screen('/onboard', () => import('./screens/Onboard')),
 
   /* Account */

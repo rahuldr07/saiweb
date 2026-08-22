@@ -7,6 +7,7 @@ import { STAFF } from '@/data/people'
 import { inr, inr2, payslipOf, words, ytd } from '@/lib/payroll'
 import { roleName } from '@/lib/permissions'
 import { csvName, downloadCSV } from '@/lib/csv'
+import { payslipFileStem, payslipRows } from '@/lib/payroll-csv'
 
 /**
  * One payslip.
@@ -138,34 +139,10 @@ export default function PayslipDetail() {
   const y = ytd(person, month)
 
   const download = () => {
-    const out = downloadCSV(csvName(`payslip-${person.n.replace(/\s+/g, '-')}-${month.replace(' ', '-')}`), [
-      ['Payslip', tenant.name, month],
-      [],
-      ['Employee', person.n],
-      ['Employee ID', person.id.toUpperCase()],
-      ['Department', person.dep.join(', ')],
-      ['Working days', s.a.working],
-      ['Paid leave', s.a.paidLeave],
-      ['Unpaid days', s.a.lop],
-      [],
-      ['Earnings', 'Amount'],
-      ...s.earn,
-      ['Gross earnings', s.gross],
-      [],
-      ['Deductions', 'Amount'],
-      ...s.ded,
-      ['Total deductions', s.totalDed],
-      [],
-      ['Net pay', s.net],
-      ['In words', words(s.net)],
-      [],
-      ['Employer contributions', ''],
-      ...s.employer,
-      [],
-      ['Year to date gross', y.gross],
-      ['Year to date deductions', y.ded],
-      ['Year to date net', y.net],
-    ])
+    const out = downloadCSV(
+      csvName(payslipFileStem(person, month)),
+      payslipRows(person, month, tenant.name),
+    )
     toast(out.name)
   }
 

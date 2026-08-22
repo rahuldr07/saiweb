@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Avatar, Banner, Btn, Due, PageHead } from '@/components/ui'
+import { Avatar, Banner, Btn, Due, PageHead, Select } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
 import { STAFF } from '@/data/people'
-import { TZ, money } from '@/lib/format'
+import { TZ, fmtDT } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { whoName } from '@/lib/permissions'
 import { hh, orderAtRisk, orderPlan } from '@/lib/sla'
@@ -16,6 +16,12 @@ import { csvName, downloadCSV } from '@/lib/csv'
 const st = (k: string) => STATUS[k]?.[0] ?? k
 
 const uniq = (xs: string[]) => [...new Set(xs)].sort()
+
+/** `[value, label]` pairs for a filter select, with the "everything" option first. */
+const allFirst = (allLabel: string, values: string[]): [string, string][] => [
+  ['all', allLabel],
+  ...values.map((v) => [v, v] as [string, string]),
+]
 
 export default function Orders() {
   const { me, tenant, can } = useSession()
@@ -88,6 +94,16 @@ export default function Orders() {
                     name={a ? whoName(a) : null}
                     self={conflict}
                     title={a ? `${s}: ${whoName(a)} — open their profile` : `${s}: unassigned`}
+                    /* A filled slot is a person, so it opens them. The row underneath
+                       opens the order, hence the stop. */
+                    onClick={
+                      a
+                        ? (e) => {
+                            e.stopPropagation()
+                            navigate({ to: '/staff/$personId', params: { personId: a } })
+                          }
+                        : undefined
+                    }
                   />
                 )
               })}
@@ -100,25 +116,43 @@ export default function Orders() {
 
   const staffName = staff === 'all' ? null : whoName(staff)
   const active = [
-    dept !== 'all' ? `in ${dept}` : null,
-    staffName ? `with ${staffName}` : null,
-    product !== 'all' ? `for ${product}` : null,
-    client !== 'all' ? `from ${client}` : null,
+    dept !== 'all' ? <>in <b>{dept}</b></> : null,
+    staffName ? <>with <b>{staffName}</b></> : null,
+    product !== 'all' ? <>for <b>{product}</b></> : null,
+    client !== 'all' ? <>from <b>{client}</b></> : null,
   ].filter(Boolean)
 
+  const clearFilters = () => {
+    setStaff('all')
+    setDept('all')
+    setProduct('all')
+    setClient('all')
+  }
+
+  /* Whichever of the two workload views answers the filter on screen: a named
+     person if there is one, otherwise the department. */
+  const openWorkload = () =>
+    navigate({
+      to: '/reports',
+      search: staff !== 'all' ? { tab: 'By staff', sw: staff } : { tab: 'By department', dw: dept },
+    })
+
+  /* The file is built from the rows on screen after the filters — exporting
+     something other than what you are looking at is worse than not exporting. */
   const exportOrders = () => {
     const out = downloadCSV(csvName('orders'), [
-      ['Order', 'Client', 'Product', 'State', 'County', 'Property', 'Status', 'Due', 'Fee', ...STAGES],
+      ['Order', 'Client', 'Product', 'Property', 'County', 'State', 'Stage', 'Due', 'Received', 'Fee', ...STAGES],
       ...base.map((o) => [
         o.id,
         o.cl,
         o.pr,
-        o.st,
-        o.co,
         o.prop,
+        o.co,
+        o.st,
         st(o.stt),
-        o.due.toISOString(),
-        money(o.fee),
+        fmtDT(o.due),
+        fmtDT(o.recv),
+        o.fee,
         ...STAGES.map((s) => (o.a[s] ? whoName(o.a[s]!) : '')),
       ]),
     ])
@@ -136,6 +170,35 @@ export default function Orders() {
         }
         actions={
           <>
+            {/* Who and where sit beside the title, not in the filter bar: they
+                change what the whole screen is about, which the banner then
+                states in words. */}
+            <Select
+              label="Filter by department"
+              value={dept}
+              onChange={(v) => {
+                setDept(v)
+                /* The staff list narrows to that department, so a person who is
+                   not in it can no longer be the selected one. */
+                if (v !== 'all' && staff !== 'all' && !STAFF.find((s) => s.id === staff)?.dep.includes(v)) {
+                  setStaff('all')
+                }
+              }}
+              options={allFirst('All departments', [...STAGES])}
+              style={{ minWidth: 165 }}
+            />
+            <Select
+              label="Filter by staff member"
+              value={staff}
+              onChange={setStaff}
+              options={[
+                ['all', 'All staff'],
+                ...STAFF.filter((s) => s.dep.length && (dept === 'all' || s.dep.includes(dept))).map(
+                  (s) => [s.id, s.n] as [string, string],
+                ),
+              ]}
+              style={{ minWidth: 180 }}
+            />
             <Btn variant="ghost" onClick={exportOrders}>
               Export
             </Btn>
@@ -147,19 +210,24 @@ export default function Orders() {
       {active.length ? (
         <Banner
           icon="◔"
-          title={`Showing orders ${active.join(' and ')}`}
+          title={
+            <>
+              Showing orders{' '}
+              {active.map((a, i) => (
+                <span key={i}>
+                  {i ? ' and ' : ''}
+                  {a}
+                </span>
+              ))}
+            </>
+          }
           actions={
-            <Btn
-              variant="ghost"
-              onClick={() => {
-                setStaff('all')
-                setDept('all')
-                setProduct('all')
-                setClient('all')
-              }}
-            >
-              Clear
-            </Btn>
+            <>
+              <Btn variant="ghost" onClick={clearFilters}>
+                Clear
+              </Btn>
+              <Btn onClick={openWorkload}>Workload report</Btn>
+            </>
           }
         >
           {base.length} of {ORDERS.length}. For the completed-and-pending breakdown across today’s whole
@@ -202,30 +270,13 @@ export default function Orders() {
             label: 'Product',
             value: product,
             onChange: setProduct,
-            options: [['all', 'All products'], ...uniq(ORDERS.map((o) => o.pr)).map((x) => [x, x] as [string, string])],
+            options: allFirst('All products', uniq(ORDERS.map((o) => o.pr))),
           },
           {
             label: 'Client',
             value: client,
             onChange: setClient,
-            options: [['all', 'All clients'], ...uniq(ORDERS.map((o) => o.cl)).map((x) => [x, x] as [string, string])],
-          },
-          {
-            label: 'Department',
-            value: dept,
-            onChange: setDept,
-            options: [['all', 'All departments'], ...STAGES.map((d) => [d, d] as [string, string])],
-          },
-          {
-            label: 'Staff',
-            value: staff,
-            onChange: setStaff,
-            options: [
-              ['all', 'All staff'],
-              ...STAFF.filter((s) => s.dep.length && (dept === 'all' || s.dep.includes(dept))).map(
-                (s) => [s.id, s.n] as [string, string],
-              ),
-            ],
+            options: allFirst('All clients', uniq(ORDERS.map((o) => o.cl))),
           },
         ]}
         cols={[
@@ -238,11 +289,18 @@ export default function Orders() {
         ]}
         rows={rows}
         emptyText="No orders match this filter."
+        emptyAction={
+          active.length ? (
+            <Btn small variant="ghost" onClick={clearFilters}>
+              Clear filters
+            </Btn>
+          ) : undefined
+        }
       />
 
       <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
         A red ring on an avatar means the same person is set to both type and QC that order —{' '}
-        <b>self-review</b>. Assignment blocks it.
+        <b>self-review</b>. Assignment blocks it; see Quality.
       </p>
     </>
   )

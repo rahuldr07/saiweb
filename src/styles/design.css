@@ -1006,9 +1006,9 @@ tr.clickable:focus-visible {
    A column chart whose bars carry their own figures. The values used to live in
    a title attribute, which is hover-only — invisible to anyone scanning the
    screen, and to anyone without a pointer at all. */
-.hbars { display: flex; align-items: flex-end; gap: 8px; height: 150px; }
+.hbars { display: flex; align-items: flex-end; gap: 6px; height: 120px; }
 .hbar { flex: 1; display: flex; flex-direction: column; height: 100%; }
-.hbar-n { font-size: 11px; color: var(--gr); text-align: center; margin-bottom: 4px; }
+.hbar-n { font-size: 10.5px; color: var(--gr); text-align: center; margin-bottom: 5px; }
 .hbar-t { flex: 1; display: flex; align-items: flex-end; }
 .hbar-f {
   width: 100%;
@@ -1017,8 +1017,9 @@ tr.clickable:focus-visible {
   min-height: 2px;
   transition: height 0.25s ease;
 }
-.hbar-f.peak { background: var(--brand); }
-.hbar-l { font-size: 10.5px; color: var(--gr); text-align: center; margin-top: 6px; }
+/* The selected hour, not the busiest one — the accent marks what you picked. */
+.hbar-f.on { background: var(--brand); }
+.hbar-l { font-size: 10.5px; color: var(--gr); text-align: center; margin-top: 5px; }
 
 /* ─── legend ───
    Only worth the space when the same encoding repeats down a list; a one-off

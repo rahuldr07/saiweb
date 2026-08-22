@@ -176,16 +176,24 @@ export interface LinkType {
   note: string
 }
 
-export interface Level {
-  id: string
-  n: string
-  note: string
+/**
+ * What can be given to somebody: which states, which counties inside them, and
+ * which products. A level is one of these with a name on it, and it is also the
+ * shape each person's coverage had before levels existed.
+ */
+export interface Coverage {
   /** 'all' or an explicit list of state codes. */
   states: 'all' | string[]
-  /** state code → counties within it the level covers. */
+  /** state code → counties within it that are covered. Absent or empty means the whole state. */
   counties?: Record<string, string[]>
   /** 'all' or an explicit list of product ids. */
   products: 'all' | string[]
+}
+
+export interface Level extends Coverage {
+  id: string
+  n: string
+  note: string
 }
 
 export interface Client {
@@ -572,6 +580,21 @@ export interface PettyConfig {
   countEvery: string
 }
 
+/**
+ * Somebody physically counting the box.
+ *
+ * `counted` is what was in the tin, not what the ledger expected — the whole
+ * value of a count is that the two are recorded separately and can disagree.
+ * Correcting the count to match the book is how a discrepancy becomes permanent.
+ */
+export interface PettyCount {
+  id: string
+  d: Date
+  by: string
+  counted: number
+  note: string
+}
+
 export interface Opening {
   id: string
   title: string
@@ -583,12 +606,25 @@ export interface Opening {
   why: string
 }
 
+/**
+ * The hiring ladder, in order. `Joined` is the end of it: a candidate who
+ * reaches it becomes a staff record, which is the only way anybody enters the
+ * system — so nobody exists without a hiring trail behind them.
+ */
+export type HireStage =
+  | 'Applied'
+  | 'Screened'
+  | 'Interview'
+  | 'Offer'
+  | 'Verification'
+  | 'Joined'
+
 export interface Candidate {
   id: string
   job: string
   n: string
   exp: number
-  stage: 'Applied' | 'Screened' | 'Interview' | 'Offer' | 'Verification'
+  stage: HireStage
   src: string
   at: Date
   note: string

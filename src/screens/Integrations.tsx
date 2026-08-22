@@ -1,4 +1,5 @@
-import { Btn, Card, Chip, PageHead } from '@/components/ui'
+import { Banner, Btn, Card, Chip, PageHead } from '@/components/ui'
+import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
 import { useNotBuilt } from '@/components/notBuilt'
 import { CONNECTORS } from '@/data/integrations'
@@ -85,16 +86,17 @@ function Integrations() {
       </div>
 
       {/* The one a reader is most likely to assume is required, said plainly. */}
-      <div className="bnr b" style={{ marginTop: 18 }}>
-        <span className="bi">◧</span>
-        <div>
-          <div className="bt">The Titleflow connection is optional, both ways</div>
-          Title CRM works on its own for any abstracting firm. If you also take work from the Titleflow
-          marketplace, connecting means an accepted order lands here ready to assign — and the finished
-          report goes back without anyone re-typing it.
-          <div className="bs">Not connecting costs you nothing; nothing here depends on it.</div>
-        </div>
-      </div>
+      <Banner
+        kind="b"
+        icon="◧"
+        title="The Titleflow connection is optional, both ways"
+        style={{ marginTop: 18 }}
+      >
+        Title CRM works on its own for any abstracting firm. If you also take work from the Titleflow
+        marketplace, connecting means an accepted order lands here ready to assign — and the finished
+        report goes back without anyone re-typing it.
+        <div className="bs">Not connecting costs you nothing; nothing here depends on it.</div>
+      </Banner>
     </>
   )
 }
@@ -102,7 +104,9 @@ function Integrations() {
 export default function IntegrationsRoute() {
   return (
     <RequireCap cap="config">
-      <Integrations />
+      <ErrorBoundary what="Integrations">
+        <Integrations />
+      </ErrorBoundary>
     </RequireCap>
   )
 }

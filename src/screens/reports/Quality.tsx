@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Banner, Btn, Card, Chip, Empty, Label } from '@/components/ui'
+import { qualityCsv } from '@/lib/report-csv'
+import { useReportExport } from './useReportExport'
 import { FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
 import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
@@ -43,13 +46,19 @@ function Scores({
   log: QcEntry[]
   onOpenRules: () => void
 }) {
+  const navigate = useNavigate()
   const [range, setRange] = useState<RangeState>(DEFAULT_RANGE)
   const [focus, setFocus] = useState('all')
   const [person, setPerson] = useState<string | null>(null)
 
+  /* The budgets a whole department is missing are set on Company, so the banner
+     that reports the miss points at them. */
+  const toBudgets = () => navigate({ to: '/company', search: { tab: 'Turnaround & SLA' } })
+
   const r = resolveRange(range)
   const dels = useMemo(() => deliveries.filter((x) => inRange(x.d, r)), [deliveries, r])
   const rows = useMemo(() => log.filter((x) => inRange(x.d, r)), [log, r])
+  useReportExport(() => qualityCsv(rows))
 
   /* Two QC stages per delivery — Search QC and Typing QC. */
   const opportunities = dels.length * 2
@@ -128,10 +137,17 @@ function Scores({
         title={
           spread <= 2 ? 'These scores are not separating anyone' : 'Coverage is the weak point, not the scale'
         }
+        actions={
+          <Btn variant="ghost" small onClick={onOpenRules}>
+            How scoring works
+          </Btn>
+        }
       >
         {cover}% of the work in this range was rated at all, and the average is {overall.toFixed(2)} out of 5
         {spread <= 2 ? ' with almost no spread' : ''}. A measure where everyone is near-perfect ranks nobody.
-        Making a rating mandatory before delivery, and scoring three criteria instead of one, fixes both.
+        <div className="bs">
+          Making a rating mandatory before delivery, and scoring three criteria instead of one, fixes both.
+        </div>
       </Banner>
 
       <FocusKpis
@@ -231,7 +247,7 @@ function Scores({
             <div className="ch">
               <h2>By person</h2>
               <div className="r gr" style={{ fontSize: '12.5px' }}>
-                {people.length} rated in this range
+                {people.length} rated in this range · click a row for the detail
               </div>
             </div>
             <div className="tsc">
@@ -262,7 +278,20 @@ function Scores({
                     const t = p.tw
                     const sd = t ? standing(p.o, t.vsPeers, overall) : null
                     return (
-                      <tr key={p.n} className="clk" onClick={() => setPerson(p.n)}>
+                      <tr
+                        key={p.n}
+                        className="clk"
+                        role="button"
+                        tabIndex={0}
+                        title={`Open ${p.n} — ratings, reasons and time against budget`}
+                        onClick={() => setPerson(p.n)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            setPerson(p.n)
+                          }
+                        }}
+                      >
                         <td>
                           <b>{p.n}</b>
                           {STAFF.some((x) => x.n === p.n) ? null : (
@@ -285,7 +314,10 @@ function Scores({
                         <td className={`n ${t ? (t.ratio <= 1 ? 'ok' : 'warn') : 'gr'}`}>
                           {t ? `${t.ratio.toFixed(2)}×` : '—'}
                         </td>
-                        <td>{sd ? <Chip kind={sd[1]}>{sd[0]}</Chip> : <span className="gr">—</span>}</td>
+                        <td>
+                          {sd ? <Chip kind={sd[1]}>{sd[0]}</Chip> : <span className="gr">—</span>}{' '}
+                          <span className="gr">›</span>
+                        </td>
                       </tr>
                     )
                   })}
@@ -327,10 +359,17 @@ function Scores({
               kind="d"
               icon="⚑"
               title={weak.map(([k, v]) => `${k} is missed by everyone ${100 - v.rate}% of the time`).join(' · ')}
+              actions={
+                <Btn variant="ghost" small onClick={toBudgets}>
+                  Stage budgets
+                </Btn>
+              }
             >
               When a whole department misses its budget this often, it is the budget or the staffing that is
-              wrong — not the people in it. No amount of coaching moves a number that everyone shares. Either
-              widen {weak[0][0]}'s share of the clock, or put more people in it.
+              wrong — not the people in it. No amount of coaching moves a number that everyone shares.
+              <div className="bs">
+                Either widen {weak[0][0]}'s share of the clock, or put more people in it.
+              </div>
             </Banner>
           ) : null}
 

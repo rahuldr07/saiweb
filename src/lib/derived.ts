@@ -3,7 +3,15 @@
  * nothing here is a stored flag, which is what makes "late = red, everywhere"
  * hold without anyone maintaining it.
  */
-import { COUNTIES, LINKTYPES, BADSTATES, LINKCHECK } from '@/data/catalog'
+import { BADSTATES } from '@/data/catalog'
+/* Counties and link types are the one dataset a workspace edits in place, so
+   these read the live record rather than the seed — otherwise the link monitor
+   would keep reporting on a county the coverage screen had already removed. */
+import {
+  currentCheck as CHECK_OF,
+  currentCounties as COUNTIES_OF,
+  currentLinkTypes as LINKTYPES_OF,
+} from '@/state/coverage'
 import { ORDERS } from '@/data/production'
 import { LEADS, STALE_BAD, STALE_WARN } from '@/data/business'
 import { LEAVE } from '@/data/hrms'
@@ -74,11 +82,18 @@ export interface FlatLink {
 }
 
 export const allLinks = (): FlatLink[] =>
-  COUNTIES.flatMap((c) => LINKTYPES.map((t) => ({ c, k: t.k, lbl: t.n, l: c.links[t.k] })))
+  COUNTIES_OF().flatMap((c) =>
+    LINKTYPES_OF()
+      .filter((t) => c.links[t.k])
+      .map((t) => ({ c, k: t.k, lbl: t.n, l: c.links[t.k] })),
+  )
 
 export const brokenLinks = () => allLinks().filter((x) => BADSTATES.includes(x.l.s))
 
-export const nextLinkCheck = () => new Date(LINKCHECK.last.getTime() + LINKCHECK.every * 86400000)
+export const nextLinkCheck = () => {
+  const c = CHECK_OF()
+  return new Date(c.last.getTime() + c.every * 86400000)
+}
 
 export function linkStats() {
   const a = allLinks()
@@ -90,13 +105,13 @@ export function linkStats() {
     total: a.length,
     by,
     bad: brokenLinks().length,
-    types: LINKTYPES.length,
+    types: LINKTYPES_OF().length,
     covered: a.filter((x) => x.l.s !== 'none').length,
   }
 }
 
 export const findCounty = (n: string, st?: string) =>
-  COUNTIES.find(
+  COUNTIES_OF().find(
     (c) => c.n.toLowerCase() === String(n).toLowerCase().trim() && (!st || c.st === st),
   )
 
@@ -125,7 +140,7 @@ export function alerts(): Alert[] {
   const bl = brokenLinks()
   if (bl.length) {
     const names = [...new Set(bl.map((x) => x.c.n))]
-    const since = days(LINKCHECK.last)
+    const since = days(CHECK_OF().last)
     out.push({
       sev: 'bad',
       t: `${bl.length} county link${bl.length === 1 ? '' : 's'} not working`,
@@ -139,7 +154,7 @@ export function alerts(): Alert[] {
     out.push({
       sev: 'warn',
       t: 'Link check is due',
-      d: `Every ${LINKCHECK.every} days · last ran ${LINKCHECK.last.toLocaleDateString('en-US')}`,
+      d: `Every ${CHECK_OF().every} days · last ran ${CHECK_OF().last.toLocaleDateString('en-US')}`,
       go: 'linkcheck',
     })
   }

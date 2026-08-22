@@ -14,8 +14,10 @@ import type {
   DeclType,
   PettyEntry,
   PettyConfig,
+  PettyCount,
   Opening,
   Candidate,
+  HireStage,
 } from './types'
 
 export const LEAVE: Leave[] = [
@@ -1222,6 +1224,45 @@ export const PETTY: PettyEntry[] = [
 ]
 
 export const PETTYCFG: PettyConfig = { float: 25000, limit: 5000, custodian: "Harry Whitfield", countEvery: "week" }
+
+/**
+ * Counts of the box, newest first.
+ *
+ * Counted by Ashok S rather than by Harry Whitfield, who holds it — a custodian
+ * who checks their own float is not a control.
+ *
+ * The design's figures were written against an earlier ledger and had drifted:
+ * both counts carry the note "Matched." while sitting against balances they do
+ * not match, so the screen rendered "Short by ₹1,200 — Matched." The dates here
+ * put each count where its figure is actually the ledger balance, which is what
+ * the notes say happened.
+ */
+export const COUNTS: PettyCount[] = [
+  {
+    id: "C1",
+    d: new Date('2026-07-20T18:30:00.000Z'),
+    by: "Ashok S",
+    counted: 30590,
+    note: "Matched.",
+  },
+  {
+    id: "C2",
+    d: new Date('2026-07-14T18:30:00.000Z'),
+    by: "Ashok S",
+    counted: 21490,
+    note: "Matched.",
+  },
+]
+
+/** The hiring ladder, in the order a candidate climbs it. */
+export const HIRESTAGES: HireStage[] = [
+  "Applied",
+  "Screened",
+  "Interview",
+  "Offer",
+  "Verification",
+  "Joined",
+]
 
 export const OPENINGS: Opening[] = [
   {

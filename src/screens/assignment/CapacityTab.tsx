@@ -161,7 +161,11 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
         <div className="ch">
           <h2>Availability today</h2>
           <div className="r">
-            <Btn variant="ghost" small onClick={() => navigate({ to: '/company' })}>
+            <Btn
+              variant="ghost"
+              small
+              onClick={() => navigate({ to: '/company', search: { tab: 'Staff' } })}
+            >
               Edit staff
             </Btn>
           </div>

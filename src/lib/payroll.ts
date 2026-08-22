@@ -13,7 +13,6 @@ import {
   OLDSLABS,
   OLDSTD,
   OT,
-  PAYCFG,
   PAYMONTHS,
   STDDED,
   TAXSLABS,
@@ -22,15 +21,19 @@ import {
   LEAVETYPES,
 } from '@/data/hrms'
 import { STAFF } from '@/data/people'
+/* The salary structure is set on the Company screen, so it is read live — every
+   payslip is derived through it, which is what makes an edit there move the
+   whole register rather than just the settings page. */
+import { currentPayCfg } from '@/state/company'
 import { pad } from './format'
 import { now } from '@/lib/clock'
 import type { Loan, Person, RunState } from '@/data/types'
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export const inr = (n: number) => PAYCFG.sym + Math.round(n).toLocaleString('en-IN')
+export const inr = (n: number) => currentPayCfg().sym + Math.round(n).toLocaleString('en-IN')
 export const inr2 = (n: number) =>
-  PAYCFG.sym +
+  currentPayCfg().sym +
   (Math.round(n * 100) / 100).toLocaleString('en-IN', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -54,11 +57,11 @@ export interface Structure {
 export function structureOf(p: Pick<Person, 'ctc'>): Structure {
   const ctc = p.ctc ?? 0
   const m = ctc / 12
-  const basic = Math.round((m * PAYCFG.basicPct) / 100)
-  const hra = Math.round((basic * PAYCFG.hraPctOfBasic) / 100)
-  const pfWage = PAYCFG.pfOnFullBasic ? basic : Math.min(basic, PAYCFG.pfWageCeiling)
-  const epfEr = Math.round((pfWage * PAYCFG.pfPct) / 100)
-  const grat = Math.round((basic * PAYCFG.gratuityPct) / 100)
+  const basic = Math.round((m * currentPayCfg().basicPct) / 100)
+  const hra = Math.round((basic * currentPayCfg().hraPctOfBasic) / 100)
+  const pfWage = currentPayCfg().pfOnFullBasic ? basic : Math.min(basic, currentPayCfg().pfWageCeiling)
+  const epfEr = Math.round((pfWage * currentPayCfg().pfPct) / 100)
+  const grat = Math.round((basic * currentPayCfg().gratuityPct) / 100)
   /* CTC = gross + employer PF + gratuity, so special allowance is the balance. */
   const special = Math.max(0, Math.round(m - epfEr - grat - basic - hra))
   return { ctc, monthly: Math.round(m), basic, hra, special, gross: basic + hra + special, epfEr, grat, pfWage }
@@ -195,11 +198,11 @@ export function payslipOf(p: Person, mn: string): Payslip {
   const special = Math.round(st.special * f)
   const gross = basic + hra + special
 
-  const pfWage = PAYCFG.pfOnFullBasic ? basic : Math.min(basic, PAYCFG.pfWageCeiling)
-  const epf = Math.round((pfWage * PAYCFG.pfPct) / 100)
-  const esi = gross <= PAYCFG.esiGrossLimit ? Math.round((gross * PAYCFG.esiPct) / 100) : 0
-  const pt = gross > 0 ? PAYCFG.ptAmount : 0
-  const tds = Math.round(taxUnder(PAYCFG.regime, st.gross * 12) / 12)
+  const pfWage = currentPayCfg().pfOnFullBasic ? basic : Math.min(basic, currentPayCfg().pfWageCeiling)
+  const epf = Math.round((pfWage * currentPayCfg().pfPct) / 100)
+  const esi = gross <= currentPayCfg().esiGrossLimit ? Math.round((gross * currentPayCfg().esiPct) / 100) : 0
+  const pt = gross > 0 ? currentPayCfg().ptAmount : 0
+  const tds = Math.round(taxUnder(currentPayCfg().regime, st.gross * 12) / 12)
 
   const arr = arrearsFor(p.id, mn).reduce((acc, x) => acc + x.amt, 0)
   const cl = claimsFor(p.id, mn).reduce((acc, x) => acc + x.amt, 0)
@@ -220,7 +223,7 @@ export function payslipOf(p: Person, mn: string): Payslip {
 
   const dedRows: [string, number][] = [
     ['Provident fund (employee)', epf],
-    [`Professional tax — ${PAYCFG.ptState}`, pt],
+    [`Professional tax — ${currentPayCfg().ptState}`, pt],
   ]
   if (esi) dedRows.push(['ESI (employee)', esi])
   dedRows.push(['Income tax (TDS)', tds])

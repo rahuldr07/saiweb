@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { ChipKind } from '@/data/types'
-import { Chip, Empty } from './ui'
+import { Chip, Empty, Select } from './ui'
 
 /**
  * The register: filter pills with counts, secondary selects, a search box, a
@@ -136,19 +136,13 @@ export function DataTable({
             ))}
             <div className="sp">
               {(filters ?? []).map((f) => (
-                <select
+                <Select
                   key={f.label}
-                  className="inp"
-                  aria-label={f.label}
+                  label={f.label}
                   value={f.value}
-                  onChange={(e) => f.onChange(e.target.value)}
-                >
-                  {f.options.map(([v, label]) => (
-                    <option key={v} value={v}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                  options={f.options}
+                  onChange={f.onChange}
+                />
               ))}
               {search ? (
                 <input

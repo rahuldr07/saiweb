@@ -45,23 +45,42 @@ export function ruleThen(r: Pick<Rule, 'then' | 'k' | 'pool'>): string {
 }
 
 /**
- * What the rule actually did today.
+ * What the rule actually did today, as `[before, emphasis, after]`.
  *
  * "Fired 2,160 times" was the same number for every always-rule and told you
  * nothing; what matters is how often it *changed the answer*. Two rules narrow
  * nothing by nature and need their own sentence: department membership builds
  * the pool, and the tie-break picks out of it.
+ *
+ * Split into three because the figure carrying the meaning is emphasised in the
+ * middle of the sentence, and the sentence is built here rather than in the tab.
+ * `ruleEffect` joins them, so the two can never disagree.
  */
-export function ruleEffect(r: Rule, fired: number, narrowed: number | undefined): string {
+type EffectParts = [before: string, emphasis: string, after: string]
+
+export function ruleEffectParts(
+  r: Rule,
+  fired: number,
+  narrowed: number | undefined,
+): EffectParts {
   const n = fired.toLocaleString()
   if (r.id === 'r1') {
     const avg = fired ? ((narrowed ?? 0) / fired).toFixed(1) : '0'
-    return `built the pool ${n} times · ${avg} candidates on average`
+    return [`built the pool ${n} times · `, avg, ' candidates on average']
   }
-  if (r.k === 'prefer') return `broke the tie ${n} ${fired === 1 ? 'time' : 'times'}`
-  if (narrowed === undefined) return `${n} checks`
-  if (narrowed === 0) return fired ? `checked ${n} times · changed nothing` : 'never came up'
-  return `changed the answer ${narrowed.toLocaleString()} ${narrowed === 1 ? 'time' : 'times'} of ${n}`
+  if (r.k === 'prefer') return [`broke the tie ${n} ${fired === 1 ? 'time' : 'times'}`, '', '']
+  if (narrowed === undefined) return [`${n} checks`, '', '']
+  if (narrowed === 0)
+    return fired ? [`checked ${n} times · `, 'changed nothing', ''] : ['never came up', '', '']
+  return [
+    'changed the answer ',
+    narrowed.toLocaleString(),
+    ` ${narrowed === 1 ? 'time' : 'times'} of ${n}`,
+  ]
+}
+
+export function ruleEffect(r: Rule, fired: number, narrowed: number | undefined): string {
+  return ruleEffectParts(r, fired, narrowed).join('')
 }
 
 /** Rules that exist to stop the system doing something it must never do. */
