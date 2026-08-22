@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Banner, Btn, Card, Chip, SectionHead } from '@/components/ui'
 import { DayPicker } from './DayPicker'
+import { assignedCsv } from '@/lib/report-csv'
+import { useReportExport } from './useReportExport'
 import { board } from '@/lib/engine'
 import { ASSIGN_STAGES } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
@@ -19,6 +21,7 @@ export function Assigned({ onOpenStaff }: { onOpenStaff: () => void }) {
   const [dept, setDept] = useState('all')
 
   const as = day === 'all' ? run.assigns : run.assigns.filter((a) => a.dk === day)
+  useReportExport(() => assignedCsv(as))
   const scope = day === 'all' ? `all ${run.days.length} days` : day
   const products = PRODUCTS.map((p) => p.id).filter((id) => as.some((a) => a.o.pr === id))
   const shown = ASSIGN_STAGES.filter((d) => dept === 'all' || d === dept)

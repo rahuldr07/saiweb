@@ -28,7 +28,8 @@ import {
   type PayTotals,
 } from '@/lib/payroll'
 import { fmtDate, initials } from '@/lib/format'
-import { csvName, downloadCSV } from '@/lib/csv'
+import { csvName, downloadCSV, type CsvRow } from '@/lib/csv'
+import { registerRows } from '@/lib/payroll-csv'
 import type { Person, RunState } from '@/data/types'
 
 /**
@@ -197,30 +198,12 @@ function Payroll() {
 
   /* ── exports ───────────────────────────────────────────────────────────── */
 
-  const exportCsv = (name: string, rows: (string | number)[][], noun: string) => {
+  const exportCsv = (name: string, rows: CsvRow[], noun: string) => {
     const out = downloadCSV(csvName(`${name}-${month.replace(' ', '-')}`), rows)
     toast(`${out.name} — ${out.rows.length - 1} ${noun}`)
   }
 
-  const exportRegister = () =>
-    exportCsv(
-      'payroll-register',
-      [
-        ['Name', 'Department', 'Unpaid days', 'Gross', 'PF', 'PT', 'ESI', 'TDS', 'Net pay'],
-        ...totals.list.map((x) => [
-          x.p.n,
-          x.p.dep[0] ?? '',
-          x.lopDays,
-          x.gross,
-          x.epf,
-          x.pt,
-          x.esi,
-          x.tds,
-          x.net,
-        ]),
-      ],
-      'people',
-    )
+  const exportRegister = () => exportCsv('payroll-register', registerRows(totals.list), 'people')
 
   const exportBankFile = () =>
     exportCsv(

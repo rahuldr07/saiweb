@@ -40,7 +40,7 @@ export function ExceptionsTab({
   onTab,
 }: {
   board: AssignmentBoard
-  onTab: (t: 'Rules' | 'Capacity') => void
+  onTab: (t: 'Rules') => void
 }) {
   const navigate = useNavigate()
   const { toast, openModal, closeModal } = useUi()
@@ -88,18 +88,12 @@ export function ExceptionsTab({
     toast(`${e.stage} → ${whoName(id)}`)
   }
 
-  if (!exc.length) {
-    return (
-      <Card>
-        <Empty icon="✓">No exceptions. Every stage found an owner inside the rules.</Empty>
-      </Card>
-    )
-  }
-
+  /* Nothing to place is a result of the run, not an absence of the screen — so the
+     banner and the heading stay and only the groups become the all-clear. */
   return (
     <>
-      <div className="bnr r">
-        <span className="bi">⚑</span>
+      <div className={`bnr ${exc.length ? 'r' : 'v'}`}>
+        <span className="bi">{exc.length ? '⚑' : '✓'}</span>
         <div>
           <div className="bt">
             {exc.length} stage{exc.length === 1 ? '' : 's'} could not be placed
@@ -138,7 +132,11 @@ export function ExceptionsTab({
             <div className="bs">This is why a department with one member is worth watching.</div>
           </div>
           <div className="ba">
-            <Btn variant="ghost" small onClick={() => onTab('Capacity')}>
+            <Btn
+              variant="ghost"
+              small
+              onClick={() => navigate({ to: '/company', search: { tab: 'Departments' } })}
+            >
               See departments
             </Btn>
           </div>
@@ -147,8 +145,9 @@ export function ExceptionsTab({
 
       <h2 className="sec">Grouped by why — fixing the cause clears the whole group</h2>
 
+      {/* In the order the run produced them. Re-sorting by size would make the
+          list jump between runs without telling the reader anything more. */}
       {Object.entries(byWhy)
-        .sort((a, b) => b[1].length - a[1].length)
         .map(([why, list]) => {
           const [label, tone] = EXCLUSION[why as ExclusionReason]
           return (
@@ -263,14 +262,11 @@ export function ExceptionsTab({
           )
         })}
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
-        Every one of these arrived today and found no home. They are not lost — they are waiting for a
-        person to place them by hand.{' '}
-        <button type="button" className="lnk" onClick={() => navigate({ to: '/company' })}>
-          Company
-        </button>{' '}
-        is where targets and departments are changed.
-      </p>
+      {exc.length ? null : (
+        <Card>
+          <Empty icon="✓">No exceptions. Every stage found an owner inside the rules.</Empty>
+        </Card>
+      )}
     </>
   )
 }

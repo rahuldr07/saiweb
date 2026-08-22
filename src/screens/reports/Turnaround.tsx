@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
+import { turnaroundCsv } from '@/lib/report-csv'
+import { useReportExport } from './useReportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
@@ -18,11 +21,16 @@ const budgetFor = (x: Delivery, stage: string) =>
 
 /** Measured against the promise, not against a feeling. */
 export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
+  const navigate = useNavigate()
   const [range, setRange] = useState<RangeState>(DEFAULT_RANGE)
   const [focus, setFocus] = useState('all')
 
+  /* Both notes below point at the same setting, so they point the same way. */
+  const toBudgets = () => navigate({ to: '/company', search: { tab: 'Turnaround & SLA' } })
+
   const r = resolveRange(range)
   const d = useMemo(() => deliveries.filter((x) => inRange(x.d, r)), [deliveries, r])
+  useReportExport(() => turnaroundCsv(d))
 
   const stages = useMemo(
     () =>
@@ -208,14 +216,14 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
           {
             key: 'spread',
             title: 'Median turnaround',
-            value: <span className="mono">{hh(med)}</span>,
+            value: <span className="mono" style={{ fontSize: '25px' }}>{hh(med)}</span>,
             detail: `mean ${hh(avg)}`,
             count: d.length,
           },
           {
             key: 'worst',
             title: 'Worst stage',
-            value: worst.st,
+            value: <span style={{ fontSize: '19px' }}>{worst.st}</span>,
             detail: <span className="warn">over budget on {worst.overPct}%</span>,
             count: worst.over,
           },
@@ -305,7 +313,10 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                   ))}
                 <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
                   Spread across the whole department, which is the signature of a budget that is too tight
-                  rather than a person who is too slow.
+                  rather than a person who is too slow.{' '}
+                  <button type="button" className="br" style={{ fontWeight: 600 }} onClick={toBudgets}>
+                    Adjust the split
+                  </button>
                 </p>
               </Card>
               <SectionHead>Every {worst.st} overrun, worst first</SectionHead>
@@ -413,8 +424,11 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
           <Card padded style={{ marginTop: 18 }}>
             <Label>Where the time goes — median hours per department, against the budget it was given</Label>
             <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 14px' }}>
-              The pale bar is the budget from Company → Stage budgets; the solid bar is what actually
-              happened.
+              The pale bar is the budget from{' '}
+              <button type="button" className="br" style={{ fontWeight: 600 }} onClick={toBudgets}>
+                Company → Stage budgets
+              </button>
+              ; the solid bar is what actually happened.
             </p>
             {stages.map((x) => (
               <div

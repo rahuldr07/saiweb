@@ -9,6 +9,7 @@ import type {
   EngineConfig,
   EngineOptions,
   Level,
+  Coverage,
 } from './types'
 
 export const TENANTS: Tenant[] = [
@@ -256,6 +257,33 @@ export const LEVELS: Level[] = [
     products: "all",
   },
 ]
+
+/**
+ * The coverage each of these people had before levels existed.
+ *
+ * Kept because it is the only record of what changed when everybody was fitted
+ * onto the nearest level — anyone who ended up covering less may start seeing
+ * work hold, and anyone covering more may be given something new. Both are worth
+ * a look, and neither is recoverable once this is gone.
+ */
+export const PRIOR_COVERAGE: Record<string, Coverage> = {
+  /* two juniors — Prasad is on leave today, which is why Level 1 still needs Asha */
+  ap: { states: ["PA", "GA"], counties: { PA: ["Cambria", "Luzerne"] }, products: ["COS"] },
+  /* the junior — current owner searches in the two counties he has been shown */
+  pd: { states: ["PA"], counties: { PA: ["Cambria", "Luzerne"] }, products: ["COS"] },
+  rm: { states: "all", counties: { PA: ["Allegheny"] }, products: "all" },
+  sr: { states: "all", counties: { PA: ["Cambria", "Luzerne"] }, products: "all" },
+  us: { states: ["PA", "GA", "CT", "KY", "TN"], counties: {}, products: "all" },
+  sm: { states: ["PA", "GA", "CT", "KY", "TN"], counties: {}, products: "all" },
+  dn: { states: ["PA", "GA", "CT", "KY", "TN"], counties: {}, products: "all" },
+  kv: {
+    states: ["PA", "GA", "CT", "KY", "TN"],
+    counties: {},
+    products: ["COS", "TOS", "Update", "PRLP", "LIEN", "10Y", "20Y"],
+  },
+  ln: { states: "all", counties: {}, products: ["COS", "Update", "PRLP", "LIEN"] },
+  kb: { states: ["PA", "GA", "CT", "TN"], counties: {}, products: "all" },
+}
 
 export const COVSTAGES: string[] = ["Search", "Search QC"]
 

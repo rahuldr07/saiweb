@@ -17,6 +17,31 @@ import type { ChipKind } from './types'
 /** Percentage of orders expected to beat their SLA. */
 export const ONTIMETARGET = 98
 
+/** One turnaround promise: a client, a product, and the hours. */
+export interface SlaRule {
+  cl: string
+  pr: string
+  h: number
+}
+
+/**
+ * Client + product overrides, falling through to the default rule.
+ *
+ * Seed data lives here rather than beside the rules that read it: the Company
+ * screen edits these through a store, and the store cannot import from `lib/sla`
+ * without the two forming a cycle.
+ */
+export const SLA: SlaRule[] = [
+  { cl: 'MGR', pr: 'LIEN', h: 24 },
+  { cl: 'MGR', pr: 'PRLP', h: 24 },
+  { cl: 'MGR', pr: 'Update', h: 24 },
+  { cl: 'CSS', pr: 'PRLP', h: 24 },
+  { cl: 'CSS', pr: 'TOS', h: 24 },
+  { cl: 'CSS', pr: 'COS', h: 48 },
+  { cl: 'NJ', pr: 'COS', h: 24 },
+  { cl: '—  (default)', pr: 'Any', h: 24 },
+]
+
 /** Share of an order's budget each stage gets, and the per-product overrides. */
 export const BUDGET: {
   buffer: number

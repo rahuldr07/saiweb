@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Banner, Btn } from '@/components/ui'
 import { DEPTLIST } from '@/data/org'
 import { STAFF } from '@/data/people'
-import { OPENINGS } from '@/data/hrms'
+import { useBoard } from './store'
 import { now } from '@/lib/clock'
 import { fmtDate } from '@/lib/format'
 import type { Opening } from '@/data/types'
@@ -24,9 +24,12 @@ const TYPES = ['Full time', 'Part time', 'Contract', 'Intern'] as const
 export function NewOpening({
   raisedBy,
   onSubmit,
+  onCancel,
 }: {
   raisedBy: string
   onSubmit: (opening: Opening) => void
+  /** Backs out without raising anything. The modal's own dismiss, in the form. */
+  onCancel?: () => void
 }) {
   const [title, setTitle] = useState('')
   const [dep, setDep] = useState(DEPTLIST[0].n)
@@ -34,6 +37,7 @@ export function NewOpening({
   const [type, setType] = useState<string>(TYPES[0])
   const [why, setWhy] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const { openings } = useBoard()
 
   const n = Number(seats)
   /* How many already work the department, so the ask has a size next to it. */
@@ -46,7 +50,10 @@ export function NewOpening({
     if (!why.trim())
       return setError('The reason. Whoever approves this did not feel the pressure that caused it.')
 
-    const next = OPENINGS.reduce((max, o) => Math.max(max, Number(o.id.replace(/\D/g, '')) || 0), 0) + 1
+    /* Numbered off the board rather than the seed, or the second opening raised
+       in a session collides with the first. */
+    const next =
+      openings.reduce((max, o) => Math.max(max, Number(o.id.replace(/\D/g, '')) || 0), 0) + 1
 
     onSubmit({
       id: `J${next}`,
@@ -156,6 +163,11 @@ export function NewOpening({
       ) : null}
 
       <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+        {onCancel ? (
+          <Btn variant="ghost" onClick={onCancel}>
+            Cancel
+          </Btn>
+        ) : null}
         <Btn onClick={submit} disabled={!title.trim() || !why.trim()}>
           Open the role
         </Btn>

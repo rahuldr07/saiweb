@@ -1,22 +1,31 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Banner, Btn, Card, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
+import { Avatar, Banner, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
+import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
+import { workloadCsv } from '@/lib/report-csv'
+import { useReportExport } from './useReportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusKpis } from '@/components/FocusKpis'
 import { WorkFocus } from './WorkFocus'
 import { board } from '@/lib/engine'
-import { AVAIL, STAFF } from '@/data/people'
-import { whoName } from '@/lib/permissions'
+import { AVAIL } from '@/data/people'
 
+/** The bar fill: green all the way up to the point it starts to matter. */
 const capTone = (pct: number) => (pct >= 95 ? 'var(--bad)' : pct >= 80 ? 'var(--warn)' : 'var(--ok)')
 
+/** The figure beside it, which the design leaves grey until it matters. */
+const capTextTone = (pct: number) => (pct >= 95 ? 'bad' : pct >= 80 ? 'warn' : 'gr')
+
+const PEOPLE_COLS = '190px 1fr 85px 85px 130px'
+
 /** Departmental workload: the whole floor, then one department at a time. */
-export function ByDepartment({ initial }: { initial?: string }) {
+export function ByDepartment({ initial, onOpenStaff }: { initial?: string; onOpenStaff: (id: string) => void }) {
   const { run, depts, dwork } = board()
+  useReportExport(() => workloadCsv(depts, true))
   const navigate = useNavigate()
   const [sel, setSel] = useState(initial ?? 'all')
   const [focus, setFocus] = useState('all')
-  const [itemFilter, setItemFilter] = useState('all')
+  const { filter, setFilter, query, setQuery, match } = useWorkFilter()
 
   const picker = (
     <select
@@ -45,7 +54,7 @@ export function ByDepartment({ initial }: { initial?: string }) {
 
     return (
       <>
-        <PageHead
+        <EmbedHead
           title="Department workload"
           sub={`Today's ${run.today.length} orders across ${depts.length} departments.`}
           actions={picker}
@@ -170,10 +179,8 @@ export function ByDepartment({ initial }: { initial?: string }) {
     )
   }
 
-  const items = r.items.filter((i) => (itemFilter === 'all' ? true : itemFilter === 'done' ? i.fin : !i.fin))
-  const ppl = Object.entries(r.people)
-    .map(([id, v]) => ({ id, ...v, tot: v.done + v.pend }))
-    .sort((a, b) => b.tot - a.tot)
+  const openOrder = (orderId: string) => navigate({ to: '/orders/$orderId', params: { orderId } })
+  const items = match(r.items)
   const cu = r.cap ? Math.round((r.load / r.cap) * 100) : 0
 
   return (
@@ -181,7 +188,7 @@ export function ByDepartment({ initial }: { initial?: string }) {
       <Btn variant="ghost" small style={{ marginBottom: 14 }} onClick={() => setSel('all')}>
         ← All departments
       </Btn>
-      <PageHead
+      <EmbedHead
         title={r.d}
         sub={`${r.staff.length} member${r.staff.length === 1 ? '' : 's'} · ${r.avail} available today · ${r.auto ? 'part of the automatic pass' : 'exception branch, assigned on demand'}`}
         actions={picker}
@@ -217,75 +224,118 @@ export function ByDepartment({ initial }: { initial?: string }) {
           title="Capacity used"
           value={`${cu}%`}
           detail={
-            <span style={{ color: capTone(cu) }}>
+            <span className={capTextTone(cu)}>
               {r.load} of {r.cap}
             </span>
           }
         />
       </Kpis>
 
-      <SectionHead>Who is carrying it</SectionHead>
+      <SectionHead>Who is in {r.d}</SectionHead>
       <Card>
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
-          {ppl.map((p) => {
-            const person = STAFF.find((s) => s.id === p.id)
-            return (
-              <div className="rw" key={p.id}>
-                <span className="gr">·</span>
-                <span>
-                  <b>{whoName(p.id)}</b>
-                  <div className="sd">
-                    {p.done} done · {p.pend} pending
-                    {person && person.avail !== 'ok' ? ` · ${AVAIL[person.avail][0].toLowerCase()}` : ''}
-                  </div>
-                </span>
-                <span>
-                  <Btn
-                    variant="ghost"
-                    small
-                    onClick={() => navigate({ to: '/staff/$personId', params: { personId: p.id } })}
+        <div className="tsc">
+          <div style={{ minWidth: 700 }}>
+            <div className="trow h" style={{ gridTemplateColumns: PEOPLE_COLS }}>
+              <span>Person</span>
+              <span>Completed / pending</span>
+              <span>Done</span>
+              <span>Pending</span>
+              <span>Load</span>
+            </div>
+            <div className="tb">
+              {/* Every member, not only those who were given something — a name
+                  with nothing against it is the useful signal here. */}
+              {r.staff.map((s) => {
+                const v = r.people[s.id] ?? { done: 0, pend: 0 }
+                const tt = v.done + v.pend
+                const pct = tt ? Math.round((v.done / tt) * 100) : 0
+                return (
+                  <div
+                    className="trow"
+                    key={s.id}
+                    role="button"
+                    tabIndex={0}
+                    style={{ gridTemplateColumns: PEOPLE_COLS }}
+                    onClick={() => onOpenStaff(s.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        onOpenStaff(s.id)
+                      }
+                    }}
                   >
-                    Open
-                  </Btn>
-                </span>
-              </div>
-            )
-          })}
+                    <div className="cell">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Avatar
+                          name={s.n}
+                          title={`Open ${s.n}`}
+                          onClick={() => navigate({ to: '/staff/$personId', params: { personId: s.id } })}
+                        />
+                        <div className="v">{s.n}</div>
+                      </div>
+                      {s.avail !== 'ok' ? <div className="s bad">{AVAIL[s.avail][0]}</div> : null}
+                    </div>
+                    <div className="cell">
+                      {tt ? (
+                        <div className="split">
+                          <span style={{ width: `${pct}%`, background: 'var(--ok)' }} />
+                          <span style={{ width: `${100 - pct}%`, background: 'var(--warn)' }} />
+                        </div>
+                      ) : (
+                        <span className="gr" style={{ fontSize: '12.5px' }}>
+                          {s.avail === 'ok' ? 'nothing assigned today' : 'unavailable'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="cell">
+                      <div className="v mono ok">{v.done || '—'}</div>
+                    </div>
+                    <div className="cell">
+                      <div className={`v mono ${v.pend ? 'warn' : 'gr'}`}>{v.pend || '—'}</div>
+                    </div>
+                    <div className="cell">
+                      <div className="v mono">
+                        {run.load[s.id] ?? 0}
+                        <span className="gr"> / {s.cap}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         </div>
       </Card>
 
-      <div className="fbar" style={{ marginTop: 16 }} role="group" aria-label="Filter tasks">
-        {[
-          ['all', `Everything (${r.items.length})`],
-          ['done', `Completed (${r.done})`],
-          ['pend', `Pending (${r.pend})`],
-        ].map(([k, label]) => (
-          <button
-            key={k}
-            className={`pill ${itemFilter === k ? 'on' : ''}`}
-            aria-pressed={itemFilter === k}
-            onClick={() => setItemFilter(k)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <FlexTable
-        cols="150px 130px 150px 1fr 110px"
+      <SectionHead>Orders at this stage</SectionHead>
+      <WorkFilter
+        filter={filter}
+        onFilter={setFilter}
+        counts={{ all: r.tot, done: r.done, pend: r.pend }}
+        query={query}
+        onQuery={setQuery}
+        shown={items.length}
+        total={r.tot}
+      />
+      <WorkTable
+        cols={WORKCOLS.who}
         min={800}
-        head={['Order', 'Client', 'Product', 'Who has it', 'State']}
+        head={['Order', 'Owner', 'Product', 'State', 'Arrived', 'Status']}
+        empty={
+          items.length
+            ? null
+            : {
+                icon: r.auto ? '✓' : '○',
+                text: r.auto
+                  ? `Nothing ${filter === 'done' ? 'completed' : 'pending'} in ${r.d}.`
+                  : `${r.d} is an exception branch — work only arrives when an order needs it.`,
+              }
+        }
       >
         {items.map((i, idx) => (
-          <FlexRow cols="150px 130px 150px 1fr 110px" key={`${i.o.id}-${idx}`}>
-            <Cell v={i.o.id} mono s={i.fin ? 'completed' : 'pending'} />
-            <Cell v={i.o.cl} />
-            <Cell v={i.o.pr} />
-            <Cell v={whoName(i.who)} tone={i.fin ? 'ok' : undefined} />
-            <Cell v={i.o.st} mono />
-          </FlexRow>
+          <WorkRow key={`${i.o.id}-${idx}`} item={i} mode="who" onOpen={openOrder} />
         ))}
-      </FlexTable>
+      </WorkTable>
     </>
   )
 }

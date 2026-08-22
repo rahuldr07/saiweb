@@ -8,28 +8,14 @@
  * three hours into a perfectly healthy Search.
  */
 import { ASSIGN_STAGES } from '@/data/org'
-import { BUDGET } from '@/data/budget'
+import { currentBudget, currentSla } from '@/state/company'
+import { SLA, type SlaRule } from '@/data/budget'
+
+export { SLA }
+export type { SlaRule }
 import { hrs } from '@/lib/format'
 import { now } from '@/lib/clock'
 import type { Order, Tier } from '@/data/types'
-
-export interface SlaRule {
-  cl: string
-  pr: string
-  h: number
-}
-
-/** Client + product overrides, falling through to the default rule. */
-export const SLA: SlaRule[] = [
-  { cl: 'MGR', pr: 'LIEN', h: 24 },
-  { cl: 'MGR', pr: 'PRLP', h: 24 },
-  { cl: 'MGR', pr: 'Update', h: 24 },
-  { cl: 'CSS', pr: 'PRLP', h: 24 },
-  { cl: 'CSS', pr: 'TOS', h: 24 },
-  { cl: 'CSS', pr: 'COS', h: 48 },
-  { cl: 'NJ', pr: 'COS', h: 24 },
-  { cl: '—  (default)', pr: 'Any', h: 24 },
-]
 
 /** No client named on it — the row that applies when nothing more specific does. */
 export const isDefaultRule = (r: SlaRule) => r.cl.startsWith('—')
@@ -44,6 +30,9 @@ export const isDefaultRule = (r: SlaRule) => r.cl.startsWith('—')
  * on both screens, so both now come through here.
  */
 export function slaRuleFor(client: string, product: string): SlaRule {
+  /* The live rules — the Company screen edits them, and a due date quoted from a
+     stale copy is the one thing this lookup exists to prevent. */
+  const SLA = currentSla()
   return (
     SLA.find((x) => x.cl === client && x.pr === product) ??
     SLA.find((x) => x.cl === client && x.pr === 'Any') ??
@@ -88,8 +77,10 @@ export function dueFor(client: string, product: string, tier: string): Due {
 
 /* ── stage budgets ──────────────────────────────────────────────────────── */
 
-export const sharesFor = (pr: string): Record<string, number> =>
-  BUDGET.over.find((x) => x.pr === pr)?.shares ?? BUDGET.base
+export const sharesFor = (pr: string): Record<string, number> => {
+  const b = currentBudget()
+  return b.over.find((x) => x.pr === pr)?.shares ?? b.base
+}
 
 export const shareTotal = (sh: Record<string, number>) =>
   ASSIGN_STAGES.reduce((a, st) => a + (sh[st] ?? 0), 0)
@@ -108,10 +99,11 @@ const cpCache = new Map<string, Checkpoint[]>()
 
 export function checkpoints(slaH: number, pr: string): Checkpoint[] {
   const sh = sharesFor(pr)
-  const key = `${slaH}|${pr}|${BUDGET.buffer}|${JSON.stringify(sh)}`
+  const buffer = currentBudget().buffer
+  const key = `${slaH}|${pr}|${buffer}|${JSON.stringify(sh)}`
   const hit = cpCache.get(key)
   if (hit) return hit
-  const win = slaH * (1 - BUDGET.buffer / 100)
+  const win = slaH * (1 - buffer / 100)
   let cum = 0
   const out = ASSIGN_STAGES.map((st) => {
     const h = (win * (sh[st] ?? 0)) / 100

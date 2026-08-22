@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Avatar, Btn, Card, Chip, Kpi, Kpis, SectionHead } from '@/components/ui'
+import { Avatar, Btn, Card, Chip, Kpi, Kpis, SectionHead, focusSection } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { ASSIGN_STAGES } from '@/data/org'
 import { whoName } from '@/lib/permissions'
@@ -18,6 +18,10 @@ import type { Rule } from '@/data/types'
  */
 
 const COLS = '130px 80px 90px 80px repeat(5, minmax(96px, 1fr))'
+
+/** The arrivals chart, which three of the four tiles point at rather than repeat. */
+const ARRIVALS = 'as-arrivals'
+const focusArrivals = () => focusSection(ARRIVALS)
 
 export function LiveTab({
   board,
@@ -165,30 +169,44 @@ export function LiveTab({
           title="Arrived today"
           value={orders.length}
           detail={`across ${run.hourly.length} hours`}
-          selected={hour === null}
-          onClick={() => setHour(null)}
+          icon="›"
+          hint="Every arrival, hour filter cleared"
+          onClick={() => {
+            setHour(null)
+            focusArrivals()
+          }}
         />
         <Kpi
           title="Placed"
-          value={<span className="ok">{assigns.length}</span>}
+          value={assigns.length}
+          valueTone="ok"
           detail={`of ${total} stages`}
+          icon="›"
+          hint="Where each stage went"
+          onClick={focusArrivals}
         />
         <Kpi
           title="Exceptions"
-          value={<span className={exc.length ? 'bad' : 'ok'}>{exc.length}</span>}
+          value={exc.length}
           tone={exc.length ? 'alert' : undefined}
           detail={exc.length ? 'waiting on a person' : 'none'}
+          detailTone={exc.length ? 'bad' : 'ok'}
+          icon="›"
+          hint="What could not be placed"
           onClick={() => onTab('Exceptions')}
         />
         <Kpi
           title="Self-review avoided"
           value={run.avoided}
-          detail={<span className="ok">rule working silently</span>}
+          detail="rule working silently"
+          detailTone="ok"
+          icon="›"
+          hint="The rule that did this"
           onClick={() => onTab('Rules')}
         />
       </Kpis>
 
-      <SectionHead>Arrivals by hour — click to filter</SectionHead>
+      <SectionHead id={ARRIVALS}>Arrivals by hour — click to filter</SectionHead>
       <Card padded>
         <div className="hbars">
           {run.hourly.map((h) => {
@@ -206,7 +224,7 @@ export function LiveTab({
                 <div className="hbar-n mono">{h.n}</div>
                 <div className="hbar-t">
                   <div
-                    className={`hbar-f${on || (hour === null && h.n === peak) ? ' peak' : ''}`}
+                    className={`hbar-f${on ? ' on' : ''}`}
                     style={{
                       height: `${(h.n / peak) * 100}%`,
                       opacity: hour !== null && !on ? 0.35 : 1,
@@ -272,9 +290,10 @@ export function LiveTab({
                               name={whoName(who)}
                               title={`Open ${whoName(who)}`}
                               style={{ width: 21, height: 21, fontSize: '8.5px' }}
-                              onClick={() =>
+                              onClick={(e) => {
+                                e.stopPropagation()
                                 navigate({ to: '/staff/$personId', params: { personId: who } })
-                              }
+                              }}
                             />
                             <span className="v" style={{ fontSize: '11.5px' }}>
                               {whoName(who).split(' ')[0]}

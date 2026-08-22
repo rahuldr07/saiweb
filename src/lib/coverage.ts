@@ -11,7 +11,7 @@
 import { LEVELS, COVSTAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { COUNTIES, PRODUCTS, US_STATES } from '@/data/catalog'
-import type { County, Level } from '@/data/types'
+import type { Coverage, County, Level } from '@/data/types'
 
 const NOLIMIT: Level = { id: '', n: '', note: '', states: 'all', counties: {}, products: 'all' }
 
@@ -24,7 +24,7 @@ export const levelOpen = (l: Level) =>
   l.states === 'all' && l.products === 'all' && !Object.values(l.counties ?? {}).some((v) => v?.length)
 
 /** A level read back as a phrase — what the pills add up to. */
-export function covWord(c: Level): string {
+export function covWord(c: Coverage): string {
   const st = c.states === 'all' ? 'every state' : `${c.states.length} state${c.states.length === 1 ? '' : 's'}`
   const narrowed = Object.entries(c.counties ?? {}).filter(([, v]) => v?.length)
   const co = narrowed.length
@@ -33,6 +33,39 @@ export function covWord(c: Level): string {
   const pr =
     c.products === 'all' ? 'every product' : `${c.products.length} product${c.products.length === 1 ? '' : 's'}`
   return `${st}${co} · ${pr}`
+}
+
+/**
+ * Who ended up covering something different when levels were introduced.
+ *
+ * Everyone already had their own coverage; rather than wipe it, each person was
+ * put on the level nearest to it — which is rarely an exact fit. This is the
+ * list of people for whom "nearest" was not "the same", which is the only way
+ * anyone would notice they can now be given more, or less, than before.
+ */
+export interface LevelMove {
+  id: string
+  n: string
+  before: string
+  after: string
+  lvl: string
+}
+
+export function levelMoves(
+  prior: Record<string, Coverage>,
+  levelOf: (id: string) => Level | null,
+  people: { id: string; n: string }[],
+): LevelMove[] {
+  const out: LevelMove[] = []
+  for (const p of people) {
+    const had = prior[p.id]
+    const now = levelOf(p.id)
+    if (!had || !now) continue
+    const before = covWord(had)
+    const after = covWord(now)
+    if (before !== after) out.push({ id: p.id, n: p.n, before, after, lvl: now.n })
+  }
+  return out
 }
 
 export type Gap =

@@ -1,33 +1,164 @@
 import { useState } from 'react'
-import { Btn, Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Banner, Btn, Card, PageHead, SectionHead } from '@/components/ui'
+import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
-import { DataTable, type DataRow } from '@/components/DataTable'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { CANDIDATES, OPENINGS } from '@/data/hrms'
+import { HIRESTAGES } from '@/data/hrms'
 import { fmtDate } from '@/lib/format'
 import { NewOpening } from './hiring/NewOpening'
-import type { ChipKind, Opening } from '@/data/types'
+import { addOpening, moveCandidate, nextStage, useBoard } from './hiring/store'
+import type { Candidate, HireStage, Opening } from '@/data/types'
 
-const STAGE_KIND: Record<string, ChipKind> = {
-  Applied: 'n',
-  Screened: 'b',
-  Interview: 'r',
-  Offer: 'v',
-  Verification: 'v',
+/**
+ * Recruitment.
+ *
+ * Two halves, and the order matters: the pipeline first, because that is what
+ * moves day to day, and the openings under it, because that is what explains
+ * why the pipeline exists at all.
+ *
+ * Every opening carries its reason. A req without one is how headcount grows
+ * without anyone deciding to grow it.
+ */
+
+/** The board is a row of stage columns that scrolls rather than wraps. */
+const COLUMN_MIN = 168
+
+/** Only the first few fit a column before it becomes a list nobody reads. */
+const SHOWN_PER_STAGE = 5
+
+function CandidateCard({ c, onMove }: { c: Candidate; onMove: (c: Candidate) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onMove(c)}
+      title={`Move ${c.n} on`}
+      style={{
+        textAlign: 'left',
+        background: 'var(--tint)',
+        border: '1px solid var(--hair)',
+        borderRadius: 9,
+        padding: '9px 11px',
+        width: '100%',
+      }}
+    >
+      <div style={{ fontSize: '12.5px', fontWeight: 650 }}>{c.n}</div>
+      <div className="gr" style={{ fontSize: '11.5px' }}>
+        {c.exp} yr{c.exp === 1 ? '' : 's'} · {c.src}
+      </div>
+      {c.note ? (
+        <div className="gr" style={{ fontSize: '11.5px', marginTop: 3 }}>
+          {c.note}
+        </div>
+      ) : null}
+    </button>
+  )
 }
 
-/** Openings, and the candidate pipeline against each. */
+function StageColumn({
+  stage,
+  list,
+  onMove,
+}: {
+  stage: HireStage
+  list: Candidate[]
+  onMove: (c: Candidate) => void
+}) {
+  return (
+    <div style={{ flex: 1, minWidth: COLUMN_MIN }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 9,
+        }}
+      >
+        <b style={{ fontSize: '12.5px' }}>{stage}</b>
+        <span className="mono gr" style={{ fontSize: '11.5px' }}>
+          {list.length}
+        </span>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+        {list.length ? (
+          list
+            .slice(0, SHOWN_PER_STAGE)
+            .map((c) => <CandidateCard key={c.id} c={c} onMove={onMove} />)
+        ) : (
+          <div className="gr" style={{ fontSize: '11.5px', padding: '8px 0' }}>
+            nobody
+          </div>
+        )}
+        {list.length > SHOWN_PER_STAGE ? (
+          <div className="gr" style={{ fontSize: '11.5px' }}>
+            and {list.length - SHOWN_PER_STAGE} more
+          </div>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 function Recruitment() {
   const { me } = useSession()
   const { openModal, closeModal, toast } = useUi()
+  const { candidates, openings } = useBoard()
   const [job, setJob] = useState('all')
-  /* Openings raised in this session, newest first, alongside the seeded ones. */
-  const [added, setAdded] = useState<Opening[]>([])
 
-  const openings = [...added, ...OPENINGS]
-  const base = CANDIDATES.filter((c) => job === 'all' || c.job === job)
-  const openingOf = (id: string) => openings.find((o) => o.id === id)
+  /* A pill for an opening that has since been filtered away would strand the
+     view on an empty board, so an unknown filter falls back to everything. */
+  const active = job === 'all' || openings.some((o) => o.id === job) ? job : 'all'
+  const shown = candidates.filter((c) => active === 'all' || c.job === active)
+  const seats = openings.reduce((a, o) => a + o.n, 0)
+
+  /* A pill names its department, which is short and is what people filter by.
+     Two openings in one department would then give two identical pills — which
+     the seeded three never do, but raising a second Search role immediately
+     does — so a department that appears twice falls back to the role title. */
+  const pillLabel = (o: Opening) =>
+    openings.filter((x) => x.dep === o.dep).length > 1 ? o.title : o.dep
+
+  /* One confirmation before anything moves. The step is small but it is the
+     record of somebody's application, so it is not a stray click. */
+  const askMove = (c: Candidate) => {
+    const next = nextStage(c.stage)
+    if (!next) return toast(`${c.n} has already joined`)
+
+    openModal({
+      title: `Move ${c.n} to ${next}?`,
+      body: (
+        <>
+          <p style={{ fontSize: '13.5px' }}>
+            {c.n} · {c.exp} year{c.exp === 1 ? '' : 's'} · from {c.src}
+            {c.note ? ` · ${c.note}` : ''}
+          </p>
+          {next === 'Joined' ? (
+            <Banner kind="b" icon="◔" style={{ margin: '12px 0 0' }}>
+              Marking someone joined would create their staff record, department and salary.{' '}
+              <b>That step is not built yet</b> — it needs the offer figures, which live outside
+              this screen.
+            </Banner>
+          ) : null}
+        </>
+      ),
+      footer: (
+        <>
+          <Btn variant="ghost" onClick={closeModal}>
+            Cancel
+          </Btn>
+          <Btn
+            onClick={() => {
+              moveCandidate(c.id)
+              closeModal()
+              toast(`${c.n} → ${next}`)
+            }}
+          >
+            Move to {next}
+          </Btn>
+        </>
+      ),
+    })
+  }
 
   const raise = () =>
     openModal({
@@ -35,8 +166,9 @@ function Recruitment() {
       body: (
         <NewOpening
           raisedBy={me.n}
-          onSubmit={(opening) => {
-            setAdded((a) => [opening, ...a])
+          onCancel={closeModal}
+          onSubmit={(opening: Opening) => {
+            addOpening(opening)
             closeModal()
             toast(`${opening.title} — ${opening.n} seat${opening.n === 1 ? '' : 's'} open`)
           }}
@@ -44,105 +176,100 @@ function Recruitment() {
       ),
     })
 
-  const rows: DataRow[] = base.map((c) => ({
-    id: c.id,
-    k: c.stage,
-    search: `${c.n} ${c.src} ${openingOf(c.job)?.title ?? ''}`,
-    c: [
-      { v: c.n, s: c.note },
-      { v: openingOf(c.job)?.title ?? c.job, s: openingOf(c.job)?.dep },
-      { v: `${c.exp} yr${c.exp === 1 ? '' : 's'}`, mono: true },
-      { v: c.src },
-      { v: c.stage, chip: STAGE_KIND[c.stage] ?? 'n' },
-      { v: fmtDate(c.at), mono: true },
-    ],
-  }))
-
-  const seats = openings.reduce((a, o) => a + o.n, 0)
-
   return (
     <>
       <PageHead
         title="Recruitment"
+        sub={`${seats} position${seats === 1 ? '' : 's'} open across ${openings.length} role${
+          openings.length === 1 ? '' : 's'
+        } · ${shown.length} ${shown.length === 1 ? 'person' : 'people'} in the pipeline`}
         actions={<Btn onClick={raise}>＋ New opening</Btn>}
-        sub={`${openings.length} opening${openings.length === 1 ? '' : 's'} for ${seats} seats, and ${CANDIDATES.length} people in the pipeline.`}
       />
 
-      <Kpis>
-        <Kpi title="Open roles" value={openings.length} detail={`${seats} seats in total`} />
-        <Kpi title="In the pipeline" value={CANDIDATES.length} detail="across every stage" />
-        <Kpi
-          title="At interview"
-          value={CANDIDATES.filter((c) => c.stage === 'Interview').length}
-          detail="waiting on us"
-        />
-        <Kpi
-          title="At offer"
-          value={<span className="ok">{CANDIDATES.filter((c) => c.stage === 'Offer').length}</span>}
-          detail="waiting on them"
-        />
-      </Kpis>
+      <div className="fbar" role="group" aria-label="Which role">
+        <button
+          type="button"
+          className={`pill ${active === 'all' ? 'on' : ''}`}
+          aria-pressed={active === 'all'}
+          onClick={() => setJob('all')}
+        >
+          All roles
+          <span className="n">{candidates.length}</span>
+        </button>
+        {openings.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            className={`pill ${active === o.id ? 'on' : ''}`}
+            aria-pressed={active === o.id}
+            onClick={() => setJob(o.id)}
+            title={`${o.title} — ${o.dep}`}
+          >
+            {pillLabel(o)}
+            <span className="n">{candidates.filter((c) => c.job === o.id).length}</span>
+          </button>
+        ))}
+      </div>
 
-      <SectionHead>Openings</SectionHead>
+      <SectionHead>The pipeline</SectionHead>
+      <Card padded>
+        {shown.length ? (
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+            {HIRESTAGES.map((st) => (
+              <StageColumn
+                key={st}
+                stage={st}
+                list={shown.filter((c) => c.stage === st)}
+                onMove={askMove}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            Nobody has applied to this role yet. The pipeline fills as candidates come in against
+            it.
+          </p>
+        )}
+        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          Click anyone to move them a stage on. A candidate at Joined becomes a staff record — that
+          is the only way people get into the system, so nobody exists without a hiring trail.
+        </p>
+      </Card>
+
+      <SectionHead>Open positions</SectionHead>
       <Card>
-        <CardHead title={`${openings.length} live`} />
-        <Rows>
+        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
           {openings.map((o) => {
-            const mine = CANDIDATES.filter((c) => c.job === o.id)
+            const mine = candidates.filter((c) => c.job === o.id)
+            const atOffer = mine.filter(
+              (c) => c.stage === 'Offer' || c.stage === 'Verification',
+            ).length
             return (
               <div className="rw" key={o.id}>
-                <span className="gr">⊕</span>
+                <span className="br">{o.n}</span>
                 <span>
                   <b>{o.title}</b>
                   <div className="sd">
-                    {o.dep} · {o.type} · {o.n} seat{o.n === 1 ? '' : 's'} · opened {fmtDate(o.open)} by {o.by}
+                    {o.dep} · {o.type} · opened {fmtDate(o.open)} by {o.by}
                   </div>
-                  <div className="sd">{o.why}</div>
+                  <div className="sd gr" style={{ marginTop: 4 }}>
+                    {o.why}
+                  </div>
                 </span>
-                <span>
-                  <Chip kind={mine.length ? 'b' : 'n'}>{mine.length} candidates</Chip>
+                <span className="mono gr" style={{ fontSize: '11.5px' }}>
+                  {mine.length} in pipeline
+                  <br />
+                  {atOffer} at offer
                 </span>
               </div>
             )
           })}
-        </Rows>
+        </div>
       </Card>
-
-      <SectionHead>Candidates</SectionHead>
-      <DataTable
-        noun="candidates"
-        min={1000}
-        search="Search a candidate or source"
-        filters={[
-          {
-            label: 'Opening',
-            value: job,
-            onChange: setJob,
-            options: [
-              ['all', 'All openings'],
-              ...openings.map((o) => [o.id, o.title] as [string, string]),
-            ],
-          },
-        ]}
-        pills={[
-          { key: 'all', label: 'All', count: base.length },
-          ...['Applied', 'Screened', 'Interview', 'Offer', 'Verification'].map((s) => ({
-            key: s,
-            label: s,
-            count: base.filter((c) => c.stage === s).length,
-          })),
-        ]}
-        cols={[
-          { l: 'Candidate', w: 200, f: 1.3 },
-          { l: 'Opening', w: 220, f: 1.3 },
-          { l: 'Experience', w: 110 },
-          { l: 'Source', w: 120 },
-          { l: 'Stage', w: 140 },
-          { l: 'Applied', w: 110 },
-        ]}
-        rows={rows}
-        emptyText="No candidates match this filter."
-      />
+      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        Every opening carries why it exists. A req without a reason is how headcount grows without
+        anyone deciding to grow it.
+      </p>
     </>
   )
 }
@@ -150,7 +277,9 @@ function Recruitment() {
 export default function RecruitmentRoute() {
   return (
     <RequireCap cap="people">
-      <Recruitment />
+      <ErrorBoundary what="Recruitment">
+        <Recruitment />
+      </ErrorBoundary>
     </RequireCap>
   )
 }

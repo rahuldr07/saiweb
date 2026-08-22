@@ -7,11 +7,13 @@ import { useState } from 'react'
 import { Avatar, Banner, Btn, Card, Chip, Empty, Rows } from '@/components/ui'
 import { useLevels } from '@/state/levels'
 import { useUi } from '@/state/ui'
-import { COVSTAGES, EVERYSTATE, stateName } from '@/lib/coverage'
+import { COVSTAGES, EVERYSTATE, levelMoves, stateName } from '@/lib/coverage'
 import { PRODUCTS } from '@/data/catalog'
+import { PRIOR_COVERAGE } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { board } from '@/lib/engine'
 import type { Gap } from '@/lib/coverage'
+import { useNavigate } from '@tanstack/react-router'
 
 /** A ticked/unticked run of pills with All and None beside the count. */
 function PillRow({
@@ -108,6 +110,7 @@ function AddCountyForm({ st, onDone }: { st: string; onDone: (msg: string) => vo
 
 export function LevelsTab() {
   const lv = useLevels()
+  const navigate = useNavigate()
   const { openModal, closeModal, toast } = useUi()
   const {
     levels,
@@ -128,6 +131,45 @@ export function LevelsTab() {
   const eligible = STAFF.filter((x) => x.dep.some((d) => COVSTAGES.includes(d)) && x.active !== false)
   const ungraded = eligible.filter((x) => !personLevel(x.id))
   const covExc = board().run.exc.filter((e) => e.today && e.why === 'coverage')
+
+  /* Recomputed against the levels as they stand, so editing one shows up here. */
+  const moves = levelMoves(
+    PRIOR_COVERAGE,
+    (id) => levels.find((l) => l.id === personLevel(id)) ?? null,
+    eligible,
+  )
+
+  const showMoves = () =>
+    openModal({
+      title: `Coverage that changed — ${moves.length}`,
+      body: (
+        <>
+          <Rows>
+            {moves.map((m) => (
+              <div className="rw" key={m.id}>
+                <span className="gr">·</span>
+                <span>
+                  <b>
+                    {m.n} → {m.lvl}
+                  </b>
+                  <div className="sd gr">was {m.before}</div>
+                </span>
+                <span className="gr" style={{ fontSize: '12.5px' }}>
+                  {m.after}
+                </span>
+              </div>
+            ))}
+          </Rows>
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+            Each person was put on the level nearest their old coverage, which is rarely an exact fit.
+            Anyone who now covers <b>less</b> than they did may start seeing work hold as an exception;
+            anyone who covers <b>more</b> may be given something they have not done before. Both are
+            worth a minute.
+          </p>
+        </>
+      ),
+      footer: <Btn onClick={closeModal}>Close</Btn>,
+    })
 
   const showGaps = (kind: Gap['kind']) => {
     const list = gaps.filter((g) => g.kind === kind)
@@ -243,17 +285,31 @@ export function LevelsTab() {
         </div>
       </div>
 
-      {covExc.length || gaps.length ? (
+      {covExc.length || gaps.length || moves.length ? (
         <Banner
           kind={covExc.length ? 'r' : 'd'}
           icon="⚑"
           title={[
             covExc.length ? `${covExc.length} order${covExc.length === 1 ? '' : 's'} held today` : '',
             gaps.length ? `${gaps.length} gap${gaps.length === 1 ? '' : 's'} nobody covers` : '',
+            moves.length ? `${moves.length} moved when levels were introduced` : '',
           ]
             .filter(Boolean)
             .join(' · ')}
-          actions={gaps.length ? <Btn variant="ghost" small onClick={() => showGaps('place')}>The gaps</Btn> : undefined}
+          actions={
+            <>
+              {gaps.length ? (
+                <Btn variant="ghost" small onClick={() => showGaps('place')}>
+                  The gaps
+                </Btn>
+              ) : null}
+              {moves.length ? (
+                <Btn variant="ghost" small onClick={showMoves}>
+                  What moved
+                </Btn>
+              ) : null}
+            </>
+          }
         >
           {gaps.length
             ? `Nothing can be given for ${gaps
@@ -473,10 +529,11 @@ export function LevelsTab() {
           </p>
         )}
 
+        {/* The sentence leads and the consequence follows it as the design's
+            trailing sub-line, rather than as a second body line at full size. */}
         <Banner
           kind={prodsOn && shownStates.length ? 'n' : 'd'}
           icon={prodsOn && shownStates.length ? '·' : '⚑'}
-          title={levelSentence(level)}
           style={{ marginTop: 20 }}
           actions={
             <Btn
@@ -516,9 +573,12 @@ export function LevelsTab() {
             </Btn>
           }
         >
-          {held.length
-            ? `${held.length} ${held.length === 1 ? 'person is' : 'people are'} on this level, so a change here moves ${held.length === 1 ? 'them' : 'them all'} tonight.`
-            : 'Nobody is on this level yet, so changing it moves nobody.'}
+          <b>{levelSentence(level)}</b>
+          <div className="bs">
+            {held.length
+              ? `${held.length} ${held.length === 1 ? 'person is' : 'people are'} on this level, so a change here moves ${held.length === 1 ? 'them' : 'them all'} tonight.`
+              : 'Nobody is on this level yet, so changing it moves nobody.'}
+          </div>
         </Banner>
       </Card>
 
@@ -567,7 +627,12 @@ export function LevelsTab() {
                   background: 'var(--tint)',
                 }}
               >
-                <Avatar name={x.n} style={{ width: 24, height: 24, fontSize: '9.5px' }} />
+                <Avatar
+                  name={x.n}
+                  title={`Open ${x.n}`}
+                  style={{ width: 24, height: 24, fontSize: '9.5px' }}
+                  onClick={() => navigate({ to: '/staff/$personId', params: { personId: x.id } })}
+                />
                 <b style={{ fontSize: '12.5px' }}>{x.n}</b>
                 <Btn
                   variant="ghost"

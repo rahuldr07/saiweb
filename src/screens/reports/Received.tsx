@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Card, Label, SectionHead } from '@/components/ui'
+import { useNavigate } from '@tanstack/react-router'
+import { Btn, Card, Label, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
 import { DayPicker } from './DayPicker'
@@ -9,16 +10,20 @@ import { CLIENTS, PRODUCTS } from '@/data/catalog'
 import { money } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { fmtDate } from '@/lib/format'
+import { receivedCsv } from '@/lib/report-csv'
+import { useReportExport } from './useReportExport'
 
 const val = (n: number) => (n ? <b className="mono">{n}</b> : <span className="gr">—</span>)
 
 /** What came in, from whom, and what kind. */
 export function Received() {
+  const navigate = useNavigate()
   const { run } = board()
   const [day, setDay] = useState(() => fmtDate(now()))
   const [focus, setFocus] = useState('all')
 
   const os = day === 'all' ? run.orders : run.orders.filter((o) => o.dk === day)
+  useReportExport(() => receivedCsv(os))
   const scope = day === 'all' ? `all ${run.days.length} days` : day
   const stageOf = curStage
 
@@ -141,7 +146,18 @@ export function Received() {
                           {c.orders.toLocaleString()} orders all time · terms {c.terms}
                         </div>
                       </span>
-                      <span />
+                      <span>
+                        <Btn
+                          variant="ghost"
+                          small
+                          aria-label={`Open ${c.n}`}
+                          onClick={() =>
+                            navigate({ to: '/clients/$clientCode', params: { clientCode: c.n } })
+                          }
+                        >
+                          Open
+                        </Btn>
+                      </span>
                     </div>
                   ))}
                 </div>

@@ -10,7 +10,7 @@ import { ruleMatches, type AssignmentBoard } from '@/lib/engine'
 import {
   RULE_KIND,
   canRemove,
-  ruleEffect,
+  ruleEffectParts,
   ruleProblem,
   ruleThen,
   ruleWhen,
@@ -424,7 +424,20 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
                     When <b>{ruleWhen(r)}</b> → {ruleThen(r)}
                   </div>
                   <div className="sd gr">
-                    {ruleEffect(r, run.fired[r.id] ?? 0, run.narrowed[r.id])}
+                    {(() => {
+                      const [before, em, after] = ruleEffectParts(
+                        r,
+                        run.fired[r.id] ?? 0,
+                        run.narrowed[r.id],
+                      )
+                      return (
+                        <>
+                          {before}
+                          {em ? <b>{em}</b> : null}
+                          {after}
+                        </>
+                      )
+                    })()}
                   </div>
                 </span>
                 <span style={{ display: 'flex', gap: 6, whiteSpace: 'nowrap' }}>

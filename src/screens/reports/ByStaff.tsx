@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Avatar, Btn, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
+import { Avatar, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
+import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
+import { workloadCsv } from '@/lib/report-csv'
+import { useReportExport } from './useReportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusKpis } from '@/components/FocusKpis'
 import { WorkFocus } from './WorkFocus'
@@ -11,12 +14,13 @@ import { AVAIL, STAFF } from '@/data/people'
 const COLS = '180px 150px 1fr 90px 90px 90px'
 
 /** Staff workload: the whole roster, then one person at a time. */
-export function ByStaff({ onOpenDept }: { onOpenDept: (d: string) => void }) {
+export function ByStaff({ initial, onOpenDept }: { initial?: string; onOpenDept: (d: string) => void }) {
   const { run, work, worked, totDone, totPend } = board()
+  useReportExport(() => workloadCsv(worked, false))
   const navigate = useNavigate()
-  const [sel, setSel] = useState('all')
+  const [sel, setSel] = useState(initial ?? 'all')
   const [focus, setFocus] = useState('all')
-  const [itemFilter, setItemFilter] = useState('all')
+  const { filter, setFilter, query, setQuery, match } = useWorkFilter()
 
   const picker = (
     <select
@@ -47,7 +51,7 @@ export function ByStaff({ onOpenDept }: { onOpenDept: (d: string) => void }) {
 
     return (
       <>
-        <PageHead
+        <EmbedHead
           title="Staff workload"
           sub={`Today's ${run.today.length} orders across ${worked.length} people. Completed means that person finished their stage.`}
           actions={picker}
@@ -158,14 +162,15 @@ export function ByStaff({ onOpenDept }: { onOpenDept: (d: string) => void }) {
     )
   }
 
-  const items = r.items.filter((i) => (itemFilter === 'all' ? true : itemFilter === 'done' ? i.fin : !i.fin))
+  const openOrder = (orderId: string) => navigate({ to: '/orders/$orderId', params: { orderId } })
+  const items = match(r.items)
 
   return (
     <>
       <Btn variant="ghost" small style={{ marginBottom: 14 }} onClick={() => setSel('all')}>
         ← All staff
       </Btn>
-      <PageHead
+      <EmbedHead
         title={r.s.n}
         sub={`${r.s.dep.join(', ')} · target ${r.s.cap} a day · ${AVAIL[r.s.avail][0]}`}
         actions={
@@ -189,64 +194,83 @@ export function ByStaff({ onOpenDept }: { onOpenDept: (d: string) => void }) {
           title="Pending"
           value={r.pend}
           tone={r.pend ? 'warn' : undefined}
-          detail={<span className={r.pend ? 'warn' : 'ok'}>{r.pend ? 'still in hand' : 'clear'}</span>}
+          detail={<span className={r.pend ? 'warn' : 'ok'}>{r.pend ? 'still on their desk' : 'nothing outstanding'}</span>}
         />
+        {/* Against the load the engine is actually tracking for this person, not
+            against today's stage-task count — they are different quantities, and
+            the department table opposite uses the load. */}
         <Kpi
           title="Room left"
-          value={Math.max(0, r.s.cap - r.tot)}
-          detail={r.tot >= r.s.cap ? <span className="warn">at target</span> : 'before the target'}
+          value={Math.max(0, r.s.cap - (run.load[r.s.id] ?? 0))}
+          detail={
+            (run.load[r.s.id] ?? 0) >= r.s.cap ? (
+              <span className="warn">at target</span>
+            ) : (
+              'before the target'
+            )
+          }
         />
       </Kpis>
 
       <SectionHead>By stage</SectionHead>
-      <Kpis>
-        {Object.entries(r.stages).map(([stage, v]) => (
-          <Kpi
-            key={stage}
-            title={stage}
-            value={v.done + v.pend}
-            detail={
-              <>
-                <span className="ok">{v.done} done</span> <span className="gr">·</span>{' '}
-                <span className={v.pend ? 'warn' : 'gr'}>{v.pend} pending</span>
-              </>
-            }
-          />
-        ))}
-      </Kpis>
+      <Card padded>
+        {Object.entries(r.stages).map(([stage, v]) => {
+          const pct = v.done + v.pend ? Math.round((v.done / (v.done + v.pend)) * 100) : 0
+          return (
+            <div
+              key={stage}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '130px 1fr 130px',
+                gap: 12,
+                alignItems: 'center',
+                padding: '7px 0',
+                fontSize: '12.5px',
+              }}
+            >
+              <span>{stage}</span>
+              <span className="split">
+                <span style={{ width: `${pct}%`, background: 'var(--ok)' }} />
+                <span style={{ width: `${100 - pct}%`, background: 'var(--warn)' }} />
+              </span>
+              <span className="mono gr" style={{ textAlign: 'right', fontSize: '11.5px' }}>
+                <span className="ok">{v.done}</span> / <span className="warn">{v.pend}</span>
+              </span>
+            </div>
+          )
+        })}
+        <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>
+          Completed / pending per stage this person works.
+        </p>
+      </Card>
 
-      <div className="fbar" style={{ marginTop: 16 }} role="group" aria-label="Filter tasks">
-        {[
-          ['all', `Everything (${r.items.length})`],
-          ['done', `Completed (${r.done})`],
-          ['pend', `Pending (${r.pend})`],
-        ].map(([k, label]) => (
-          <button
-            key={k}
-            className={`pill ${itemFilter === k ? 'on' : ''}`}
-            aria-pressed={itemFilter === k}
-            onClick={() => setItemFilter(k)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <FlexTable
-        cols="150px 130px 140px 1fr 110px"
-        min={800}
-        head={['Order', 'Client', 'Product', 'Stage', 'State']}
+      <SectionHead>Their orders</SectionHead>
+      <WorkFilter
+        filter={filter}
+        onFilter={setFilter}
+        counts={{ all: r.tot, done: r.done, pend: r.pend }}
+        query={query}
+        onQuery={setQuery}
+        shown={items.length}
+        total={r.tot}
+      />
+      <WorkTable
+        cols={WORKCOLS.stage}
+        min={760}
+        head={['Order', 'Stage', 'Product', 'State', 'Arrived', 'Status']}
+        empty={
+          items.length
+            ? null
+            : {
+                icon: '✓',
+                text: `Nothing ${filter === 'done' ? 'completed' : 'pending'} for ${r.s.n}.`,
+              }
+        }
       >
         {items.map((i, idx) => (
-          <FlexRow cols="150px 130px 140px 1fr 110px" key={`${i.o.id}-${idx}`}>
-            <Cell v={i.o.id} mono s={i.fin ? 'completed' : 'pending'} />
-            <Cell v={i.o.cl} />
-            <Cell v={i.o.pr} />
-            <Cell v={i.stage} tone={i.fin ? 'ok' : undefined} />
-            <Cell v={i.o.st} mono />
-          </FlexRow>
+          <WorkRow key={`${i.o.id}-${idx}`} item={i} mode="stage" onOpen={openOrder} />
         ))}
-      </FlexTable>
+      </WorkTable>
     </>
   )
 }

@@ -5,7 +5,7 @@ import { fmtTime, initials, TZ, TZ2 } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { alerts } from '@/lib/derived'
 import { DEMO_IDENTITY } from '@/lib/demo'
-import { LINKCHECK } from '@/data/catalog'
+import { useCoverage } from '@/state/coverage'
 import { ROUTE_LABEL } from './nav'
 import { Empty, Row, Rows } from '@/components/ui'
 
@@ -15,6 +15,7 @@ const LOCAL_OFFSET_H = 9.5
 export function TopBar({ current }: { current: string }) {
   const { me, tenant, theme, toggleTheme, navOpen, setNavOpen, roleLabel, can } = useSession()
   const { openModal, closeModal } = useUi()
+  const { check } = useCoverage()
   const navigate = useNavigate()
 
   const list = alerts()
@@ -55,7 +56,7 @@ export function TopBar({ current }: { current: string }) {
             ))}
           </Rows>
           <p className="gr" style={{ fontSize: '11.5px', marginTop: 12 }}>
-            Going to {LINKCHECK.notify === 'admins' ? 'company admins' : LINKCHECK.notify}. Change who under
+            Going to {check.notify === 'admins' ? 'company admins' : check.notify}. Change who under
             Link monitor.
           </p>
         </>
