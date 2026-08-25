@@ -4,7 +4,7 @@ import { Btn, SecHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
 import { useClients } from '@/state/company'
-import { ClientForm, ClientDelete } from './forms/ClientForm'
+import { useClientEditor } from './forms/useClientEditor'
 import { money } from '@/lib/format'
 import { csvName, downloadCSV } from '@/lib/csv'
 
@@ -19,34 +19,10 @@ const r2 = (n: number) => Math.round(n * 100) / 100
  */
 export function ClientsTab() {
   const navigate = useNavigate()
-  const { openModal, closeModal, toast } = useUi()
+  const { toast } = useUi()
+  const { editClient } = useClientEditor()
   const CLIENTS = useClients()
   const [showOff, setShowOff] = useState(false)
-
-  const editClient = (name?: string) =>
-    openModal({
-      title: name ? `Edit ${name}` : 'Add a client',
-      body: (
-        <ClientForm
-          name={name}
-          onCancel={closeModal}
-          onDone={(m) => { closeModal(); toast(m) }}
-          onRemove={(x) => confirmRemove(x)}
-        />
-      ),
-    })
-
-  const confirmRemove = (name: string) =>
-    openModal({
-      title: `Remove ${name}?`,
-      body: (
-        <ClientDelete
-          name={name}
-          onCancel={() => editClient(name)}
-          onDone={(m) => { closeModal(); toast(m) }}
-        />
-      ),
-    })
 
   const list = CLIENTS.filter((c) => showOff || c.active !== false)
   const off = CLIENTS.filter((c) => c.active === false).length

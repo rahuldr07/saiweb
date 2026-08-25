@@ -124,12 +124,16 @@ const routeTree = rootRoute.addChildren([
   /* Configure */
   screen('/integ', () => import('./screens/Integrations')),
   /* Reports links straight at Company → Turnaround & SLA, where the stage
-     budgets it is complaining about are set, so the tab is nameable. */
+     budgets it is complaining about are set, so the tab is nameable — and so is
+     the section inside it, since "Turnaround & SLA" is three separate settings
+     and landing on the wrong one is the same as not linking at all. */
   createRoute({
     getParentRoute: () => rootRoute,
     path: '/company',
-    validateSearch: (s: Record<string, unknown>): { tab?: string } =>
-      typeof s.tab === 'string' ? { tab: s.tab } : {},
+    validateSearch: (s: Record<string, unknown>): { tab?: string; sub?: string } => ({
+      ...(typeof s.tab === 'string' ? { tab: s.tab } : {}),
+      ...(typeof s.sub === 'string' ? { sub: s.sub } : {}),
+    }),
     component: lazyRouteComponent(() => import('./screens/Company')),
   }),
   screen('/onboard', () => import('./screens/Onboard')),
