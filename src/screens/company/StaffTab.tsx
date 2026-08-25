@@ -3,11 +3,8 @@ import { useNavigate } from '@tanstack/react-router'
 import { Banner, Btn, SecHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useNotBuilt } from '@/components/notBuilt'
-import { useUi } from '@/state/ui'
-import { StaffForm, StaffDelete } from './forms/StaffForm'
-import { RoleForm } from './forms/RoleForm'
+import { useStaffEditor } from './forms/useStaffEditor'
 import { useStaff } from '@/state/company'
-import type { Person } from '@/data/types'
 import { AVAIL } from '@/data/people'
 import { board } from '@/lib/engine'
 import { roleName } from '@/lib/permissions'
@@ -23,64 +20,10 @@ import { csvName, downloadCSV } from '@/lib/csv'
 export function StaffTab({ tenantName, onOpenRoles }: { tenantName: string; onOpenRoles: () => void }) {
   const navigate = useNavigate()
   const notBuilt = useNotBuilt()
-  const { openModal, closeModal, toast } = useUi()
+  const { editStaff } = useStaffEditor()
   const { run } = board()
   const STAFF = useStaff()
   const [showOff, setShowOff] = useState(false)
-
-  /* Editing somebody, and stepping out to create a role without losing what has
-     already been typed — the design's one genuinely two-step flow. */
-  const editStaff = (id?: string, draft?: Partial<Person> | null) =>
-    openModal({
-      title: id ? `Edit ${STAFF.find((s) => s.id === id)?.n ?? ''}` : 'Add staff',
-      body: (
-        <StaffForm
-          id={id}
-          draft={draft}
-          onCancel={closeModal}
-          onDone={(m) => {
-            closeModal()
-            toast(m)
-          }}
-          onRemove={(rid) => confirmRemove(rid)}
-          onNewRole={(typed) => newRoleFor(id, typed)}
-        />
-      ),
-    })
-
-  const confirmRemove = (id: string) =>
-    openModal({
-      title: `Remove ${STAFF.find((s) => s.id === id)?.n ?? ''}?`,
-      body: (
-        <StaffDelete
-          id={id}
-          onCancel={() => editStaff(id)}
-          onDone={(m) => {
-            closeModal()
-            toast(m)
-          }}
-        />
-      ),
-    })
-
-  const newRoleFor = (id: string | undefined, typed: Partial<Person>) =>
-    openModal({
-      title: 'Add a role',
-      body: (
-        <RoleForm
-          isAdmin
-          onCancel={() => editStaff(id, typed)}
-          onManagePerms={() => editStaff(id, typed)}
-          onRemove={() => editStaff(id, typed)}
-          onDone={(m, roleId) => {
-            toast(m)
-            /* Straight back to the staff form, with the new role already chosen
-               and nothing that was typed lost. */
-            editStaff(id, { ...typed, r: roleId })
-          }}
-        />
-      ),
-    })
 
   const list = STAFF.filter((s) => showOff || s.active !== false)
   const off = STAFF.filter((s) => s.active === false).length

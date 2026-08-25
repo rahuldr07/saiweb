@@ -1,460 +1,1169 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import {
-  Avatar,
   Bar,
   Banner,
   Btn,
   Card,
-  CardBody,
-  CardHead,
   Chip,
-  Empty,
-  KeyValues,
+  Field,
   Kpi,
   Kpis,
+  Label,
   NotFoundRecord,
   PageHead,
+  Row,
   Rows,
+  SectionHead,
   Tabs,
 } from '@/components/ui'
+import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { SkeletonRows, SkeletonValue } from '@/components/async'
+import { useStaffEditor } from './company/forms/useStaffEditor'
 import { useSession } from '@/state/session'
-import { AVAIL, STAFF } from '@/data/people'
-import { ROLELIST } from '@/data/org'
+import { useUi } from '@/state/ui'
+import { useStaff, usePerms, useRoles } from '@/state/company'
+import { useLevels } from '@/state/levels'
+import { AVAIL } from '@/data/people'
+import { ASSIGN_STAGES, COVSTAGES, STAGES } from '@/data/org'
 import { board } from '@/lib/engine'
-import { covSummary, levelOf } from '@/lib/coverage'
-import { inr, leaveBalance, structureOf, yearsServed } from '@/lib/payroll'
-import { ONTIMETARGET } from '@/lib/metrics'
-import { useDeliveries } from '@/lib/useDeliveries'
+import { covWord } from '@/lib/coverage'
+import { median } from '@/lib/metrics'
+import { standing, stageWorkOf, type StageWork } from '@/lib/quality'
+import { DEFAULT_RANGE, inRange, resolveRange } from '@/lib/range'
+import { fmtDate, initials } from '@/lib/format'
 import { roleName } from '@/lib/permissions'
+import { useDeliveries } from '@/lib/useDeliveries'
+import { useQcLog } from '@/lib/useQcLog'
+import type { QcEntry } from '@/data/quality'
 
-const TABS = ['Work', 'Coverage', 'Leave', 'Employment'] as const
+const TABS = ['Overview', 'Work', 'Quality', 'Access'] as const
 type Tab = (typeof TABS)[number]
 
+/** Last four only. Anything more should be a deliberate act. */
+const maskAadhaar = (a: string) => (a ? `XXXX XXXX ${a.replace(/\s/g, '').slice(-4)}` : '')
+
+const markTone = (v: number) => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
+
+/** The label/value line the design uses down the side of the Overview cards. */
+function DetailRow({
+  label,
+  value,
+  last,
+}: {
+  label: string
+  value: React.ReactNode
+  last?: boolean
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: 14,
+        padding: '7px 0',
+        fontSize: '13.5px',
+        ...(last ? {} : { borderBottom: '1px solid var(--hair)' }),
+      }}
+    >
+      <span className="gr">{label}</span>
+      <span style={{ textAlign: 'right', fontWeight: 600 }}>{value}</span>
+    </div>
+  )
+}
+
+const TINT: Record<string, string> = {
+  v: 'var(--oksoft)',
+  d: 'var(--badtint)',
+  r: 'var(--warntint)',
+  b: 'var(--brandsoft)',
+  n: 'var(--tint)',
+}
+
 /**
- * One person: what they are carrying today, what they are qualified to take,
- * where their leave stands, and their employment record.
+ * One person, everything about them.
+ *
+ * The figures already existed — they were just spread across four screens, so
+ * nobody could answer "how is she doing?" without opening three of them and
+ * holding the numbers in their head. Four tabs, in the order the question is
+ * usually asked: who they are, what they are carrying, how the work reads, and
+ * what they are allowed to do.
  *
  * Two rules the design is firm about, and this screen keeps:
  *
- *  - Personal performance is measured against a target, never against a
- *    colleague. There is no ranking on this screen and no comparison to peers.
- *  - The employment record — bank, PAN, Aadhaar, salary — is not roster
- *    information. It needs `people`, and it is a separate tab rather than
- *    something you scroll past on the way to somebody's workload.
+ *  - Performance is measured against a target and against people doing the same
+ *    stages — never against the company average, which would say more about
+ *    which stage someone works on than about them.
+ *  - Aadhaar and bank details show masked. Revealing them is a deliberate act,
+ *    and in a real deployment a logged one.
  */
 export default function PersonDetail() {
   const { personId } = useParams({ from: '/staff/$personId' })
   const navigate = useNavigate()
   const { me, can } = useSession()
-  const [tab, setTab] = useState<Tab>('Work')
+  const { openModal } = useUi()
+  const { editStaff } = useStaffEditor()
+  const staff = useStaff()
+  const perms = usePerms()
+  const roles = useRoles()
+  const levelsApi = useLevels()
+  const [tab, setTab] = useState<Tab>('Overview')
+  const [aadhaarShown, setAadhaarShown] = useState(false)
 
-  const person = STAFF.find((s) => s.id === personId)
+  const person = staff.find((s) => s.id === personId)
+
   const history = useDeliveries()
-
-  const mine = useMemo(
-    () => (history.data ?? []).filter((d) => Object.values(d.by).includes(personId)),
-    [history.data, personId],
-  )
-
-  const work = board().work[personId]
+  const qcLog = useQcLog()
 
   if (!person) {
-    return <NotFoundRecord what="person" backTo="/company" backLabel="Company" />
+    return <NotFoundRecord what="person" backTo="/company" backLabel="Staff" />
   }
 
+  /* Nothing below is memoised by hand. The compiler does it, and doing it here
+     as well is what stops it from doing it at all — the roster these figures are
+     keyed on is an edited store, so a manual dependency list on it cannot be
+     preserved. */
+  const range = resolveRange(DEFAULT_RANGE)
+  const { run, work: allWork, dwork } = board()
+  const log = qcLog.data ?? []
+
+  /* Ratings on their work, and the ratings they handed out — both inside the
+     same window, so the two halves of a QC record can be read together. */
+  const rated = log.filter((x) => x.onName === person.n && inRange(x.d, range))
+  const given = log.filter((x) => x.byName === person.n && inRange(x.d, range))
+  const teamRows = log.filter((x) => inRange(x.d, range))
+  const stageWork = stageWorkOf((history.data ?? []).filter((x) => inRange(x.d, range)))
+
+  const work = allWork[person.id] ?? { done: 0, pend: 0, tot: 0, pct: 0, items: [], stages: {} }
+  const t: StageWork | null = stageWork.people[person.n] ?? null
+  const qavg = rated.length ? rated.reduce((a, x) => a + x.avg, 0) / rated.length : null
+  const teamAvg = teamRows.length ? teamRows.reduce((a, x) => a + x.avg, 0) / teamRows.length : 0
+  const sd = qavg !== null && t ? standing(qavg, t.vsPeers, teamAvg) : null
+  const role = roles.find((x) => x.id === person.r)
+  const dis = person.active === false
   const isMe = person.id === me.id
-  const late = mine.filter((d) => d.late).length
-  const onTime = mine.length ? ((mine.length - late) / mine.length) * 100 : null
-  const level = levelOf(person.id)
-  const structure = person.ctc ? structureOf(person) : null
-  const balances = leaveBalance(person.id)
-  const served = yearsServed(person)
+  const load = run.load[person.id] ?? 0
+  const level = levelsApi.levelOf(person.id)
+  const levelId = levelsApi.personLevel(person.id)
+  const loading = qcLog.isPending || history.isPending
 
-  /* Somebody's own record is always theirs to see; anyone else's employment
-     details need the capability that manages staff. */
-  const maySeeEmployment = isMe || can('people')
-  const maySeePay = isMe || can('pricing')
+  /* Somebody's own record is always theirs to read; anyone else's statutory
+     identifiers and bank account need the capability that manages staff. The
+     design has no gate here because it has no roles behind it — this screen
+     does, and a page reachable by any signed-in person is the wrong place to
+     print an Aadhaar number. */
+  const maySeePersonal = isMe || can('people')
 
-  const role = ROLELIST.find((r) => r.id === person.r)
+  /* ── the modals the figures open ───────────────────────────────────────── */
 
-  /* Both come out of the history already fetched for the on-time tile, so this
-     costs nothing extra — and a person's page that shows only today is thin for
-     exactly the people who are on leave or between orders. */
-  const recent = [...mine].sort((a, b) => b.d.getTime() - a.d.getTime()).slice(0, 8)
-  const stageMix = Object.entries(
-    mine.reduce<Record<string, number>>((acc, d) => {
-      for (const [stage, who] of Object.entries(d.by)) {
-        if (who === person.id) acc[stage] = (acc[stage] ?? 0) + 1
-      }
-      return acc
-    }, {}),
+  const modalNote = (children: React.ReactNode) => (
+    <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      {children}
+    </p>
+  )
+
+  const openStages = () => {
+    const items = [...work.items].sort((a, b) => a.hr - b.hr)
+    openModal({
+      title: `${person.n} — ${work.tot} stage${work.tot === 1 ? '' : 's'} today`,
+      body: (
+        <>
+          {items.length ? (
+            <Rows>
+              {items.map((x, i) => (
+                <Row
+                  key={`${x.o.id}-${x.stage}-${i}`}
+                  icon={<span className={x.fin ? 'ok' : 'gr'}>{x.fin ? '✓' : '·'}</span>}
+                  title={`${x.o.id} · ${x.stage}`}
+                  detail={`${x.o.cl} · ${x.o.pr} · placed at ${x.hr}:00`}
+                  right={<span className={x.fin ? 'ok' : 'gr'}>{x.fin ? 'done' : 'open'}</span>}
+                />
+              ))}
+            </Rows>
+          ) : (
+            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+              Nothing has been placed with them today.
+            </p>
+          )}
+          {modalNote(
+            <>
+              Their target is <b>{person.cap} a day</b>, set on their record rather than by the
+              department. The assignment run stops offering them work once they reach it.
+            </>,
+          )}
+        </>
+      ),
+    })
+  }
+
+  const openLate = () => {
+    const over = t ? t.items.filter((x) => x.over && x.d.late) : []
+    openModal({
+      title: `Late deliveries their stage overran — ${over.length}`,
+      body: (
+        <>
+          {over.length ? (
+            <Rows>
+              {over.map((x, i) => (
+                <Row
+                  key={`${x.d.id}-${x.st}-${i}`}
+                  icon={<span className="bad">⚑</span>}
+                  title={`${x.d.id} · ${x.st}`}
+                  detail={`${x.d.cl} · ${x.d.pr} · took ${x.h.toFixed(1)}h against a ${x.budget.toFixed(1)}h budget`}
+                  right={<span className="mono bad">{x.ratio.toFixed(2)}×</span>}
+                />
+              ))}
+            </Rows>
+          ) : (
+            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+              None. Where an order ran late, their stage was inside its budget.
+            </p>
+          )}
+          {modalNote(
+            <>
+              Only counted when <b>their own stage</b> was the one that overran. An order can be late
+              for reasons upstream of the person holding it, and blaming them for that is how a
+              metric stops being trusted.
+            </>,
+          )}
+        </>
+      ),
+    })
+  }
+
+  const CHECK_TITLE: Record<string, string> = {
+    all: 'Every check on their work',
+    defect: 'Scored 3 or below',
+    clean: 'Nothing raised',
+    gave: 'Checks they carried out',
+  }
+
+  const openChecks = (kind: 'all' | 'defect' | 'clean' | 'gave') => {
+    const set: QcEntry[] =
+      kind === 'gave'
+        ? given
+        : kind === 'defect'
+          ? rated.filter((x) => x.defect)
+          : kind === 'clean'
+            ? rated.filter((x) => !x.crit)
+            : rated
+    openModal({
+      title: `${person.n} — ${CHECK_TITLE[kind].toLowerCase()} · ${set.length}`,
+      body: (
+        <>
+          {set.length ? (
+            <Rows>
+              {set.map((x, i) => (
+                <Row
+                  key={`${x.order}-${x.stage}-${i}`}
+                  icon={
+                    <span className={x.defect ? 'bad' : x.crit ? 'gr' : 'ok'}>
+                      {x.defect ? '⚑' : x.crit ? '·' : '✓'}
+                    </span>
+                  }
+                  title={`${x.order} · ${x.stage}`}
+                  detail={`${fmtDate(x.d)} · ${
+                    kind === 'gave' ? `on ${x.onName}` : `checked by ${x.byName}`
+                  }${x.note ? ` — ${x.note}` : ''}`}
+                  right={<span className="mono">{x.avg.toFixed(2)}</span>}
+                />
+              ))}
+            </Rows>
+          ) : (
+            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+              Nothing in {range.label}.
+            </p>
+          )}
+          {modalNote(
+            kind === 'gave'
+              ? 'What someone raises on others is as much a part of their record as what is raised on them — a checker who never finds anything is not necessarily a good checker.'
+              : 'About a third of finished work is never rated, so these counts are a sample rather than a census. Read the reasons before the average.',
+          )}
+        </>
+      ),
+    })
+  }
+
+  const budgetHelp = () =>
+    openModal({
+      title: 'What “inside your budget” means',
+      body: (
+        <>
+          <Rows>
+            <Row
+              title="The stage budget"
+              detail="the share of the client promise this stage is allowed"
+              right={<span className="gr">set per product</span>}
+            />
+            <Row title="Inside budget" detail="you finished the stage within that share" />
+            <Row
+              title="Compared against"
+              detail="other people doing the same stages, not the company average"
+            />
+          </Rows>
+          {modalNote(
+            'Stages differ enormously — RTS finishes inside budget almost every time and Search barely 60% of the time. Comparing you against the company average would say more about which stage you work on than about you.',
+          )}
+        </>
+      ),
+    })
+
+  /* ── the header ────────────────────────────────────────────────────────── */
+
+  const head = (
+    <Card padded>
+      <div className="ch" style={{ border: 'none', padding: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
+          <span className="ava" style={{ width: 52, height: 52, fontSize: '17px' }}>
+            {initials(person.n)}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
+              <h2 style={{ margin: 0, fontSize: '19px' }}>{person.n}</h2>
+              <Chip kind={person.r === 'admin' ? 'b' : person.r === 'staff' ? 'n' : 'r'}>
+                {roleName(person.r)}
+              </Chip>
+              {dis ? (
+                <Chip kind="n">Disabled</Chip>
+              ) : (
+                <Chip kind={AVAIL[person.avail][1]}>{AVAIL[person.avail][0]}</Chip>
+              )}
+              {sd ? <Chip kind={sd[1]}>{sd[0]}</Chip> : null}
+              {isMe ? <Chip kind="b">You</Chip> : null}
+            </div>
+            <div className="gr" style={{ fontSize: '12.5px', marginTop: 4 }}>
+              {person.dep.length ? (
+                person.dep.join(' · ')
+              ) : (
+                <span className="warn">in no department — cannot be assigned anything</span>
+              )}
+              {person.e ? (
+                <>
+                  {' · '}
+                  <span className="mono">{person.e}</span>
+                </>
+              ) : null}
+              {person.mob ? (
+                <>
+                  {' · '}
+                  <span className="mono">{person.mob}</span>
+                </>
+              ) : null}
+            </div>
+          </div>
+        </div>
+        <div className="r">
+          <Btn variant="ghost" onClick={() => editStaff(person.id)}>
+            Edit details
+          </Btn>
+          {can('people') ? (
+            <Btn
+              variant="ghost"
+              onClick={() => navigate({ to: '/company', search: { tab: 'Roles' } })}
+            >
+              Roles
+            </Btn>
+          ) : null}
+        </div>
+      </div>
+
+      {person.conflict ? (
+        <Banner kind="r" icon="⚖" title="In a stage and its own QC" style={{ margin: '14px 0 0' }}>
+          {person.n} is in both Typing and Typing QC, so they could be asked to check their own
+          typing. Assignment blocks it order by order, but the pairing itself is worth a decision.
+        </Banner>
+      ) : null}
+
+      {dis ? (
+        <Banner kind="d" icon="⚑" title="Disabled — takes no new work" style={{ margin: '14px 0 0' }}>
+          Their history stays exactly as it is. Everything below still counts the work they did.
+        </Banner>
+      ) : null}
+    </Card>
+  )
+
+  /* ── overview ──────────────────────────────────────────────────────────── */
+
+  const overview = (
+    <>
+      <Kpis style={{ marginTop: 16 }}>
+        <Kpi
+          title="Today"
+          value={work.tot}
+          detail={`of a ${person.cap} target`}
+          hint="Their day, stage by stage"
+          onClick={() => setTab('Work')}
+        />
+        <Kpi
+          title="Completed"
+          value={<span className="ok">{work.done}</span>}
+          detail={`${work.pct}% of their day`}
+          hint="Their day, stage by stage"
+          onClick={() => setTab('Work')}
+        />
+        <Kpi
+          title="On their desk"
+          value={<span className={work.pend ? 'warn' : 'ok'}>{work.pend}</span>}
+          tone={work.pend ? 'warn' : undefined}
+          detail="still to finish"
+          hint="What is still open"
+          onClick={() => setTab('Work')}
+        />
+        <Kpi
+          title="Quality"
+          value={loading ? <SkeletonValue width={64} /> : qavg !== null ? qavg.toFixed(2) : '—'}
+          detail={`${rated.length} rating${rated.length === 1 ? '' : 's'} · ${range.label}`}
+          hint="Every rating and why marks came off"
+          onClick={() => setTab('Quality')}
+        />
+      </Kpis>
+
+      {sd && qavg !== null && t ? (
+        <Card padded style={{ marginTop: 16 }}>
+          <div
+            className="rw"
+            style={{ background: TINT[sd[1]] ?? 'var(--tint)', borderRadius: 9, padding: '13px 15px' }}
+          >
+            <span>
+              <Chip kind={sd[1]}>{sd[0]}</Chip>
+            </span>
+            <span>
+              <b>{sd[2]}</b>
+              <div className="sd">
+                Quality {qavg.toFixed(2)} against a team {teamAvg.toFixed(2)}; inside budget on{' '}
+                {t.onBudget}% of {t.c} stages where peers on the same stages manage {t.expected}%.
+              </div>
+            </span>
+            <span>
+              <Btn variant="ghost" small onClick={() => setTab('Quality')}>
+                The detail
+              </Btn>
+            </span>
+          </div>
+        </Card>
+      ) : null}
+
+      <div className="two" style={{ marginTop: 16 }}>
+        <Card padded>
+          <Label>Contact and emergency</Label>
+          {(
+            [
+              ['Mobile', person.mob],
+              ['Email', person.e],
+              ['Address', person.addr],
+            ] as [string, string][]
+          )
+            .filter((r) => r[1])
+            .map((r) => (
+              <DetailRow key={r[0]} label={r[0]} value={r[1]} />
+            ))}
+          {person.emg?.n ? (
+            <div
+              className="rw"
+              style={{
+                background: 'var(--badtint)',
+                borderRadius: 9,
+                padding: '12px 14px',
+                marginTop: 12,
+              }}
+            >
+              <span className="bad" style={{ fontSize: '14.5px' }}>
+                ☎
+              </span>
+              <span>
+                <b>
+                  {person.emg.n} — {person.emg.rel}
+                </b>
+                <div className="sd mono">{person.emg.mob}</div>
+                <div className="sd gr">Called first if something happens here.</div>
+              </span>
+              <span />
+            </div>
+          ) : (
+            <Banner kind="r" icon="⚠" style={{ marginTop: 12 }}>
+              <b>No emergency contact on record.</b> This is the field nobody misses until the day it
+              is needed.
+            </Banner>
+          )}
+        </Card>
+
+        <Card padded>
+          <Label>Statutory</Label>
+          {maySeePersonal ? (
+            <>
+              {(
+                [
+                  ['PAN', person.pan],
+                  ['UAN — provident fund', person.uan],
+                  ['ESIC number', person.esicNo],
+                ] as [string, string][]
+              ).map((r) => (
+                <DetailRow
+                  key={r[0]}
+                  label={r[0]}
+                  value={
+                    r[1] ? <span className="mono">{r[1]}</span> : <span className="bad">not on record</span>
+                  }
+                />
+              ))}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: 14,
+                  padding: '7px 0',
+                  fontSize: '13.5px',
+                  borderBottom: '1px solid var(--hair)',
+                }}
+              >
+                <span className="gr">Aadhaar</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <b className="mono">
+                    {person.aadhaar
+                      ? aadhaarShown
+                        ? person.aadhaar
+                        : maskAadhaar(person.aadhaar)
+                      : 'not on record'}
+                  </b>
+                  {person.aadhaar && !aadhaarShown ? (
+                    <Btn variant="ghost" small onClick={() => setAadhaarShown(true)}>
+                      Show
+                    </Btn>
+                  ) : null}
+                </span>
+              </div>
+              <DetailRow
+                label="Bank"
+                last
+                value={
+                  person.bank?.acct ? (
+                    <span className="mono">
+                      {person.bank.acct} · {person.bank.ifsc}
+                    </span>
+                  ) : (
+                    <span className="bad">not on record</span>
+                  )
+                }
+              />
+              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+                Aadhaar shows its last four by default. Anything more should be a deliberate act, and
+                in a real deployment a logged one.
+              </p>
+            </>
+          ) : (
+            <p className="gr" style={{ fontSize: '12.5px', margin: '10px 0 0' }}>
+              Statutory identifiers and bank details need the “people” capability. Ask a company admin
+              if you should be able to see them.
+            </p>
+          )}
+        </Card>
+      </div>
+
+      <div className="two" style={{ marginTop: 16 }}>
+        <Card padded>
+          <Label>Where they work</Label>
+          {person.dep.length ? (
+            person.dep.map((d) => {
+              const st = work.stages[d] ?? { done: 0, pend: 0 }
+              const dept = dwork[d]
+              return (
+                <div
+                  key={d}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '130px 1fr 120px',
+                    gap: 12,
+                    alignItems: 'center',
+                    padding: '7px 0',
+                    fontSize: '12.5px',
+                  }}
+                >
+                  <span>
+                    <b>{d}</b>
+                  </span>
+                  <Bar value={st.done + st.pend} max={Math.max(1, work.tot)} color="var(--brand2)" />
+                  <span className="mono gr" style={{ textAlign: 'right' }}>
+                    {st.done + st.pend} today
+                    {dept?.staff ? ` · 1 of ${dept.staff.length}` : ''}
+                  </span>
+                </div>
+              )
+            })
+          ) : (
+            <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+              No department, so the assignment engine can never pick them.{' '}
+              <button type="button" className="lnk" onClick={() => editStaff(person.id)}>
+                Fix that
+              </button>
+              .
+            </p>
+          )}
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            A person in one department is a single point of failure for that stage on the day they
+            are away.
+          </p>
+        </Card>
+
+        <Card padded>
+          <Label>Capacity</Label>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '8px 0 10px' }}>
+            <b className="mono" style={{ fontSize: '26px' }}>
+              {load}
+            </b>
+            <span className="gr">of {person.cap} today</span>
+          </div>
+          <Bar
+            value={load}
+            max={person.cap}
+            color={load >= person.cap ? 'var(--warn)' : 'var(--ok)'}
+          />
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            {load >= person.cap
+              ? 'At target, so the engine will not give them anything else today. Anything that needed them became an exception.'
+              : `${person.cap - load} more before the engine stops offering them work.`}
+          </p>
+          <p className="gr" style={{ fontSize: '12.5px' }}>
+            Their target is set on their record, not by the department.
+          </p>
+        </Card>
+
+        {person.dep.some((d) => COVSTAGES.includes(d)) ? (
+          <Card padded>
+            <Label>What they can be given</Label>
+            <div style={{ marginTop: 10 }}>
+              <Field
+                label="Level"
+                hint={
+                  levelId
+                    ? 'Coverage comes from the level, so changing it here moves them, not the level.'
+                    : 'Not restricted — a candidate for anything in their department.'
+                }
+              >
+                <select
+                  className="inp"
+                  aria-label="Level"
+                  value={levelId ?? ''}
+                  onChange={(e) => levelsApi.setPersonLevel(person.id, e.target.value)}
+                >
+                  <option value="">No level — takes anything</option>
+                  {levelsApi.levels.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.n} — {covWord(l)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+            {levelId && level ? (
+              <div className="rw" style={{ padding: '11px 0', marginTop: 6 }}>
+                <span className="ok" style={{ fontSize: '14.5px' }}>
+                  ◈
+                </span>
+                <span>
+                  <b>{covWord(levelsApi.covOf(person.id))}</b>
+                  <div className="sd">
+                    Shared with {Math.max(0, levelsApi.onLevel(levelId).length - 1)} other
+                    {levelsApi.onLevel(levelId).length - 1 === 1 ? '' : 's'} on {level.n}. Widen the
+                    level and they all move together.
+                  </div>
+                </span>
+                <span>
+                  <Btn
+                    variant="ghost"
+                    small
+                    onClick={() => {
+                      levelsApi.select(levelId)
+                      navigate({ to: '/assign' })
+                    }}
+                  >
+                    Open the level
+                  </Btn>
+                </span>
+              </div>
+            ) : null}
+            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              Levels apply to {COVSTAGES.join(' and ')} only — the stages that need local knowledge.
+              Typing and RTS work from what the searcher found.
+            </p>
+          </Card>
+        ) : null}
+      </div>
+    </>
+  )
+
+  /* ── work ──────────────────────────────────────────────────────────────── */
+
+  const dayItems = [...work.items].sort((a, b) => a.hr - b.hr)
+
+  const workTab = (
+    <>
+      <Kpis style={{ marginTop: 16 }}>
+        <Kpi
+          title="Stages today"
+          value={work.tot}
+          detail={`${work.done} done · ${work.pend} open`}
+          hint="Their day, stage by stage"
+          onClick={openStages}
+        />
+        <Kpi
+          title="Inside budget"
+          value={loading ? <SkeletonValue width={64} /> : t ? `${t.onBudget}%` : '—'}
+          valueTone={t ? (t.vsPeers >= -5 ? 'ok' : 'warn') : undefined}
+          tone={t && t.vsPeers < -5 ? 'warn' : undefined}
+          detail={t ? `peers ${t.expected}%` : 'no history in range'}
+          hint="What this is measured against"
+          onClick={budgetHelp}
+        />
+        <Kpi
+          title="Median time used"
+          value={loading ? <SkeletonValue width={64} /> : t ? `${t.ratio.toFixed(2)}×` : '—'}
+          detail="of the budget allowed"
+          hint="What this is measured against"
+          onClick={budgetHelp}
+        />
+        <Kpi
+          title="Late orders they overran"
+          value={
+            loading ? (
+              <SkeletonValue width={48} />
+            ) : (
+              <span className={t?.causedLate ? 'bad' : 'ok'}>{t ? t.causedLate : '—'}</span>
+            )
+          }
+          tone={t?.causedLate ? 'alert' : undefined}
+          detail="their stage went over"
+          hint="Which orders, and by how much"
+          onClick={openLate}
+        />
+      </Kpis>
+
+      {loading ? (
+        <Card style={{ marginTop: 16 }}>
+          <div className="cb">
+            <SkeletonRows rows={4} cols={3} />
+          </div>
+        </Card>
+      ) : t ? (
+        <Card padded style={{ marginTop: 16 }}>
+          <Label>Time against budget, by department — {range.label}</Label>
+          {ASSIGN_STAGES.filter((st) => t.stages[st]?.length).map((st) => {
+            const l = t.stages[st]
+            const md = median(l.map((x) => x.ratio))
+            const ov = l.filter((x) => x.over).length
+            return (
+              <div
+                key={st}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '120px 1fr 200px',
+                  gap: 12,
+                  alignItems: 'center',
+                  padding: '7px 0',
+                  fontSize: '12.5px',
+                }}
+              >
+                <span className="gr">{st}</span>
+                {/* Pale bar is the budget, solid is their median against it. */}
+                <span style={{ position: 'relative', height: 16 }}>
+                  <span className="bar" style={{ position: 'absolute', inset: 0, height: 16 }}>
+                    <i style={{ width: '50%', background: 'var(--brandsoft)' }} />
+                  </span>
+                  <span
+                    className="bar"
+                    style={{ position: 'absolute', inset: '4px 0', height: 8, background: 'transparent' }}
+                  >
+                    <i
+                      style={{
+                        width: `${Math.min(100, Math.round(md * 50))}%`,
+                        background: md > 1 ? 'var(--warn)' : 'var(--brand2)',
+                      }}
+                    />
+                  </span>
+                </span>
+                <span className="mono" style={{ textAlign: 'right', fontSize: '12.5px' }}>
+                  {md.toFixed(2)}×{' '}
+                  <span className={ov / l.length > 0.3 ? 'warn' : 'gr'}>
+                    · over on {ov} of {l.length}
+                  </span>
+                </span>
+              </div>
+            )
+          })}
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            Pale bar is the budget, solid is their median. Judged against people doing the same
+            stages, not against the whole company.
+          </p>
+        </Card>
+      ) : null}
+
+      <SectionHead>Today, stage by stage</SectionHead>
+      {dayItems.length ? (
+        <FlexTable
+          cols="105px 160px 150px 150px 1fr"
+          min={760}
+          head={['Arrived', 'Order', 'Client', 'Stage', 'Status']}
+        >
+          {dayItems.map((i, idx) => (
+            <FlexRow
+              key={`${i.o.id}-${i.stage}-${idx}`}
+              cols="105px 160px 150px 150px 1fr"
+              onClick={() => navigate({ to: '/orders/$orderId', params: { orderId: i.o.id } })}
+            >
+              <Cell v={`${i.hr}:00`} mono />
+              <Cell v={i.o.id} s={i.o.pr} mono />
+              <Cell v={i.o.cl} />
+              <Cell v={i.stage} />
+              <Cell>
+                <Chip kind={i.fin ? 'v' : 'r'}>{i.fin ? 'Completed' : 'On their desk'}</Chip>
+              </Cell>
+            </FlexRow>
+          ))}
+        </FlexTable>
+      ) : (
+        <Card padded>
+          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            Nothing assigned today.
+            {person.avail !== 'ok'
+              ? ` They are ${AVAIL[person.avail][0].toLowerCase()}.`
+              : ' The engine had work but did not need them.'}
+          </p>
+        </Card>
+      )}
+    </>
+  )
+
+  /* ── quality ───────────────────────────────────────────────────────────── */
+
+  const defects = rated.filter((x) => x.defect)
+  const clean = rated.filter((x) => !x.crit)
+  const gavg = given.length ? given.reduce((a, x) => a + x.avg, 0) / given.length : null
+  const reasons = Object.entries(
+    rated
+      .filter((x) => x.note)
+      .reduce<Record<string, number>>((acc, x) => {
+        acc[x.note!] = (acc[x.note!] ?? 0) + 1
+        return acc
+      }, {}),
   ).sort((a, b) => b[1] - a[1])
+
+  const qualityTab = (
+    <>
+      <Kpis style={{ marginTop: 16 }}>
+        <Kpi
+          title="Quality"
+          value={loading ? <SkeletonValue width={64} /> : qavg !== null ? qavg.toFixed(2) : '—'}
+          detail={`${rated.length} ratings`}
+          hint="Every rating on their work"
+          onClick={() => openChecks('all')}
+        />
+        <Kpi
+          title="Defects"
+          value={
+            <span className={!rated.length ? 'gr' : defects.length ? 'bad' : 'ok'}>
+              {rated.length ? defects.length : '—'}
+            </span>
+          }
+          tone={defects.length ? 'alert' : undefined}
+          detail={rated.length ? 'a 3 or below' : 'nothing to count'}
+          hint="The ones scored 3 or below"
+          onClick={() => openChecks('defect')}
+        />
+        <Kpi
+          title="Clean"
+          value={
+            <span className={rated.length ? 'ok' : 'gr'}>{rated.length ? clean.length : '—'}</span>
+          }
+          detail={
+            rated.length
+              ? `${Math.round((clean.length / rated.length) * 100)}% straight fives`
+              : 'never rated in this range'
+          }
+          hint="The ones with nothing raised"
+          onClick={() => openChecks('clean')}
+        />
+        <Kpi
+          title="Ratings they gave"
+          value={given.length || '—'}
+          detail={gavg !== null ? `averaging ${gavg.toFixed(2)}` : 'not a QC role'}
+          hint="What they raised on other people"
+          onClick={() => openChecks('gave')}
+        />
+      </Kpis>
+
+      {loading ? (
+        <Card style={{ marginTop: 16 }}>
+          <div className="cb">
+            <SkeletonRows rows={5} cols={4} />
+          </div>
+        </Card>
+      ) : rated.length ? (
+        <>
+          {reasons.length ? (
+            <>
+              <SectionHead>Why marks came off</SectionHead>
+              <Card>
+                <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+                  {reasons.map(([why, n]) => (
+                    <div className="rw" key={why}>
+                      <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
+                        {n > 1 ? '⚑' : '·'}
+                      </span>
+                      <span>
+                        <b>{why}</b>
+                        {n > 1 ? <div className="sd warn">{n} times — a habit, not a slip</div> : null}
+                      </span>
+                      <span className="mono gr">{n}</span>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </>
+          ) : (
+            <Card padded style={{ marginTop: 16 }}>
+              <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+                Every rating in this range was a straight 5 on all three criteria.
+              </p>
+            </Card>
+          )}
+
+          <SectionHead>Every rating — {range.label}</SectionHead>
+          <FlexTable
+            cols="105px 150px 130px 110px 1fr 140px"
+            min={880}
+            head={['Date', 'Order', 'Stage', 'Marks', 'What the rater said', 'Rated by']}
+          >
+            {[...rated]
+              .sort((a, b) => b.d.getTime() - a.d.getTime())
+              .map((x, i) => (
+                <FlexRow key={`${x.order}-${x.stage}-${i}`} cols="105px 150px 130px 110px 1fr 140px">
+                  <Cell v={x.dk} mono />
+                  <Cell v={x.order} s={`${x.cl} · ${x.pr}`} mono />
+                  <Cell v={x.stage} />
+                  <Cell>
+                    <div className="v mono" style={{ fontSize: '12.5px' }}>
+                      <span className={markTone(x.acc)}>{x.acc}</span>·
+                      <span className={markTone(x.comp)}>{x.comp}</span>·
+                      <span className={markTone(x.fmt)}>{x.fmt}</span>
+                    </div>
+                  </Cell>
+                  {x.note ? (
+                    <Cell v={x.note} s={x.crit ?? ''} tone={x.defect ? 'bad' : 'warn'} />
+                  ) : (
+                    <Cell v="clean — nothing raised" tone="gr" />
+                  )}
+                  <Cell v={x.byName} />
+                </FlexRow>
+              ))}
+          </FlexTable>
+        </>
+      ) : (
+        <Card padded style={{ marginTop: 16 }}>
+          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            No ratings in this range. Either their work was not checked, or they do not do work that
+            gets checked.
+          </p>
+        </Card>
+      )}
+
+      {given.length && gavg !== null ? (
+        <>
+          <SectionHead>As a checker — {given.length} ratings given</SectionHead>
+          <Card padded>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+              <b className="mono" style={{ fontSize: '23px' }}>
+                {gavg.toFixed(2)}
+              </b>
+              <span className="gr">
+                average given, against {teamAvg.toFixed(2)} across everyone
+              </span>
+            </div>
+            <Bar
+              value={Math.min(100, Math.round((gavg / 5) * 100))}
+              max={100}
+              color={Math.abs(gavg - teamAvg) > 0.06 ? 'var(--warn)' : 'var(--ok)'}
+            />
+            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+              {Math.abs(gavg - teamAvg) <= 0.06 ? (
+                'They mark in line with everyone else, so their scores can be compared with anyone’s.'
+              ) : gavg > teamAvg ? (
+                <>
+                  They mark <b>{(gavg - teamAvg).toFixed(2)} higher</b> than the company average. Work
+                  they check will look better than the same work checked by someone else — worth
+                  knowing before comparing two people’s scores.
+                </>
+              ) : (
+                <>
+                  They mark <b>{(teamAvg - gavg).toFixed(2)} lower</b> than the company average. Anyone
+                  they check will look worse than the same work checked by someone else.
+                </>
+              )}
+            </p>
+            <p className="gr" style={{ fontSize: '12.5px' }}>
+              On a scale where almost everything is a 5, who checks the work can matter more than who
+              did it.
+            </p>
+          </Card>
+        </>
+      ) : null}
+    </>
+  )
+
+  /* ── access ────────────────────────────────────────────────────────────── */
+
+  const held = role ? role.p : []
+
+  const accessTab = (
+    <>
+      <div className="two" style={{ marginTop: 16 }}>
+        <Card padded>
+          <Label>Role</Label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0 4px' }}>
+            <Chip kind={person.r === 'admin' ? 'b' : person.r === 'staff' ? 'n' : 'r'}>
+              {roleName(person.r)}
+            </Chip>
+            <span className="gr" style={{ fontSize: '12.5px' }}>
+              {role ? role.desc : 'role no longer exists'}
+            </span>
+          </div>
+          <div className="rows" style={{ border: 'none', borderRadius: 0, marginTop: 10 }}>
+            {perms.map((x) => {
+              const has = held.includes(x.k)
+              return (
+                <div className="rw" key={x.k}>
+                  <span className={has ? 'ok' : 'gr'} style={{ fontSize: '13.5px' }}>
+                    {has ? '✓' : '·'}
+                  </span>
+                  <span>
+                    <b className={has ? '' : 'gr'}>{x.n}</b>
+                    {x.never ? <div className="sd gr">nobody holds this</div> : null}
+                  </span>
+                  <span />
+                </div>
+              )
+            })}
+          </div>
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            These come from the role, not from the person. Change them under{' '}
+            <button
+              type="button"
+              className="lnk"
+              onClick={() => navigate({ to: '/company', search: { tab: 'Roles' } })}
+            >
+              Company → Roles
+            </button>{' '}
+            and everyone holding the role moves with it.
+          </p>
+        </Card>
+
+        <Card padded>
+          <Label>Departments — what they can be assigned</Label>
+          {STAGES.map((d) => {
+            const inIt = person.dep.includes(d)
+            return (
+              <div className="rw" style={{ padding: '9px 0' }} key={d}>
+                <span className={inIt ? 'ok' : 'gr'} style={{ fontSize: '13.5px' }}>
+                  {inIt ? '✓' : '·'}
+                </span>
+                <span>
+                  <b className={inIt ? '' : 'gr'}>{d}</b>
+                  <div className="sd gr">
+                    {inIt
+                      ? ASSIGN_STAGES.includes(d)
+                        ? 'eligible for automatic assignment'
+                        : 'assigned by hand when needed'
+                      : 'not eligible'}
+                  </div>
+                </span>
+                <span />
+              </div>
+            )
+          })}
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            Department decides what work can reach them; the role decides what they can see and do.
+          </p>
+        </Card>
+      </div>
+
+      <Card padded style={{ marginTop: 16 }}>
+        <Label>Account</Label>
+        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+          <Row
+            icon={<span className="gr">·</span>}
+            title="Daily target"
+            detail={`${person.cap} stages — the engine stops offering work at this number`}
+            right={
+              <Btn variant="ghost" small onClick={() => editStaff(person.id)}>
+                Change
+              </Btn>
+            }
+          />
+          <Row
+            icon={<span className="gr">·</span>}
+            title="Availability"
+            detail={`${AVAIL[person.avail][0]}${
+              person.avail !== 'ok' ? ' — the engine skips them entirely' : ''
+            }`}
+            right={
+              <Btn variant="ghost" small onClick={() => editStaff(person.id)}>
+                Change
+              </Btn>
+            }
+          />
+          <Row
+            icon={<span className={dis ? 'bad' : 'ok'}>{dis ? '⚑' : '✓'}</span>}
+            title={dis ? 'Disabled' : 'Active'}
+            detail={
+              dis
+                ? 'Takes no new work. History is kept.'
+                : 'Counted in capacity and eligible for assignment.'
+            }
+            right={
+              <Btn variant="ghost" small onClick={() => editStaff(person.id)}>
+                {dis ? 'Re-enable' : 'Disable'}
+              </Btn>
+            }
+          />
+        </div>
+        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          Disabling keeps every rating and every hour they worked. Deleting a person would silently
+          rewrite the reports they appear in, which is why it is not offered.
+        </p>
+      </Card>
+    </>
+  )
 
   return (
     <>
       <PageHead
-        parent={{ to: '/company', label: 'Company' }}
+        parent={{ to: '/company', search: { tab: 'Staff' }, label: 'Staff' }}
         title={person.n}
-        sub={
-          <>
-            {roleName(person.r)} · {person.dep.length ? person.dep.join(', ') : 'No department'} ·{' '}
-            <span className="mono">{person.e}</span>
-          </>
-        }
+        sub={`${person.dep.join(', ') || 'no department'} · ${roleName(person.r)}`}
         actions={
           <>
-            <Chip kind={AVAIL[person.avail][1]}>{AVAIL[person.avail][0]}</Chip>
-            {person.active === false ? <Chip kind="n">Inactive</Chip> : null}
-            {isMe ? <Chip kind="b">You</Chip> : null}
+            <Btn
+              variant="ghost"
+              onClick={() =>
+                navigate({ to: '/reports', search: { tab: 'By staff', sw: person.id } })
+              }
+            >
+              In workload
+            </Btn>
+            <Btn onClick={() => editStaff(person.id)}>Edit details</Btn>
           </>
         }
       />
 
-      {person.avail !== 'ok' ? (
-        <Banner kind="r" icon="◷" title={`Not available — ${AVAIL[person.avail][0]}`}>
-          The assignment engine skips {isMe ? 'you' : person.n.split(' ')[0]} entirely while this is set, so
-          nothing new will be placed today.
-        </Banner>
-      ) : null}
+      {head}
 
-      <Kpis>
-        <Kpi title="On desk today" value={work?.tot ?? 0} detail="stages assigned" />
-        <Kpi
-          title="Finished today"
-          value={<span className="ok">{work?.done ?? 0}</span>}
-          detail={`${work?.pct ?? 0}% of them`}
-        />
-        <Kpi
-          title="Daily target"
-          value={
-            <span className="mono">
-              {person.open}/{person.cap}
-            </span>
-          }
-          detail={<Bar value={person.open} max={person.cap} />}
-        />
-        <Kpi
-          title="On time"
-          value={
-            history.isPending ? (
-              <SkeletonValue />
-            ) : onTime === null ? (
-              '—'
-            ) : (
-              onTime.toFixed(1) + '%'
-            )
-          }
-          tone={!history.isPending && onTime !== null && onTime < ONTIMETARGET ? 'warn' : undefined}
-          detail={`across ${mine.length} delivered`}
-        />
-      </Kpis>
-
-      <div style={{ marginTop: 20 }}>
+      <div style={{ marginTop: 16 }}>
         <Tabs tabs={[...TABS]} value={tab} onChange={setTab} />
       </div>
 
-      {tab === 'Work' ? (
-        <Card>
-          <CardHead
-            title="On the desk today"
-            actions={
-              work?.items.length ? <Chip kind="n">{work.items.length} stages</Chip> : undefined
-            }
-          />
-          {work?.items.length ? (
-            <Rows>
-              {work.items.map((item, i) => (
-                <button
-                  key={`${item.o.id}-${item.stage}-${i}`}
-                  type="button"
-                  className="rw"
-                  style={{ width: '100%' }}
-                  onClick={() => navigate({ to: '/orders/$orderId', params: { orderId: item.o.id } })}
-                >
-                  <span className={item.fin ? 'ok' : 'warn'}>{item.fin ? '✓' : '◷'}</span>
-                  <span>
-                    <b className="mono">{item.o.id}</b>
-                    <div className="sd">
-                      {item.stage} · {item.o.pr} · {item.o.co}, {item.o.st}
-                    </div>
-                  </span>
-                  <span>
-                    <Chip kind={item.fin ? 'v' : 'r'}>{item.fin ? 'Done' : 'In hand'}</Chip>
-                  </span>
-                </button>
-              ))}
-            </Rows>
-          ) : (
-            <Empty
-              icon={person.dep.length === 0 ? '⊘' : '◷'}
-              action={
-                <Btn small onClick={() => navigate({ to: '/assign' })}>
-                  Open Assignment
-                </Btn>
-              }
-            >
-              {person.dep.length === 0
-                ? `${person.n.split(' ')[0]} belongs to no department, so the engine has no stage to give them.`
-                : person.avail !== 'ok'
-                  ? `Nothing was placed today — ${person.n.split(' ')[0]} is ${AVAIL[person.avail][0].toLowerCase()}, and the engine skips anyone unavailable.`
-                  : `Nothing was placed with ${isMe ? 'you' : person.n.split(' ')[0]} today.`}
-            </Empty>
-          )}
-        </Card>
-      ) : null}
-
-      {tab === 'Work' ? (
-        <div className="two" style={{ marginTop: 16 }}>
-          <Card>
-            <CardHead title="Recently delivered" />
-            {history.isPending ? (
-              <CardBody>
-                <SkeletonRows rows={4} cols={3} />
-              </CardBody>
-            ) : recent.length ? (
-              <Rows>
-                {recent.map((d) => (
-                  <div className="rw" key={d.id}>
-                    <span className={d.late ? 'bad' : 'ok'}>{d.late ? '⚑' : '✓'}</span>
-                    <span>
-                      <b className="mono">{d.id}</b>
-                      <div className="sd">
-                        {d.pr} · {d.cl} ·{' '}
-                        {Object.entries(d.by)
-                          .filter(([, who]) => who === person.id)
-                          .map(([stage]) => stage)
-                          .join(', ')}
-                      </div>
-                    </span>
-                    <span className="mono gr" style={{ fontSize: '11.5px' }}>
-                      {d.dk}
-                    </span>
-                  </div>
-                ))}
-              </Rows>
-            ) : (
-              <Empty icon="☰">Nothing delivered yet.</Empty>
-            )}
-          </Card>
-
-          <Card>
-            <CardHead
-              title="Usually works"
-              actions={mine.length ? <Chip kind="n">{mine.length} delivered</Chip> : undefined}
-            />
-            {history.isPending ? (
-              <CardBody>
-                <SkeletonRows rows={3} cols={2} />
-              </CardBody>
-            ) : stageMix.length ? (
-              <CardBody>
-                {stageMix.map(([stage, n]) => (
-                  <div key={stage} style={{ marginBottom: 12 }}>
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        fontSize: '12.5px',
-                        marginBottom: 4,
-                      }}
-                    >
-                      <span>{stage}</span>
-                      <span className="mono gr">{n}</span>
-                    </div>
-                    <Bar value={n} max={stageMix[0][1]} />
-                  </div>
-                ))}
-                <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>
-                  Which stages {person.n.split(' ')[0]} has actually been given, across every delivered
-                  order — not the departments they are a member of.
-                </p>
-              </CardBody>
-            ) : (
-              <Empty icon="◷">No delivered orders on record yet.</Empty>
-            )}
-          </Card>
-        </div>
-      ) : null}
-
-      {tab === 'Coverage' ? (
-        <Card>
-          <CardHead title="What they may be given" actions={<Chip kind="n">{covSummary(person.id)}</Chip>} />
-          <CardBody>
-            <KeyValues
-              rows={[
-                ['Level', level ? `${level.n} — ${level.note}` : 'No level, so nothing is ruled out'],
-                [
-                  'States',
-                  level && level.states !== 'all' ? level.states.join(', ') : 'Every state',
-                ],
-                [
-                  'Counties',
-                  level && Object.keys(level.counties ?? {}).length
-                    ? Object.entries(level.counties ?? {})
-                        .map(([st, cs]) => `${st}: ${cs.join(', ')}`)
-                        .join(' · ')
-                    : 'Every county in those states',
-                ],
-                [
-                  'Products',
-                  level && level.products !== 'all' ? level.products.join(', ') : 'Every product',
-                ],
-                ['Departments', person.dep.length ? person.dep.join(', ') : 'None'],
-                ['Shift', person.shift],
-              ]}
-            />
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-              Coverage is checked before availability and before load. Somebody who does not cover a county
-              was never a candidate for it — the exception says that, rather than blaming the roster.
-            </p>
-          </CardBody>
-        </Card>
-      ) : null}
-
-      {tab === 'Leave' ? (
-        <Card>
-          <CardHead title="Balances" />
-          <CardBody>
-            <div className="tsc">
-              <table className="mat">
-                <thead>
-                  <tr>
-                    <th>Type</th>
-                    <th style={{ textAlign: 'right' }}>Earned</th>
-                    <th style={{ textAlign: 'right' }}>Taken</th>
-                    <th style={{ textAlign: 'right' }}>Pending</th>
-                    <th style={{ textAlign: 'right' }}>Left</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(balances).map(([kind, b]) => (
-                    <tr key={kind}>
-                      <td>{kind.toUpperCase()}</td>
-                      <td className="mono" style={{ textAlign: 'right' }}>{b.earned}</td>
-                      <td className="mono" style={{ textAlign: 'right' }}>{b.taken}</td>
-                      <td className="mono" style={{ textAlign: 'right' }}>{b.pending}</td>
-                      <td
-                        className="mono"
-                        style={{ textAlign: 'right', fontWeight: 600 }}
-                      >
-                        {b.left}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardBody>
-        </Card>
-      ) : null}
-
-      {tab === 'Employment' ? (
-        maySeeEmployment ? (
-          <>
-            <Card>
-              <CardHead
-                title="Record"
-                actions={served !== null ? <Chip kind="n">{served.toFixed(1)} years</Chip> : undefined}
-              />
-              <CardBody>
-                <KeyValues
-                  rows={[
-                    ['Employee id', <span className="mono">{person.id}</span>],
-                    ['Joined', <span className="mono">{person.doj || 'Not on record'}</span>],
-                    ['Date of birth', <span className="mono">{person.dob || 'Not on record'}</span>],
-                    ['Mobile', <span className="mono">{person.mob}</span>],
-                    ['Address', person.addr],
-                    [
-                      'Emergency contact',
-                      person.emg ? `${person.emg.n} (${person.emg.rel}) · ${person.emg.mob}` : '—',
-                    ],
-                    ['Role', role ? `${role.n} — ${role.desc}` : person.r],
-                    [
-                      'Capabilities',
-                      role ? (
-                        <span style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                          {role.p.map((c) => (
-                            <Chip key={c} kind="n" plain>
-                              {c}
-                            </Chip>
-                          ))}
-                        </span>
-                      ) : (
-                        '—'
-                      ),
-                    ],
-                  ]}
-                />
-              </CardBody>
-            </Card>
-
-            <Card style={{ marginTop: 16 }}>
-              <CardHead title="Statutory" />
-              <CardBody>
-                <KeyValues
-                  rows={[
-                    ['PAN', <span className="mono">{person.pan || '—'}</span>],
-                    ['Aadhaar', <span className="mono">{person.aadhaar || '—'}</span>],
-                    ['UAN', <span className="mono">{person.uan || '—'}</span>],
-                    ['ESIC', <span className="mono">{person.esicNo || '—'}</span>],
-                    [
-                      'Bank',
-                      person.bank
-                        ? `${person.bank.name} · ${person.bank.acct} · ${person.bank.ifsc}`
-                        : '—',
-                    ],
-                  ]}
-                />
-              </CardBody>
-            </Card>
-
-            {structure && maySeePay ? (
-              <Card style={{ marginTop: 16 }}>
-                <CardHead
-                  title="Salary structure"
-                  actions={<Chip kind="n">{inr(structure.ctc)} CTC</Chip>}
-                />
-                <CardBody>
-                  <KeyValues
-                    rows={[
-                      ['Monthly', <span className="mono">{inr(structure.monthly)}</span>],
-                      ['Basic', <span className="mono">{inr(structure.basic)}</span>],
-                      ['House rent allowance', <span className="mono">{inr(structure.hra)}</span>],
-                      ['Special allowance', <span className="mono">{inr(structure.special)}</span>],
-                      ['Gross', <span className="mono">{inr(structure.gross)}</span>],
-                      ['Employer PF', <span className="mono">{inr(structure.epfEr)}</span>],
-                      ['Gratuity provision', <span className="mono">{inr(structure.grat)}</span>],
-                    ]}
-                  />
-                  <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-                    Everything above is derived from the one CTC figure through the 50% wage rule. Nothing
-                    here is typed twice, so a payslip cannot disagree with this page.
-                  </p>
-                </CardBody>
-              </Card>
-            ) : null}
-          </>
-        ) : (
-          <Card>
-            <CardBody>
-              <p className="gr">
-                Employment records need the “people” capability. Ask a company admin if you should be able
-                to see this.
-              </p>
-            </CardBody>
-          </Card>
-        )
-      ) : null}
-
-      {work?.tot ? (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 16 }}>
-          <Avatar name={person.n} style={{ verticalAlign: '-6px', marginRight: 6 }} />
-          Measured against {person.n.split(' ')[0]}’s own target of {person.cap} a day — never against a
-          colleague.
-        </p>
-      ) : null}
+      {tab === 'Overview' ? overview : null}
+      {tab === 'Work' ? workTab : null}
+      {tab === 'Quality' ? qualityTab : null}
+      {tab === 'Access' ? accessTab : null}
     </>
   )
 }

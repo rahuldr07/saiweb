@@ -51,10 +51,19 @@ export function Btn({
  * does the same job and also says where you are, which is what the space above
  * a title is for.
  */
-export function Parent({ to, children }: { to: string; children: ReactNode }) {
+export function Parent({
+  to,
+  search,
+  children,
+}: {
+  to: string
+  /** For a parent that is one tab of a screen rather than the screen itself. */
+  search?: Record<string, string>
+  children: ReactNode
+}) {
   const navigate = useNavigate()
   return (
-    <button type="button" className="eyebrow" onClick={() => navigate({ to })}>
+    <button type="button" className="eyebrow" onClick={() => navigate({ to, search })}>
       <i>←</i>
       {children}
     </button>
@@ -107,12 +116,16 @@ export function PageHead({
   sub?: ReactNode
   actions?: ReactNode
   /** Where this screen sits, for a detail view reached from a register. */
-  parent?: { to: string; label: string }
+  parent?: { to: string; label: string; search?: Record<string, string> }
 }) {
   return (
     <div className="hd">
       <div style={{ minWidth: 0 }}>
-        {parent ? <Parent to={parent.to}>{parent.label}</Parent> : null}
+        {parent ? (
+          <Parent to={parent.to} search={parent.search}>
+            {parent.label}
+          </Parent>
+        ) : null}
         <h1 className="pg">{title}</h1>
         {sub ? <p className="sub">{sub}</p> : null}
       </div>
