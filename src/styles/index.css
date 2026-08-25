@@ -26,8 +26,9 @@
 }
 
 /*
- * The signed-out shell. No sidebar and no top bar, so the page needs its own
- * ground and a column that does not run the full 1360px the app content does.
+ * The signed-out shell. No sidebar and no top bar, so the page supplies its own
+ * ground and a column the width of the thing standing in it — which is one mark
+ * and two fields, not the full 1360px the app content gets.
  */
 .authshell {
   min-height: 100vh;
@@ -36,8 +37,12 @@
   justify-content: center;
 }
 .authshell .wrap {
-  max-width: 720px;
-  padding-top: clamp(48px, 12vh, 120px);
+  max-width: 480px;
+  padding-top: clamp(40px, 11vh, 120px);
+}
+.authcol {
+  max-width: 400px;
+  margin: 0 auto;
 }
 
 /*
@@ -107,6 +112,35 @@
 }
 .kpi .v {
   overflow-wrap: anywhere;
+}
+
+/*
+ * A row whose first slot holds a chip rather than a glyph.
+ *
+ * `.rw` sets that column to a fixed 22px, which is exactly one icon wide. A chip
+ * put there — a leave type, a link status, a standing — is 85 to 100px, so it
+ * overran the column and printed on top of the description beside it. Three
+ * screens did this and all three overlapped by 20 to 100 pixels.
+ *
+ * Sizing the column to its content fixes the class rather than the three cases,
+ * and leaves every ordinary icon row exactly as it was.
+ */
+.rw.tagged {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+/*
+ * The tab bar scrolls sideways rather than wrapping, with the scrollbar hidden.
+ * That was fine for the five-tab screens the export shipped; on the eight-tab
+ * ones — an order, and Company — the last tab is cut in half with nothing on
+ * screen to say it is there or how to reach it.
+ *
+ * Wrapping keeps every tab reachable and changes nothing at widths where they
+ * already fit. The row keeps its underline by letting each line carry it.
+ */
+.tabs {
+  flex-wrap: wrap;
+  overflow-x: visible;
 }
 
 /* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */

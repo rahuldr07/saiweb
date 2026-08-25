@@ -60,8 +60,6 @@ export function RulesProvider({ children }: { children: ReactNode }) {
      the counter is the only thing that can tell React either has moved. */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rules = useMemo(() => [...RULES], [version])
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const board = useMemo(() => sharedBoard(), [version])
 
   const toggle = useCallback(
     (id: string) => {
@@ -163,7 +161,14 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     () => ({
       rules,
       engine,
-      board,
+      /* Read on access rather than on mount. The run is one memoised pass that
+         costs around 14ms, and this provider wraps the router — computing it
+         here charged every load for it, including the sign-in screen, which
+         reads no board at all. The property the six screens already destructure
+         is unchanged; only the moment it runs has moved. */
+      get board() {
+        return sharedBoard()
+      },
       version,
       toggle,
       save,
@@ -172,7 +177,7 @@ export function RulesProvider({ children }: { children: ReactNode }) {
       rerun: changed,
       dryRun,
     }),
-    [rules, engine, board, version, toggle, save, remove, setEngine, changed, dryRun],
+    [rules, engine, version, toggle, save, remove, setEngine, changed, dryRun],
   )
 
   return <RulesContext value={value}>{children}</RulesContext>

@@ -48,32 +48,3 @@ export function median(xs: number[]): number {
   const s = [...xs].sort((a, b) => a - b)
   return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2
 }
-
-/** Median end-to-end turnaround, in hours. */
-export function medianTurnaround(deliveries: Delivery[]): number {
-  return median(deliveries.map((d) => d.hrs))
-}
-
-export interface Grouped {
-  key: string
-  n: number
-  late: number
-  hrs: number
-}
-
-/** Deliveries rolled up by client, product or whatever else the caller picks. */
-export function groupDeliveries(
-  deliveries: Delivery[],
-  pick: (d: Delivery) => string,
-): Grouped[] {
-  const m = new Map<string, Grouped>()
-  for (const d of deliveries) {
-    const key = pick(d)
-    const g = m.get(key) ?? { key, n: 0, late: 0, hrs: 0 }
-    g.n++
-    if (d.late) g.late++
-    g.hrs += d.hrs
-    m.set(key, g)
-  }
-  return [...m.values()].sort((a, b) => b.n - a.n)
-}

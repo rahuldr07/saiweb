@@ -362,13 +362,17 @@ export function removeDept(id: string): void {
 export const ADMIN_FLOOR = ['all', 'people', 'config']
 
 export function saveRole(next: Omit<Role, 'id'>, id?: string): string {
-  if (id === 'admin') for (const k of ADMIN_FLOOR) if (!next.p.includes(k)) next.p.push(k)
+  /* A copy: `next` belongs to the form that is still holding it, and pushing the
+     floor onto its array edited the caller's state from underneath it. */
+  const permissions =
+    id === 'admin' ? [...new Set([...next.p, ...ADMIN_FLOOR])] : [...next.p]
+  const role = { ...next, p: permissions }
   const made = id ?? nextId('r', state.roles.map((r) => r.id))
   state = {
     ...state,
     roles: id
-      ? state.roles.map((r) => (r.id === id ? { ...r, ...next } : r))
-      : [...state.roles, { ...next, id: made }],
+      ? state.roles.map((r) => (r.id === id ? { ...r, ...role } : r))
+      : [...state.roles, { ...role, id: made }],
   }
   emit()
   return made

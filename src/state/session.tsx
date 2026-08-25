@@ -4,8 +4,13 @@ import { STAFF } from '@/data/people'
 import { TENANTS } from '@/data/org'
 import type { Person, Tenant } from '@/data/types'
 import { can as canFor, roleName } from '@/lib/permissions'
-import { endSession, fetchMe, fetchMemberships, type Membership } from '@/lib/api'
+import { endSession as endApiSession, fetchMe, fetchMemberships, type Membership } from '@/lib/api'
 import { DEMO_IDENTITY } from '@/lib/demo'
+import {
+  endSession as endSeedSession,
+  readSession as readSeedSession,
+  startSession as startSeedSession,
+} from './seedSession'
 
 /**
  * Who you are and which company you are inside.
@@ -30,16 +35,17 @@ import { DEMO_IDENTITY } from '@/lib/demo'
  */
 export type AuthState = 'loading' | 'authenticated' | 'anonymous' | 'demo'
 
-/**
- * Whether a build with no API opens straight into the application.
+/*
+ * There used to be an `OPEN_ACCESS` here, and with it the seed build opened
+ * straight into a workspace as a fixed person. The reasoning was that a gate in
+ * front of a build with no database can only ask for credentials it cannot
+ * check.
  *
- * There is nothing to authenticate against until the database exists, so a gate
- * in front of the seed build only ever asked for credentials it could not check.
- * It is off while the data is fictional. Real sign-in is unaffected: the moment
- * `/api/me` answers, a browser without a session is `anonymous` and gets the
- * form, and clearing `VITE_DEMO_IDENTITY` turns this off with it.
+ * That was half right. It cannot check the password yet — but it can ask, and it
+ * can let the email decide who you are, which is what gives each of the
+ * twenty-eight people their own login instead of everybody arriving as the same
+ * admin. See `seedSession.ts` for what is and is not verified.
  */
-export const OPEN_ACCESS = DEMO_IDENTITY
 
 interface SessionValue {
   me: Person
@@ -62,63 +68,115 @@ interface SessionValue {
 
 const SessionContext = createContext<SessionValue | null>(null)
 
-const DEFAULT_USER = 'hw'
-
 /** Seed workspaces are keyed by slug; the server's are UUIDs. */
 const isServerTenantId = (id: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [meId, setMeId] = useState(DEFAULT_USER)
-  const [tenantId, setTenantId] = useState(TENANTS[0].id)
+  /* Whoever signed in on this tab. Nobody, until they do. */
+  const [meId, setMeId] = useState<string | null>(() => readSeedSession())
+  const [pickedTenantId, setTenantId] = useState(TENANTS[0].id)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [navOpen, setNavOpen] = useState(false)
   const queryClient = useQueryClient()
 
 
+  /*
+   * Which workspaces this user is in.
+   *
+   * Deliberately first, deliberately not gated on `me`, and deliberately asked
+   * without a workspace header: it is the one call that answers with a session
+   * alone. `/me` cannot answer until a workspace has been named, and the only
+   * place a workspace id comes from is this list — so gating this on `me`
+   * succeeding meant neither ever did, and a correct email and password landed
+   * straight back on the sign-in form.
+   */
+  const memberships = useQuery({
+    queryKey: ['memberships'],
+    queryFn: () => fetchMemberships(null),
+    retry: false,
+    staleTime: 5 * 60_000,
+  })
+
+  /*
+   * The workspace being asked about.
+   *
+   * A fresh session has settled on none, so the client adopts one as soon as it
+   * knows which it may use: the one the server calls current, or the first it is
+   * a member of. Derived rather than stored — an explicit pick outranks it the
+   * moment there is one, and writing it back from an effect only buys a second
+   * render.
+   */
+  const tenantId = isServerTenantId(pickedTenantId)
+    ? pickedTenantId
+    : ((memberships.data?.find((t) => t.current) ?? memberships.data?.[0])?.id ?? pickedTenantId)
+
   /* Only send a workspace header once we hold a real id — before that the server
      falls back to whichever workspace the session is already inside. */
   const header = isServerTenantId(tenantId) ? tenantId : null
 
-  /* `retry: false` because the interesting failure is "there is no server", and
-     retrying it three times only delays the fallback. */
+  /*
+   * `retry: false` because the interesting failure is "there is no server", and
+   * retrying it three times only delays the fallback.
+   *
+   * Not asked at all until a workspace is known. Asking without one is answered
+   * "no workspace selected", and an error here reads as "not signed in" two
+   * lines below — so firing it during the bootstrap made entry a race between
+   * two requests: if this one settled first the gate bounced to the sign-in form
+   * with a perfectly good session in hand, and if the other did, it did not.
+   */
   const me = useQuery({
     queryKey: ['me', header],
     queryFn: () => fetchMe(header),
     retry: false,
     staleTime: 5 * 60_000,
+    enabled: header !== null,
   })
 
-  const memberships = useQuery({
-    queryKey: ['memberships'],
-    queryFn: () => fetchMemberships(header),
-    retry: false,
-    staleTime: 5 * 60_000,
-    enabled: me.isSuccess,
-  })
 
   const serverCaps = me.data?.capabilities
   const authority: 'server' | 'seed' = serverCaps ? 'server' : 'seed'
 
-  /* A failed /api/me means one of two things, and they are not the same: there
-     is no server (the seed build, which opens straight into the application),
-     or there is one and this browser has no session — which is the only case
-     that gets the sign-in screen. */
-  const authState: AuthState = me.isPending
+  /* Three outcomes, and they are not the same thing. The server knows you:
+     authenticated. It does not, but this tab holds a seed sign-in: demo — the
+     credential form was filled in, the email picked the person, and the password
+     is the part that is not checked yet. Neither: anonymous, and anonymous gets
+     the form rather than a workspace. */
+  /* The bootstrap is two requests, not one, and it is not finished until both
+     have had their turn: the workspace list, and then who you are inside the
+     workspace it named. Calling it early is what bounced a signed-in person. */
+  const bootstrapping = memberships.isPending || (header !== null && me.isPending)
+
+  const authState: AuthState = bootstrapping
     ? 'loading'
     : me.isSuccess
       ? 'authenticated'
-      : OPEN_ACCESS
+      : meId
         ? 'demo'
         : 'anonymous'
 
-  const seedMe = useMemo(() => STAFF.find((s) => s.id === meId) ?? STAFF[0], [meId])
-
-  /* The server knows the person's name and role; the seed knows their
-     department, capacity and level, which no endpoint exposes yet. Until the
-     screens read the API, the seed record stays the shape everything renders
-     from — only the capabilities are taken from the server. */
-  const person = seedMe
+  /**
+   * Who the application renders as.
+   *
+   * The seed record is still the shape everything reads — it carries the
+   * department, capacity and level no endpoint exposes yet — but *which* record
+   * has to come from the server when there is one. `people.ref` is the seed id,
+   * so the two line up.
+   *
+   * This used to be the locally chosen id unconditionally, which meant a real
+   * deployment rendered every signed-in person as the same default: their own
+   * queue, their own payslips and their own "my work" all belonged to somebody
+   * else. Capabilities were correct and identity was not, which is the worst
+   * of the two to get wrong silently.
+   */
+  const person = useMemo(() => {
+    const ref = me.data?.person?.ref
+    return (
+      (ref ? STAFF.find((s) => s.id === ref) : undefined) ??
+      STAFF.find((s) => s.id === meId) ??
+      STAFF[0]
+    )
+  }, [me.data?.person?.ref, meId])
 
   const tenant = useMemo<Tenant>(() => {
     const fromServer = memberships.data?.find((t) => t.id === tenantId)
@@ -147,10 +205,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [serverCaps, person],
   )
 
-  /* Switching identity without a password is a development affordance; ignoring
-     the call rather than removing it keeps every caller honest about that. */
+  /* Taking the place of a seeded person. Reached from the sign-in form once the
+     email has named them, and refused outright in a build with the demonstration
+     flag off — there, Better Auth is the only way in. */
   const signInAs = useCallback((id: string) => {
     if (!DEMO_IDENTITY) return
+    startSeedSession(id)
     setMeId(id)
   }, [])
 
@@ -158,7 +218,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
      workspace membership are per-person, so leaving them behind would show the
      next person the previous one's board until each query happened to refetch. */
   const signOut = useCallback(async () => {
-    await endSession()
+    endSeedSession()
+    setMeId(null)
+    await endApiSession()
     await queryClient.resetQueries()
   }, [queryClient])
 
@@ -177,9 +239,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       toggleTheme: () => setTheme((t) => (t === 'dark' ? 'light' : 'dark')),
       setNavOpen,
       can,
-      roleLabel: me.data?.person ? roleName(person.r) : roleName(person.r),
+      roleLabel: roleName(person.r),
     }),
-    [person, tenant, theme, navOpen, authority, authState, memberships.data, signInAs, signOut, can, me.data],
+    [person, tenant, theme, navOpen, authority, authState, memberships.data, signInAs, signOut, can],
   )
 
   return <SessionContext value={value}>{children}</SessionContext>

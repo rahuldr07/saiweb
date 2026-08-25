@@ -180,7 +180,6 @@ const seed = makeCoverage(LEVELS, (id) => STAFF.find((x) => x.id === id)?.lvl ??
 
 export const levelOf = seed.levelOf
 export const covOf = seed.covOf
-export const ALLSTATES = seed.allStates
 export const countiesIn = seed.countiesIn
 export const coversPlace = seed.coversPlace
 export const coversProduct = seed.coversProduct

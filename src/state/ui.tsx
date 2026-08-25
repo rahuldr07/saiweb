@@ -1,4 +1,13 @@
-import { createContext, use, useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 
 /**
  * Two pieces of chrome that any screen may reach for: the single modal the shell
@@ -30,6 +39,11 @@ export function UiProvider({ children }: { children: ReactNode }) {
     clearTimeout(timer.current)
     timer.current = setTimeout(() => setToastText(null), 2600)
   }, [])
+
+  /* The last toast leaves a timer behind that would set state on a provider
+     that no longer exists. It only bites on teardown, which is exactly when
+     nobody is watching for it. */
+  useEffect(() => () => clearTimeout(timer.current), [])
 
   const value = useMemo<UiValue>(
     () => ({

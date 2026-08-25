@@ -33,4 +33,24 @@ export const auth = betterAuth({
   baseURL: process.env.API_URL ?? 'http://localhost:8787',
 })
 
+/**
+ * Refuses to continue without a signing secret.
+ *
+ * Better Auth signs session cookies with this. Unset, it is left to whatever the
+ * library falls back to — which is not stable across a restart, and not shared
+ * between the instances of a deployment, so sessions stop verifying for reasons
+ * that look like anything except a missing environment variable. The row-level
+ * security check in `db/connect` refuses to start for the same class of reason:
+ * a misconfiguration with no symptom is worse than one that stops the server.
+ */
+export function assertAuthSecretIsSet(): void {
+  const secret = process.env.BETTER_AUTH_SECRET
+  if (!secret || secret.trim().length < 32) {
+    throw new Error(
+      'BETTER_AUTH_SECRET is missing or shorter than 32 characters. Sessions cannot ' +
+        'be signed safely without it. Generate one with: openssl rand -base64 32',
+    )
+  }
+}
+
 export type Session = typeof auth.$Infer.Session

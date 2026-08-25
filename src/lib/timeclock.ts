@@ -136,9 +136,3 @@ export const lateBy = (inAt: string, shift: Shift) => {
   const late = mins(inAt) - mins(shift.from)
   return late > TIMECFG.lateGraceMins ? late : 0
 }
-
-/** Overtime earned by the day as punched, after breaks. */
-export const overtimeMins = (m: DayMark | null | undefined) => {
-  if (!m || !m.out) return 0
-  return Math.max(0, worked(m) - (m.breakMins ?? 0) - TIMECFG.otAfterMins)
-}

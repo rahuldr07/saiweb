@@ -1,24 +1,29 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
-import { Avatar, Assumption, Banner, Btn, Card, CardHead, Chip, PageHead } from '@/components/ui'
+import { Banner, Btn, Card } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { STAFF, AVAIL } from '@/data/people'
-import { ROLELIST } from '@/data/org'
-import { roleName } from '@/lib/permissions'
-import { DEMO_IDENTITY, DEMO_IDENTITY_NOTE } from '@/lib/demo'
+import { STAFF } from '@/data/people'
+import { COMPANY_GLYPH, COMPANY_NAME, LOGO_HEIGHT, LOGO_URL } from '@/data/brand'
+import { can as capabilityOf, mayVisit, roleName } from '@/lib/permissions'
+import { DEMO_IDENTITY } from '@/lib/demo'
+import { ADMIN_EMAIL, checkCredentials } from '@/lib/credentials'
 import { ApiError, startSession } from '@/lib/api'
 
 /**
- * The one public screen.
+ * The one public screen: a mark, an email, a password.
  *
- * Anonymous visitors get a credential form, which is the only way into the
- * application. Where `DEMO_IDENTITY` is on — development, or a build someone
- * deliberately flagged — the seeded people are also listed, because switching
- * identity is how the permission model is inspected: every role sees a different
- * sidebar and a different register. That list is a demonstration in development
- * and an impersonation anywhere else, so it is never in a default build.
+ * Which of the two is actually verified depends on what is behind the
+ * application. With a database, Better Auth checks both and a wrong password is
+ * a wrong password. Without one there is nothing to check a password against, so
+ * the email only decides which account you land in — `hari@gmail.com` is the
+ * administrator, a seeded person's own address is that person, and anything else
+ * is a member of production staff.
+ *
+ * The roster of seeded people that used to sit under this form is gone. It made
+ * the screen a picker with a form attached; a sign-in screen should ask for
+ * credentials and nothing else.
  */
 export default function SignIn() {
   const { me, authState, signInAs, signOut, can } = useSession()
@@ -33,6 +38,27 @@ export default function SignIn() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [logoBroken, setLogoBroken] = useState(false)
+
+  /* Where somebody lands depends on what they can see. Two ways to get this
+     wrong, and the seeded roles hit both: sending production staff to the
+     dashboard drops them on a refusal page one second after a successful sign
+     in, and so does honouring a `next` they were only redirected off because
+     they were not allowed there in the first place. */
+  const landing = (personId: string) => {
+    const person = STAFF.find((s) => s.id === personId)
+    const wanted = next?.split('/').filter(Boolean)[0]
+    if (next && wanted && mayVisit(person, wanted)) return next
+    return capabilityOf(person, 'all') ? '/dash' : '/mywork'
+  }
+
+  /**
+   * A real server refusing a real password is not the same as there being no
+   * server. Only the second falls through to the local check — otherwise a
+   * deployment with a database could be entered by failing authentication.
+   */
+  const noServiceBehind = (e: unknown) =>
+    !(e instanceof ApiError) || e.status === 404 || e.status === 0 || e.status >= 500
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -45,14 +71,60 @@ export default function SignIn() {
       await queryClient.resetQueries()
       navigate({ to: next ?? '/dash', replace: true })
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not reach the sign-in service.')
+      if (!noServiceBehind(err)) {
+        setError(err instanceof ApiError ? err.message : 'That email and password did not match.')
+        setBusy(false)
+        return
+      }
+
+      /* Statically false in a build with the flag off, which is what lets the
+         bundler drop everything below it — the seeded roster check, the admin
+         address, the whole local sign-in — rather than shipping an unreachable
+         way in and trusting a runtime argument to keep it unreachable. */
+      if (!DEMO_IDENTITY) {
+        setError('This build signs in against the database. The sign-in service is not reachable.')
+        setBusy(false)
+        return
+      }
+
+      const check = checkCredentials(email, password, { passwordChecked: false })
+      if (!check.ok) {
+        setError(check.error)
+        setBusy(false)
+        return
+      }
+      signInAs(check.person.id)
+      toast(`Signed in as ${check.person.n} — ${roleName(check.person.r)}`)
+      navigate({ to: landing(check.person.id), replace: true })
     } finally {
       setBusy(false)
     }
   }
 
-  const credentials = (
-    <Card padded style={{ maxWidth: 420 }}>
+  const mark = (
+    <div style={{ textAlign: 'center', marginBottom: 26 }}>
+      {LOGO_URL && !logoBroken ? (
+        <img
+          src={LOGO_URL}
+          alt={COMPANY_NAME}
+          height={LOGO_HEIGHT}
+          style={{ height: LOGO_HEIGHT, width: 'auto', maxWidth: '100%' }}
+          /* Hot-linked from somebody else's host, so a failure is a real
+             possibility rather than a theoretical one. The wordmark takes over
+             instead of leaving a broken-image glyph on the front door. */
+          onError={() => setLogoBroken(true)}
+        />
+      ) : (
+        <div style={{ fontSize: '23px', fontWeight: 650, letterSpacing: '-0.02em' }}>
+          <span style={{ color: 'var(--brand)', marginRight: 8 }}>{COMPANY_GLYPH}</span>
+          {COMPANY_NAME}
+        </div>
+      )}
+    </div>
+  )
+
+  const form = (
+    <Card padded>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
         <div className="fld">
           <label htmlFor="si-email">Email</label>
@@ -62,8 +134,13 @@ export default function SignIn() {
             type="email"
             autoComplete="username"
             required
+            autoFocus
+            placeholder="you@company.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value)
+              setError(null)
+            }}
           />
         </div>
         <div className="fld">
@@ -75,11 +152,14 @@ export default function SignIn() {
             autoComplete="current-password"
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              setError(null)
+            }}
           />
         </div>
         {error ? (
-          <Banner kind="d" icon="⚠" title="Could not sign you in">
+          <Banner kind="d" icon="⚠" style={{ margin: 0 }} title="Could not sign you in">
             {error}
           </Banner>
         ) : null}
@@ -90,138 +170,51 @@ export default function SignIn() {
     </Card>
   )
 
-  /* Signed in, no demo list: the account screen. */
-  if (authState === 'authenticated' && !DEMO_IDENTITY) {
+  /* Already signed in: this becomes the account screen rather than offering the
+     form again to somebody who has just used it. */
+  if (authState !== 'anonymous') {
     return (
-      <>
-        <PageHead
-          title="Signed in"
-          sub={`${me.n} — ${roleName(me.r)}. Your role decides which screens exist at all.`}
-          actions={
+      <div className="authcol">
+        {mark}
+        <Card padded>
+          <div style={{ fontSize: '15px', fontWeight: 600 }}>{me.n}</div>
+          <div className="gr" style={{ fontSize: '12.5px', marginTop: 2 }}>
+            {roleName(me.r)} · {me.dep.join(', ') || 'No department'}
+          </div>
+          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            You {can('all') ? 'can' : 'cannot'} see every order, and{' '}
+            {can('pricing') ? 'can' : 'cannot'} see pricing and invoices. Your role decides which
+            screens exist at all.
+          </p>
+          <div style={{ marginTop: 16 }}>
             <Btn
               variant="ghost"
               onClick={async () => {
                 await signOut()
+                setEmail('')
+                setPassword('')
                 navigate({ to: '/signin', replace: true })
               }}
             >
               Sign out
             </Btn>
-          }
-        />
-        <Assumption title="Switching identity is a development affordance">{DEMO_IDENTITY_NOTE}</Assumption>
-        <p className="gr" style={{ fontSize: '12.5px' }}>
-          You {can('all') ? 'can' : 'cannot'} see every order, and {can('pricing') ? 'can' : 'cannot'} see
-          pricing and invoices.
-        </p>
-      </>
-    )
-  }
-
-  /* Anonymous: the credential form is the whole screen. */
-  if (!DEMO_IDENTITY) {
-    return (
-      <>
-        <PageHead title="Sign in to Title CRM" sub="Your role decides which screens exist at all." />
-        {credentials}
-      </>
-    )
-  }
-
-  const pick = (id: string) => {
-    const person = STAFF.find((s) => s.id === id)
-    signInAs(id)
-    toast(`Signed in as ${person?.n} — ${roleName(person?.r ?? 'staff')}`)
-    navigate({ to: person && ROLELIST.find((r) => r.id === person.r)?.p.includes('all') ? '/dash' : '/mywork' })
-  }
-
-  const byRole = ROLELIST.map((r) => ({
-    role: r,
-    people: STAFF.filter((s) => s.r === r.id && s.active !== false),
-  })).filter((g) => g.people.length)
-
-  return (
-    <>
-      <PageHead
-        title={authState === 'anonymous' ? 'Sign in to Title CRM' : 'Who are you signed in as'}
-        sub={
-          authState === 'anonymous'
-            ? 'Your role decides which screens exist at all.'
-            : `Currently ${me.n} — ${roleName(me.r)}. Changing this changes which screens exist at all.`
-        }
-        actions={
-          authState === 'anonymous' ? undefined : (
-            <Btn
-              variant="ghost"
-              onClick={async () => {
-                await signOut()
-                navigate({ to: '/signin', replace: true })
-              }}
-            >
-              Sign out
-            </Btn>
-          )
-        }
-      />
-
-      <Assumption title="Demonstration sign-in">{DEMO_IDENTITY_NOTE}</Assumption>
-
-      {/* Only when signed out. Offering a sign-in form to somebody already signed
-          in asks them to do the one thing they have just done. */}
-      {authState === 'anonymous' ? credentials : null}
-
-      <h2 className="sec">
-        {authState === 'anonymous' ? 'Or sign in as a seeded person' : 'Take the place of a seeded person'}
-      </h2>
-
-      {byRole.map(({ role, people }) => (
-        <Card key={role.id} style={{ marginBottom: 16 }}>
-          <CardHead
-            title={
-              <div>
-                <h2>{role.n}</h2>
-                <div className="gr" style={{ fontSize: '12.5px', marginTop: 3 }}>
-                  {role.desc}
-                </div>
-              </div>
-            }
-            actions={<Chip kind="n">{role.p.length} capabilities</Chip>}
-          />
-          <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
-            {people.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                className="rw"
-                style={{ width: '100%' }}
-                onClick={() => pick(p.id)}
-              >
-                <span>
-                  <Avatar name={p.n} />
-                </span>
-                <span>
-                  <b>{p.n}</b>
-                  <div className="sd">
-                    {p.dep.length ? p.dep.join(', ') : 'No department'} · {p.e}
-                  </div>
-                </span>
-                <span>
-                  {p.id === me.id ? (
-                    <Chip kind="b">Current</Chip>
-                  ) : (
-                    <Chip kind={AVAIL[p.avail][1]}>{AVAIL[p.avail][0]}</Chip>
-                  )}
-                </span>
-              </button>
-            ))}
           </div>
         </Card>
-      ))}
+      </div>
+    )
+  }
 
-      <p className="gr" style={{ fontSize: '12.5px' }}>
-        You currently {can('all') ? 'can' : 'cannot'} see every order, and {can('pricing') ? 'can' : 'cannot'}{' '}
-        see pricing and invoices.
-      </p>
-    </>
+  return (
+    <div className="authcol">
+      {mark}
+      {form}
+      {DEMO_IDENTITY ? (
+        <p className="gr" style={{ fontSize: '12.5px', marginTop: 14, textAlign: 'center' }}>
+          There is no database behind this build yet, so the password is asked for but not checked.{' '}
+          <b className="mono">{ADMIN_EMAIL}</b> signs in as the administrator; any other address
+          signs in as staff.
+        </p>
+      ) : null}
+    </div>
   )
 }

@@ -11,6 +11,7 @@ import {
   Row,
   Rows,
   Tabs,
+  focusElement,
 } from '@/components/ui'
 import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
@@ -108,13 +109,7 @@ function ThisMonth({
 
   /* Take someone to the list already on the page rather than duplicating it, and
      flash it so the eye lands where the tile just sent them. */
-  const focusList = () => {
-    const el = list.current
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    el.classList.add('lit')
-    setTimeout(() => el.classList.remove('lit'), 1500)
-  }
+  const focusList = () => focusElement(list.current)
 
   /* Each tile answers a different question, so each opens a different thing. */
   const showCredited = () =>

@@ -7,11 +7,14 @@ import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
 import { TZ, fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
-import { ATRISK, OPEN, PASTDUE } from '@/lib/derived'
+import { atRiskCount, openCount, pastDueCount } from '@/lib/derived'
 import { board, curStage, stageCounts } from '@/lib/engine'
 import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
 import { useDeliveries } from '@/lib/useDeliveries'
+import { celebrationsWithin } from '@/lib/celebrations'
+import { STAFF } from '@/data/people'
 import { SkeletonValue } from '@/components/async'
+import { TeamWishes } from '@/components/Wishes'
 
 const st = (k: string) => STATUS[k]?.[0] ?? k
 const stColor = (k: string) => STATUS[k]?.[1] ?? '#94A3B8'
@@ -23,6 +26,10 @@ function Dashboard() {
   const navigate = useNavigate()
   const [pipe, setPipe] = useState<string | null>(null)
 
+  const pastDue = pastDueCount()
+  const atRisk = atRiskCount()
+  const open = openCount()
+
   const counts = stageCounts(ORDERS)
   const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : ORDERS.filter((o) => !o.done && o.due < now())
 
@@ -32,6 +39,10 @@ function Dashboard() {
   const history = useDeliveries()
   const ot = useMemo(() => onTime30(history.data ?? []), [history.data])
   const otLoading = history.isPending
+  /* Whose day it is, across the whole company — the dashboard is the one screen
+     that sees everybody. Shown only when there is something in the week. */
+  const wishes = celebrationsWithin(STAFF, now(), 7)
+
   const unassigned = ORDERS.filter((o) => !o.done && Object.values(o.a).every((x) => !x)).length
   const { run: RUN } = board()
   const delivered = RUN.today.filter((o) => !curStage(o)).length
@@ -57,11 +68,11 @@ function Dashboard() {
         <Kpi
           title="Past due"
           icon="▲"
-          value={PASTDUE}
-          tone={PASTDUE ? 'alert' : undefined}
+          value={pastDue}
+          tone={pastDue ? 'alert' : undefined}
           detail={
-            <span className={PASTDUE ? 'bad' : 'ok'}>
-              {PASTDUE ? 'client already owed an explanation' : 'nothing overdue'}
+            <span className={pastDue ? 'bad' : 'ok'}>
+              {pastDue ? 'client already owed an explanation' : 'nothing overdue'}
             </span>
           }
           onClick={() => navigate({ to: '/orders', search: { pill: 'late' } })}
@@ -69,15 +80,15 @@ function Dashboard() {
         <Kpi
           title="Due within 4h"
           icon="◷"
-          value={ATRISK}
-          tone={ATRISK ? 'warn' : undefined}
+          value={atRisk}
+          tone={atRisk ? 'warn' : undefined}
           detail={<span className="warn">act now to stay on time</span>}
           onClick={() => navigate({ to: '/orders', search: { pill: 'soon' } })}
         />
         <Kpi
           title="Open orders"
           icon="☰"
-          value={OPEN}
+          value={open}
           detail={`across ${STAGES.length} stages`}
           onClick={() => navigate({ to: '/orders', search: { pill: 'all' } })}
         />
@@ -190,6 +201,13 @@ function Dashboard() {
           <Empty icon="✓">Nothing past due. The board is clean.</Empty>
         </div>
       )}
+
+      {wishes.length ? (
+        <>
+          <SectionHead>Worth a word</SectionHead>
+          <TeamWishes celebrations={wishes} title="Birthdays and anniversaries this week" />
+        </>
+      ) : null}
 
       <SectionHead>Today</SectionHead>
       <Kpis>

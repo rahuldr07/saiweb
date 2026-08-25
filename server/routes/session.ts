@@ -3,9 +3,17 @@ import { sql } from 'drizzle-orm'
 import { eq } from 'drizzle-orm'
 import { db, withTenant } from '../db/client'
 import { people, tenantSettings, tenants } from '../db/schema'
-import type { Ctx } from '../context'
+import type { Ctx, SessionCtx } from '../context'
 
 export const sessionRoutes = new Hono<Ctx>()
+
+/**
+ * The routes that answer before a workspace has been chosen.
+ *
+ * Mounted ahead of `requireWorkspace`, because this is the one thing a client
+ * needs to know before it can name a workspace at all.
+ */
+export const preflightRoutes = new Hono<SessionCtx>()
 
 /**
  * Who you are here, and what you may do. This is the endpoint that makes the
@@ -43,7 +51,7 @@ sessionRoutes.get('/me', async (c) => {
  * that user's own memberships. There is no argument that widens it, so the
  * blast radius is one person's own list — see `app_memberships` in rls.sql.
  */
-sessionRoutes.get('/memberships', async (c) => {
+preflightRoutes.get('/memberships', async (c) => {
   const userId = c.get('userId')
 
   const rows = await db.execute<{
@@ -55,15 +63,31 @@ sessionRoutes.get('/memberships', async (c) => {
     person_id: string
   }>(sql`select * from app_memberships(${userId})`)
 
+  const list = Array.from(rows)
+
+  /*
+   * This route does not need a workspace — it is what you call to find one. But
+   * naming one you are not a member of is still a bogus request, and refusing it
+   * everywhere is a rule worth being able to state without exceptions. The list
+   * just fetched is the authority, so this costs no extra query.
+   */
+  const named = c.req.header('x-tenant-id')
+  if (named && !list.some((r) => r.tenant_id === named)) {
+    return c.json({ error: 'No access to this workspace' }, 403)
+  }
+
   return c.json(
-    Array.from(rows).map((r) => ({
+    list.map((r) => ({
       id: r.tenant_id,
       slug: r.slug,
       name: r.name,
       plan: r.plan,
       state: r.state,
       personId: r.person_id,
-      current: r.tenant_id === c.get('tenantId'),
+      /* Which one the caller is already in, if any — the header when they have
+         named one, the session's own choice otherwise, and none of them before
+         either exists. */
+      current: r.tenant_id === (c.req.header('x-tenant-id') ?? c.get('activeTenantId')),
     })),
   )
 })

@@ -3,7 +3,7 @@ import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { visibleNav } from '@/lib/permissions'
 import { initials } from '@/lib/format'
-import { PASTDUE, brokenLinks, followUpCount } from '@/lib/derived'
+import { pastDueCount, brokenLinks, followUpCount } from '@/lib/derived'
 import { TENANTS } from '@/data/org'
 import { Chip, Row, Rows } from '@/components/ui'
 
@@ -12,7 +12,8 @@ import { Chip, Row, Rows } from '@/components/ui'
  * permanent badge, which is what keeps a badge meaning "act on this".
  */
 function badgeFor(route: string) {
-  if (route === 'dash' && PASTDUE) return { n: PASTDUE, warn: false }
+  const overdue = pastDueCount()
+  if (route === 'dash' && overdue) return { n: overdue, warn: false }
   const fu = followUpCount()
   if (route === 'leads' && fu) return { n: fu, warn: true }
   const bl = brokenLinks().length
@@ -21,7 +22,7 @@ function badgeFor(route: string) {
 }
 
 export function Sidebar({ current }: { current: string }) {
-  const { me, tenant, switchTenant, roleLabel, setNavOpen } = useSession()
+  const { me, tenant, switchTenant, roleLabel, setNavOpen, memberships } = useSession()
   const { openModal, closeModal } = useUi()
   const navigate = useNavigate()
 
@@ -31,6 +32,19 @@ export function Sidebar({ current }: { current: string }) {
     setNavOpen(false)
     navigate({ to: `/${route}` })
   }
+
+  /*
+   * The workspaces this person actually belongs to, once the server has said so.
+   *
+   * `/api/memberships` was being fetched and then ignored, so a real deployment
+   * listed the three seeded workspaces instead. Picking one set an id the server
+   * does not recognise, the header went unsent, and the sidebar then showed
+   * another company's name over the current company's data. The seed list stays
+   * as the fallback for the build that has no server to ask.
+   */
+  const workspaces = memberships.length
+    ? memberships.map((m) => ({ id: m.id, name: m.name, plan: m.plan }))
+    : TENANTS.map((t) => ({ id: t.id, name: t.name, plan: t.plan }))
 
   const openTenantPicker = () =>
     openModal({
@@ -42,7 +56,7 @@ export function Sidebar({ current }: { current: string }) {
             private to it — nothing is shared between companies.
           </p>
           <Rows>
-            {TENANTS.map((t) =>
+            {workspaces.map((t) =>
               t.id === 'new' ? (
                 <Row
                   key={t.id}

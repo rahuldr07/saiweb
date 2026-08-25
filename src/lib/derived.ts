@@ -14,7 +14,6 @@ import {
 } from '@/state/coverage'
 import { ORDERS } from '@/data/production'
 import { LEADS, STALE_BAD, STALE_WARN } from '@/data/business'
-import { LEAVE } from '@/data/hrms'
 import { STAFF } from '@/data/people'
 import { DEPTLIST } from '@/data/org'
 import { now } from '@/lib/clock'
@@ -29,9 +28,18 @@ export const pastDue = () => openOrders().filter((o) => o.due < now())
 export const atRisk = () =>
   openOrders().filter((o) => o.due >= now() && (o.due.getTime() - now().getTime()) / 3600000 < 4)
 
-export const PASTDUE = pastDue().length
-export const ATRISK = atRisk().length
-export const OPEN = openOrders().length
+/*
+ * Counts, not constants.
+ *
+ * These were evaluated once at module load. Pinned to the seed clock that was
+ * indistinguishable from correct; the moment `setClock` points at the real one —
+ * which is what happens when the API is wired up — they freeze at whatever the
+ * chunk happened to load, and the dashboard's "past due" stops moving. Every
+ * other derived figure in this file is already a function.
+ */
+export const pastDueCount = () => pastDue().length
+export const atRiskCount = () => atRisk().length
+export const openCount = () => openOrders().length
 
 /* ── leads ──────────────────────────────────────────────────────────────── */
 
@@ -117,8 +125,6 @@ export const findCounty = (n: string, st?: string) =>
 
 /* ── HR ─────────────────────────────────────────────────────────────────── */
 
-export const pendingLeave = () => LEAVE.filter((l) => l.st === 'pending')
-
 /** Departments with nobody available: any order needing that stage has nowhere to go. */
 export const thinDepts = () =>
   DEPTLIST.filter(
@@ -158,10 +164,11 @@ export function alerts(): Alert[] {
       go: 'linkcheck',
     })
   }
-  if (PASTDUE) {
+  const overdue = pastDueCount()
+  if (overdue) {
     out.push({
       sev: 'bad',
-      t: `${PASTDUE} order${PASTDUE === 1 ? '' : 's'} past due`,
+      t: `${overdue} order${overdue === 1 ? '' : 's'} past due`,
       d: 'The client is already owed an explanation',
       go: 'orders',
     })

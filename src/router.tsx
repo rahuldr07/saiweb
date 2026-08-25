@@ -6,6 +6,7 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { AppShell } from './app/AppShell'
+import { RouteError } from './components/async'
 import { NotFound } from './screens/NotFound'
 
 /**
@@ -19,6 +20,10 @@ import { NotFound } from './screens/NotFound'
 const rootRoute = createRootRoute({
   component: AppShell,
   notFoundComponent: NotFound,
+  /* Every screen inherits this. Three of them wrap their own panels in an
+     `ErrorBoundary` so one broken panel does not take the page; this is the
+     backstop for everything else, and for the screens that do not. */
+  errorComponent: RouteError,
 })
 
 /** Generic over the path so TanStack keeps the literal type for `navigate({ to })`. */
@@ -124,12 +129,16 @@ const routeTree = rootRoute.addChildren([
   /* Configure */
   screen('/integ', () => import('./screens/Integrations')),
   /* Reports links straight at Company → Turnaround & SLA, where the stage
-     budgets it is complaining about are set, so the tab is nameable. */
+     budgets it is complaining about are set, so the tab is nameable — and so is
+     the section inside it, since "Turnaround & SLA" is three separate settings
+     and landing on the wrong one is the same as not linking at all. */
   createRoute({
     getParentRoute: () => rootRoute,
     path: '/company',
-    validateSearch: (s: Record<string, unknown>): { tab?: string } =>
-      typeof s.tab === 'string' ? { tab: s.tab } : {},
+    validateSearch: (s: Record<string, unknown>): { tab?: string; sub?: string } => ({
+      ...(typeof s.tab === 'string' ? { tab: s.tab } : {}),
+      ...(typeof s.sub === 'string' ? { sub: s.sub } : {}),
+    }),
     component: lazyRouteComponent(() => import('./screens/Company')),
   }),
   screen('/onboard', () => import('./screens/Onboard')),

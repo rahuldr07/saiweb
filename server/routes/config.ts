@@ -3,6 +3,7 @@ import { asc, eq } from 'drizzle-orm'
 import { withTenant } from '../db/client'
 import { assignmentRules, departments, products, slaRules, stageBudgets, tenantSettings } from '../db/schema'
 import { needs, type Ctx } from '../context'
+import { readEnabled, readSettings } from './validate'
 
 export const configRoutes = new Hono<Ctx>()
 
@@ -24,7 +25,8 @@ configRoutes.get('/rules', async (c) => {
 
 configRoutes.post('/rules/:id', needs('config'), async (c) => {
   const id = c.req.param('id')
-  const body = (await c.req.json()) as { enabled: boolean }
+  const read = readEnabled(await c.req.json().catch(() => null))
+  if (!read.ok) return c.json({ error: read.error }, 400)
 
   const result = await withTenant(c.get('tenantId'), async (tx) => {
     const [rule] = await tx.select().from(assignmentRules).where(eq(assignmentRules.id, id)).limit(1)
@@ -37,7 +39,7 @@ configRoutes.post('/rules/:id', needs('config'), async (c) => {
 
     await tx
       .update(assignmentRules)
-      .set({ enabled: body.enabled })
+      .set({ enabled: read.value })
       .where(eq(assignmentRules.id, id))
     return { ok: true as const }
   })
@@ -79,18 +81,11 @@ configRoutes.get('/settings', async (c) => {
 
 configRoutes.post('/settings', needs('config'), async (c) => {
   const tenantId = c.get('tenantId')
-  const body = (await c.req.json()) as {
-    dateFormat?: string
-    slaBufferPct?: number
-    onTimeTarget?: number
-  }
-
-  if (body.slaBufferPct !== undefined && (body.slaBufferPct < 0 || body.slaBufferPct >= 100)) {
-    return c.json({ error: 'The buffer is a percentage of the promise, so it must be under 100' }, 400)
-  }
+  const read = readSettings(await c.req.json().catch(() => null))
+  if (!read.ok) return c.json({ error: read.error }, 400)
 
   await withTenant(tenantId, (tx) =>
-    tx.update(tenantSettings).set(body).where(eq(tenantSettings.tenantId, tenantId)),
+    tx.update(tenantSettings).set(read.value).where(eq(tenantSettings.tenantId, tenantId)),
   )
   return c.json({ ok: true })
 })

@@ -15,7 +15,7 @@ export { SLA }
 export type { SlaRule }
 import { hrs } from '@/lib/format'
 import { now } from '@/lib/clock'
-import type { Order, Tier } from '@/data/types'
+import type { Assignments, Order, Tier } from '@/data/types'
 
 /** No client named on it — the row that applies when nothing more specific does. */
 export const isDefaultRule = (r: SlaRule) => r.cl.startsWith('—')
@@ -114,10 +114,24 @@ export function checkpoints(slaH: number, pr: string): Checkpoint[] {
   return out
 }
 
-const ownersOf = (o: Order) => o.a ?? {}
+/**
+ * The least an order has to carry to be planned against its promise.
+ *
+ * Wider than `Order` because the assignment run's arrivals are planned too, and
+ * an arrival carries a *projected* plan rather than a record of who has finished
+ * — no `a`, no `done`. That is deliberate rather than missing: for an arrival
+ * the checkpoints read as "where this should be by now", which is exactly the
+ * question My work's queue asks.
+ */
+export type Plannable = Pick<Order, 'cl' | 'pr' | 'recv'> & {
+  done?: boolean
+  a?: Assignments
+}
+
+const ownersOf = (o: Plannable) => o.a ?? {}
 
 /** How far an order has actually got: the last stage with a person on it. */
-export function curIdx(o: Order): number {
+export function curIdx(o: Plannable): number {
   if (o.done) return ASSIGN_STAGES.length
   const own = ownersOf(o)
   let last = -1
@@ -127,7 +141,7 @@ export function curIdx(o: Order): number {
   return last
 }
 
-export const curStageOf = (o: Order): string | null => {
+export const curStageOf = (o: Plannable): string | null => {
   const i = curIdx(o)
   return i < 0 ? ASSIGN_STAGES[0] : i >= ASSIGN_STAGES.length ? null : ASSIGN_STAGES[i]
 }
@@ -155,7 +169,7 @@ export interface OrderPlan {
   short: number
 }
 
-export function orderPlan(o: Order): OrderPlan {
+export function orderPlan(o: Plannable): OrderPlan {
   const h = slaHours(o)
   const cps = checkpoints(h, o.pr)
   const i = curIdx(o)
@@ -188,7 +202,18 @@ export function orderPlan(o: Order): OrderPlan {
   }
 }
 
-export const orderAtRisk = (o: Order) => !o.done && orderPlan(o).doomed
+export const orderAtRisk = (o: Plannable) => !o.done && orderPlan(o).doomed
+
+/**
+ * When this is due to the client.
+ *
+ * A register order carries its own due datetime; an arrival from the assignment
+ * run does not, so it is derived from arrival plus the promise. Same answer
+ * either way, which is the point — two screens quoting different deadlines for
+ * one order is the failure this exists to prevent.
+ */
+export const dueOf = (o: Plannable & { due?: Date }): Date =>
+  o.due ?? new Date(o.recv.getTime() + slaHours(o) * 36e5)
 
 /** Hours, shown the way the design shows them: 2.5h, or 40m under an hour. */
 export const hh = (h: number) => (h >= 1 ? `${Math.round(h * 10) / 10}h` : `${Math.round(h * 60)}m`)

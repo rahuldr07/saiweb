@@ -43,6 +43,8 @@ interface TimeclockValue {
 
   decideCorrection: (id: string, st: 'approved' | 'rejected') => string
   decideSwap: (id: string, st: 'approved' | 'rejected') => string
+  /** Asks a colleague to take a day. Goes to a manager, because it moves cover. */
+  requestSwap: (from: string, to: string, date: string, why: string) => void
   decideOvertime: (id: string, st: 'approved' | 'rejected') => string
   claimOvertime: (personId: string, d: string, minutes: number, why: string) => void
   setWaived: (id: string, waived: boolean) => void
@@ -158,6 +160,18 @@ export function TimeclockProvider({ children }: { children: ReactNode }) {
     return `Swap ${st}`
   }, [])
 
+  const requestSwap = useCallback((from: string, to: string, date: string, why: string) => {
+    ledger.swaps.unshift({
+      id: `S${9000 + ledger.swaps.length}`,
+      from,
+      to,
+      d: date,
+      why,
+      st: 'pending',
+    })
+    changed()
+  }, [])
+
   const decideOvertime = useCallback((id: string, st: 'approved' | 'rejected') => {
     const o = ledger.overtime.find((x) => x.id === id)
     if (!o) return ''
@@ -208,6 +222,7 @@ export function TimeclockProvider({ children }: { children: ReactNode }) {
       breakEnd,
       decideCorrection,
       decideSwap,
+      requestSwap,
       decideOvertime,
       claimOvertime,
       setWaived,
@@ -226,6 +241,7 @@ export function TimeclockProvider({ children }: { children: ReactNode }) {
     breakEnd,
     decideCorrection,
     decideSwap,
+    requestSwap,
     decideOvertime,
     claimOvertime,
     setWaived,

@@ -90,8 +90,6 @@ export function taxUnder(regime: 'new' | 'old', gross12: number, declared = 0): 
   return slabTax(Math.max(0, gross12 - OLDSTD - declared), OLDSLABS, 500000)
 }
 
-export const annualTax = (gross12: number) => taxUnder('new', gross12)
-
 /* ── attendance and overtime ────────────────────────────────────────────── */
 
 export const monthOf = (mmddyyyy: string) => {

@@ -51,10 +51,19 @@ export function Btn({
  * does the same job and also says where you are, which is what the space above
  * a title is for.
  */
-export function Parent({ to, children }: { to: string; children: ReactNode }) {
+export function Parent({
+  to,
+  search,
+  children,
+}: {
+  to: string
+  /** For a parent that is one tab of a screen rather than the screen itself. */
+  search?: Record<string, string>
+  children: ReactNode
+}) {
   const navigate = useNavigate()
   return (
-    <button type="button" className="eyebrow" onClick={() => navigate({ to })}>
+    <button type="button" className="eyebrow" onClick={() => navigate({ to, search })}>
       <i>←</i>
       {children}
     </button>
@@ -107,12 +116,16 @@ export function PageHead({
   sub?: ReactNode
   actions?: ReactNode
   /** Where this screen sits, for a detail view reached from a register. */
-  parent?: { to: string; label: string }
+  parent?: { to: string; label: string; search?: Record<string, string> }
 }) {
   return (
     <div className="hd">
       <div style={{ minWidth: 0 }}>
-        {parent ? <Parent to={parent.to}>{parent.label}</Parent> : null}
+        {parent ? (
+          <Parent to={parent.to} search={parent.search}>
+            {parent.label}
+          </Parent>
+        ) : null}
         <h1 className="pg">{title}</h1>
         {sub ? <p className="sub">{sub}</p> : null}
       </div>
@@ -134,13 +147,15 @@ export function SectionHead({ children, id }: { children: ReactNode; id?: string
  * elsewhere. The brief highlight is what says "this, here" — without it the page
  * simply jumps and the reader has to work out what moved.
  */
-export function focusSection(id: string) {
-  const el = document.getElementById(id)
+export function focusElement(el: HTMLElement | null) {
   if (!el) return
   el.scrollIntoView({ block: 'start', behavior: 'smooth' })
   el.classList.add('lit')
   setTimeout(() => el.classList.remove('lit'), 1500)
 }
+
+/** The same, for a section that has an id rather than a ref. */
+export const focusSection = (id: string) => focusElement(document.getElementById(id))
 
 /**
  * The header a tab body opens with: a sentence saying what you are looking at,
@@ -249,6 +264,7 @@ export function Kpi({
   title,
   value,
   valueTone,
+  valueSize,
   detail,
   detailTone,
   tone,
@@ -262,6 +278,12 @@ export function Kpi({
   value: ReactNode
   /** Colours the figure itself — the design's `vc`. */
   valueTone?: 'ok' | 'warn' | 'bad'
+  /**
+   * Overrides the figure's size — the design's `vs`, used wherever the value is
+   * money. `₹1,23,456` at the default 26px overruns a 168px tile; every money
+   * tile in the export drops it to 23.
+   */
+  valueSize?: number
   detail?: ReactNode
   /** Colours the detail line, replacing its default grey — the design's `dc`. */
   detailTone?: 'ok' | 'warn' | 'bad'
@@ -312,7 +334,12 @@ export function Kpi({
         {title}
         {icon ? <span className="i">{icon}</span> : null}
       </div>
-      <div className={`v${valueTone ? ' ' + valueTone : ''}`}>{value}</div>
+      <div
+        className={`v${valueTone ? ' ' + valueTone : ''}`}
+        style={valueSize ? { fontSize: valueSize } : undefined}
+      >
+        {value}
+      </div>
       {/* The detail line is grey unless the tile colours it. */}
       {detail ? <div className={`d ${detailTone ?? 'gr'}`}>{detail}</div> : null}
     </div>
@@ -360,38 +387,6 @@ export function Avatar({
     <span className={cls} title={title ?? name ?? 'Unassigned'} style={style}>
       {text}
     </span>
-  )
-}
-
-/** The six-stage assignment strip: one slot per stage, initials or an empty ring. */
-export function StageStrip({
-  stages,
-  assignments,
-  nameOf,
-  meId,
-  onPick,
-}: {
-  stages: string[]
-  assignments: Record<string, string | null>
-  nameOf: (id: string) => string
-  meId?: string
-  onPick?: (stage: string) => void
-}) {
-  return (
-    <div className="asg">
-      {stages.map((s) => {
-        const who = assignments[s]
-        return (
-          <Avatar
-            key={s}
-            name={who ? nameOf(who) : null}
-            self={!!who && who === meId}
-            title={who ? `${s} — ${nameOf(who)}` : `${s} — unassigned`}
-            onClick={onPick ? () => onPick(s) : undefined}
-          />
-        )
-      })}
-    </div>
   )
 }
 

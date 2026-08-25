@@ -8,13 +8,24 @@
  * a rule consulted 2,160 times that never removed anybody is doing nothing.
  */
 import { ASSIGN_STAGES, PAIRS, RULES, STAGES } from '@/data/org'
+import { PRODUCTS } from '@/data/catalog'
 import { STAFF } from '@/data/people'
 import { COUNTIES } from '@/data/catalog'
 import { PRODMIX, CLIENTMIX } from '@/data/production'
 import { fmtDate } from './format'
 import { now } from '@/lib/clock'
 import { COVSTAGES, coversPlace, coversProduct } from './coverage'
-import type { Order, Person, Rule, RuleCondition } from '@/data/types'
+import type { Order, OrderStatus, Person, Rule, RuleCondition } from '@/data/types'
+
+/** The register's status key for each pipeline stage. */
+const STAGE_STATUS: Record<string, OrderStatus> = {
+  Search: 'search',
+  'Search QC': 'sq',
+  Typing: 'typing',
+  'Typing QC': 'tqc',
+  RTS: 'rts',
+  'Doc Req': 'docreq',
+}
 
 /* ── what a run is given ────────────────────────────────────────────────── */
 
@@ -569,12 +580,6 @@ export const doneCount = (o: Arrival) =>
 
 export const isDone = (o: Arrival, stage: string) => stageIdx(stage) < doneCount(o)
 
-/** complete · waiting · progress — the three states a board can show. */
-export const orderState = (o: Arrival) => {
-  const d = doneCount(o)
-  return d >= ASSIGN_STAGES.length ? 'complete' : d === 0 ? 'waiting' : 'progress'
-}
-
 export const curStage = (o: Arrival): string | null => ASSIGN_STAGES[doneCount(o)] ?? null
 
 /* ── rosters ────────────────────────────────────────────────────────────── */
@@ -764,6 +769,44 @@ export const EXCLUSION: Record<ExclusionReason, [string, 'warn' | 'bad', string]
     'Widen somebody’s level, or add a person who already covers it.',
   ],
 }
+
+/**
+ * One of today's arrivals, as an order.
+ *
+ * The assignment run deals arrivals rather than register rows, so a queue built
+ * from the run holds ids the register has never heard of. Every screen that
+ * showed one still linked it at order detail, which meant a row somebody was
+ * told to work opened on "that order is not here".
+ *
+ * Nothing is invented here: the plan is the run's own placement, the due date
+ * comes from the same promise the SLA planner uses, the fee is the product's,
+ * and the stage is wherever the run has got to. What an arrival genuinely does
+ * not have is a property address — that is taken at intake — so it stays empty
+ * rather than being filled with something plausible.
+ */
+export function arrivalAsOrder(o: Arrival, slaHours: number): Order {
+  const stage = curStage(o)
+  const age = Math.max(0, Math.round(ageHrs(o)))
+  return {
+    id: o.id,
+    cl: o.cl,
+    pr: o.pr,
+    stt: (stage ? STAGE_STATUS[stage] : 'sent') ?? 'search',
+    st: o.st,
+    co: o.co,
+    prop: '',
+    a: { ...(o.plan ?? {}) },
+    due: new Date(o.recv.getTime() + slaHours * 36e5),
+    recv: o.recv,
+    fee: PRODUCTS.find((p) => p.id === o.pr)?.fee ?? 0,
+    age: stage ? `${age}h in ${stage}` : `${age}h, delivered`,
+    done: !stage,
+  }
+}
+
+/** Find one of today's arrivals by id. */
+export const arrivalById = (id: string): Arrival | undefined =>
+  board().run.orders.find((o) => o.id === id)
 
 /** Stage counts across the order register, for the dashboard pipeline strip. */
 export function stageCounts(orders: Order[]): Record<string, number> {

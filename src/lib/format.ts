@@ -29,6 +29,17 @@ export const fmtDate = (d: Date) =>
     ? `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`
     : `${pad(d.getMonth() + 1)}/${pad(d.getDate())}/${d.getFullYear()}`
 
+/**
+ * The inverse of `fmtDate` for the stored MM/DD/YYYY strings — joining dates,
+ * birthdays, holidays. Deliberately not `new Date(str)`, which reads the same
+ * string as UTC in some engines and local in others, moving a date by a day
+ * depending on the timezone the browser happens to be in.
+ */
+export const parseUsDate = (v: string): Date => {
+  const [m, d, y] = v.split('/').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 export const fmtTime = (d: Date) => {
   let h = d.getHours()
   const m = pad(d.getMinutes())

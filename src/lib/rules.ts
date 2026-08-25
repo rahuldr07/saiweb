@@ -7,7 +7,6 @@
  * so the screen never carries a hand-written description that can drift from the
  * condition actually being run.
  */
-import { ASSIGN_STAGES } from '@/data/org'
 import { whoName } from '@/lib/permissions'
 import { COVSTAGES, coversPlace, coversProduct } from '@/lib/coverage'
 import type { Exception } from '@/lib/engine'
@@ -130,5 +129,3 @@ export function ruleProblem(d: RuleDraft, rules: Rule[], id: string | null): str
   return null
 }
 
-/** Every stage a rule may be conditioned on. */
-export const RULE_STAGES = ASSIGN_STAGES

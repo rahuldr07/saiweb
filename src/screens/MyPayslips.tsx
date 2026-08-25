@@ -1,94 +1,199 @@
+import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Card, CardHead, Chip, Kpi, Kpis, PageHead, Rows, SectionHead } from '@/components/ui'
+import { Btn, Card, Kpi, Kpis, PageHead, SectionHead, focusSection } from '@/components/ui'
 import { useSession } from '@/state/session'
+import { useUi } from '@/state/ui'
 import { PAYMONTHS, PAYRUNS } from '@/data/hrms'
-import { inr, leaveBalance, payslipOf, structureOf, ytd } from '@/lib/payroll'
+import { inr, payslipOf, ytd } from '@/lib/payroll'
+import { payslipFileStem, payslipRows } from '@/lib/payroll-csv'
+import { csvName, downloadCSV } from '@/lib/csv'
 
-/** A person's own payslip history. No comparison to anyone else appears here. */
+const COLS = '150px 140px 140px 140px 1fr'
+
+/**
+ * A person's own payslip history.
+ *
+ * Only published months appear. An approved run is not a payslip yet — payroll
+ * can still move a figure in it — so showing a draft here would be showing
+ * somebody a number that is going to change. The months that are not out are
+ * named at the bottom instead, because "my June payslip is missing" and "June
+ * has not been released" are different worries and only one of them is real.
+ *
+ * Nothing on this screen compares anyone to anyone else.
+ */
 export default function MyPayslips() {
-  const { me } = useSession()
+  const { me, tenant } = useSession()
+  const { toast } = useUi()
   const navigate = useNavigate()
 
+  /* Published state is set by the pay run, so it is read rather than stored —
+     publishing a month on the Payroll screen makes it appear here. */
+  const published = useMemo(() => PAYMONTHS.filter((m) => PAYRUNS[m]?.published).reverse(), [])
+  const pending = useMemo(() => PAYMONTHS.filter((m) => !PAYRUNS[m]?.published), [])
+
+  const openPayslip = (month: string) =>
+    navigate({ to: '/payslips/$personId', params: { personId: me.id }, search: { m: month } })
+
+  const download = (month: string) => {
+    const out = downloadCSV(
+      csvName(payslipFileStem(me, month)),
+      payslipRows(me, month, tenant.name),
+    )
+    toast(out.name)
+  }
+
+  /* No salary on the record means no payslip has been produced — which is a
+     different thing from none being published, and says who can fix it. */
   if (!me.ctc) {
     return (
       <>
-        <PageHead title="My payslips" sub="Nothing on payroll for this account." />
-        <Card padded>
+        <PageHead title="My payslips" />
+        <Card padded style={{ maxWidth: 560 }}>
           <p style={{ fontSize: '13.5px', margin: 0 }}>
-            {me.n} has no salary record, so there are no payslips to show.
+            There is no salary on your record yet, so no payslip has been produced. Whoever runs
+            payroll can set it.
           </p>
         </Card>
       </>
     )
   }
 
-  const latest = PAYMONTHS[PAYMONTHS.length - 1]
-  const st = structureOf(me)
-  const year = ytd(me, latest)
-  const bal = leaveBalance(me.id)
+  const newest = published[0]
+  const latest = newest ? payslipOf(me, newest) : null
+  const year = newest ? ytd(me, newest) : null
 
-  /* Opens the payslip itself. A modal that restates half of one is a second
-     version of the document to keep right. */
-  const open = (mn: string) =>
-    navigate({ to: '/payslips/$personId', params: { personId: me.id }, search: { m: mn } })
   return (
     <>
-      <PageHead title="My payslips" sub={`${me.n} · ${me.dep.join(', ') || 'No department'}`} />
+      <PageHead
+        title="My payslips"
+        sub={`${me.n} · ${published.length} published`}
+        actions={newest ? <Btn onClick={() => openPayslip(newest)}>Open {newest}</Btn> : undefined}
+      />
 
-      <Kpis>
-        <Kpi
-          title="Monthly gross"
-          value={<span className="mono">{inr(st.gross)}</span>}
-          detail="before deductions"
-        />
-        <Kpi
-          title="Net this month"
-          value={<span className="mono ok">{inr(payslipOf(me, latest).net)}</span>}
-          detail={latest}
-        />
-        <Kpi
-          title="Paid year to date"
-          value={<span className="mono">{inr(year.net)}</span>}
-          detail={`tax ${inr(year.tds)}`}
-        />
-        <Kpi
-          title="Paid leave left"
-          value={<span className="mono">{bal.pl.left}</span>}
-          detail={`of ${bal.pl.annual} a year`}
-        />
-      </Kpis>
+      {latest && year && newest ? (
+        <Kpis>
+          <Kpi
+            title="Last net pay"
+            value={inr(latest.net)}
+            valueTone="ok"
+            valueSize={23}
+            detail={newest}
+            hint="Open that payslip"
+            onClick={() => openPayslip(newest)}
+          />
+          <Kpi
+            title="Gross that month"
+            value={inr(latest.gross)}
+            valueSize={23}
+            detail="before deductions"
+            hint="Open that payslip"
+            onClick={() => openPayslip(newest)}
+          />
+          {/* Not clickable, and deliberately: year-to-date spans every published
+              payslip, so there is no single document to open. */}
+          <Kpi
+            title="Deducted this year"
+            value={inr(year.ded)}
+            valueTone="warn"
+            valueSize={23}
+            detail={`of which ${inr(year.tds)} tax`}
+          />
+          <Kpi
+            title="Received this year"
+            value={inr(year.net)}
+            valueSize={23}
+            detail={`across ${published.length} month${published.length === 1 ? '' : 's'}`}
+            hint="Month by month"
+            onClick={() => focusSection('mpList')}
+          />
+        </Kpis>
+      ) : null}
 
-      <SectionHead>Every payslip</SectionHead>
-      <Card>
-        <CardHead title={`${PAYMONTHS.length} months`} />
-        <Rows>
-          {[...PAYMONTHS].reverse().map((mn) => {
-            const s = payslipOf(me, mn)
-            const run = PAYRUNS[mn]
-            return (
-              <button
-                key={mn}
-                type="button"
-                className="rw"
-                style={{ width: '100%' }}
-                onClick={() => open(mn)}
-              >
-                <span className="gr">▤</span>
-                <span>
-                  <b>{mn}</b>
-                  <div className="sd">
-                    gross {inr(s.gross)} · deductions {inr(s.totalDed)}
-                  </div>
-                </span>
-                <span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span className="mono">{inr(s.net)}</span>
-                  <Chip kind={run?.published ? 'v' : 'n'}>{run?.published ? 'Published' : 'Pending'}</Chip>
-                </span>
-              </button>
-            )
-          })}
-        </Rows>
-      </Card>
+      <SectionHead id="mpList">Every payslip</SectionHead>
+
+      {published.length ? (
+        <Card>
+          <div className="tsc">
+            <div style={{ minWidth: 760 }}>
+              <div className="trow h" style={{ gridTemplateColumns: COLS }}>
+                <span>Month</span>
+                <span>Gross</span>
+                <span>Deductions</span>
+                <span>Net pay</span>
+                <span />
+              </div>
+              <div className="tb">
+                {published.map((m) => {
+                  const s = payslipOf(me, m)
+                  return (
+                    <div
+                      key={m}
+                      className="trow"
+                      role="button"
+                      tabIndex={0}
+                      style={{ gridTemplateColumns: COLS, cursor: 'pointer' }}
+                      onClick={() => openPayslip(m)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          openPayslip(m)
+                        }
+                      }}
+                    >
+                      <div className="cell">
+                        <div className="v">{m}</div>
+                        {s.a.lop ? (
+                          <div className="s warn">
+                            {s.a.lop} unpaid day{s.a.lop === 1 ? '' : 's'}
+                          </div>
+                        ) : null}
+                      </div>
+                      <div className="cell">
+                        <div className="v mono">{inr(s.gross)}</div>
+                      </div>
+                      <div className="cell">
+                        <div className="v mono warn">{inr(s.totalDed)}</div>
+                      </div>
+                      <div className="cell">
+                        <div className="v mono ok" style={{ fontWeight: 650 }}>
+                          {inr(s.net)}
+                        </div>
+                      </div>
+                      <div className="cell">
+                        <Btn
+                          variant="ghost"
+                          small
+                          aria-label={`Download the ${m} payslip`}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            download(m)
+                          }}
+                        >
+                          Download
+                        </Btn>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </Card>
+      ) : (
+        <Card padded>
+          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            Nothing published yet.
+          </p>
+        </Card>
+      )}
+
+      {pending.length ? (
+        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          {pending.join(', ')} {pending.length === 1 ? 'is' : 'are'} not published yet.{' '}
+          {pending.length === 1 ? 'It' : 'They'} will appear here once payroll is approved and
+          released — you are not missing anything.
+        </p>
+      ) : null}
     </>
   )
 }
