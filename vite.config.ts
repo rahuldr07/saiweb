@@ -48,4 +48,18 @@ export default defineConfig({
       },
     },
   },
+
+  /* The same proxy for `vite preview`, which serves the built bundle. Without it
+     the production build can only be exercised with no API behind it — which is
+     the one configuration that is never deployed, and the one where sign-in
+     cannot be tested at all. Deployment does not use this: there, `/api` is the
+     serverless function. */
+  preview: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_URL ?? 'http://localhost:8787',
+        changeOrigin: true,
+      },
+    },
+  },
 })

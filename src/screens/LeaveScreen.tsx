@@ -430,7 +430,7 @@ function LeaveScreen() {
       <Card padded style={{ marginTop: 18 }}>
         <Label>How each type behaves</Label>
         {LEAVETYPES.map((t) => (
-          <div className="rw" key={t.k} style={{ padding: '9px 0' }}>
+          <div className="rw tagged" key={t.k} style={{ padding: '9px 0' }}>
             <span>
               <Chip kind={t.c}>{t.n}</Chip>
             </span>

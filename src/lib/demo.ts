@@ -1,26 +1,32 @@
 /**
  * Whether the demonstration affordances are available.
  *
- * Switching identity from a list of people, with no password, is how the
- * permission model is inspected — a lead really does get a different sidebar and
- * a different register, which is worth being able to show. But it sits at
- * exactly the seam where real authentication goes, and a switcher that reaches a
- * deployed build is not a demo, it is a way to become somebody else.
+ * There is no database in this build, so there is nothing for a password to be
+ * checked against. This flag is what lets sign-in proceed anyway: the email
+ * picks the person off the roster, the password is required but not verified.
+ * That keeps the shape of the real flow while the check behind it is missing.
  *
- * So it is gated, and the gate is deliberately narrow: on in development, and in
- * a build only when someone has explicitly asked for it. The default for any
- * build is off.
+ * It sits at exactly the seam where real authentication goes, and a build that
+ * accepts any password is not a demonstration once it holds real records. So it
+ * is gated, and the gate is deliberately narrow: on in development, and in a
+ * build only when someone has explicitly asked for it. The default is off.
  */
 const flag = import.meta.env.VITE_DEMO_IDENTITY
 
 export const DEMO_IDENTITY: boolean = import.meta.env.DEV || flag === 'true'
 
-/**
- * Said out loud on the screen itself, so nobody has to infer it from the absence
- * of a control.
+/*
+ * A built bundle carries its flags baked in, and nothing about the running
+ * application looks different — which is how a demonstration flag survives into
+ * a deployment nobody meant it to reach. This is the one place that can still
+ * tell anyone, so it does, once, at startup.
+ *
+ * Development is silent: the flag is meant to be on there.
  */
-export const DEMO_IDENTITY_NOTE =
-  'Choosing a person swaps the session without a password. This is available in ' +
-  'development only — a deployed build authenticates with Better Auth, and ' +
-  'permissions come from the database either way, so what each role can reach is ' +
-  'identical.'
+if (!import.meta.env.DEV && DEMO_IDENTITY) {
+  console.warn(
+    '[titlecrm] VITE_DEMO_IDENTITY is on in a production build: sign-in accepts ' +
+      'any password for any address on the roster. Remove it from .env.production ' +
+      'before this build is put in front of real records.',
+  )
+}

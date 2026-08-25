@@ -1,6 +1,20 @@
 import { useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Banner, Btn, Card, CardHead, Chip, Kpi, Kpis, Label, PageHead, Row, Rows, SectionHead } from '@/components/ui'
+import {
+  Banner,
+  Btn,
+  Card,
+  CardHead,
+  Chip,
+  focusElement,
+  Kpi,
+  Kpis,
+  Label,
+  PageHead,
+  Row,
+  Rows,
+  SectionHead,
+} from '@/components/ui'
 import { ErrorBoundary } from '@/components/async'
 import { useUi } from '@/state/ui'
 import { STAFF } from '@/data/people'
@@ -65,13 +79,6 @@ function LinkMonitor() {
 
   const admins = STAFF.filter((s) => s.r === 'admin' && s.active !== false).map((s) => s.n)
   const countiesHit = new Set(bad.map((x) => x.c.n)).size
-
-  const focus = (el: HTMLElement | null) => {
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    el.classList.add('lit')
-    setTimeout(() => el.classList.remove('lit'), 1500)
-  }
 
   /** Sends the reader to the coverage register with a filter already applied. */
   const toCoverage = (f?: 'ok' | 'gap') =>
@@ -160,7 +167,7 @@ function LinkMonitor() {
           detail={stats.bad ? 'listed below' : 'none'}
           icon="›"
           hint={stats.bad ? 'What is broken and why' : 'Every county'}
-          onClick={() => (stats.bad ? focus(broken.current) : toCoverage())}
+          onClick={() => (stats.bad ? focusElement(broken.current) : toCoverage())}
         />
         <Kpi
           title="No link at all"
@@ -180,7 +187,7 @@ function LinkMonitor() {
           detail={`every ${check.every} days`}
           icon="›"
           hint="How the check runs"
-          onClick={() => focus(schedule.current)}
+          onClick={() => focusElement(schedule.current)}
         />
       </Kpis>
 
@@ -333,7 +340,7 @@ function LinkMonitor() {
           <Label>What counts as broken</Label>
           <Rows>
             {CAUSES.map(([s, what]) => (
-              <div className="rw" key={s}>
+              <div className="rw tagged" key={s}>
                 <span>
                   <Chip kind={LSTATE[s][1]}>{LSTATE[s][0]}</Chip>
                 </span>

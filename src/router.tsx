@@ -6,6 +6,7 @@ import {
   redirect,
 } from '@tanstack/react-router'
 import { AppShell } from './app/AppShell'
+import { RouteError } from './components/async'
 import { NotFound } from './screens/NotFound'
 
 /**
@@ -19,6 +20,10 @@ import { NotFound } from './screens/NotFound'
 const rootRoute = createRootRoute({
   component: AppShell,
   notFoundComponent: NotFound,
+  /* Every screen inherits this. Three of them wrap their own panels in an
+     `ErrorBoundary` so one broken panel does not take the page; this is the
+     backstop for everything else, and for the screens that do not. */
+  errorComponent: RouteError,
 })
 
 /** Generic over the path so TanStack keeps the literal type for `navigate({ to })`. */

@@ -7,7 +7,8 @@ import { FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
 import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
 import { median } from '@/lib/metrics'
-import { QC_CRITERIA, QC_RULES, QC_SCALE, ratedPeople, stageWorkOf, standing } from '@/lib/quality'
+import { QC_CRITERIA, QC_SCALE, ratedPeople, stageWorkOf, standing } from '@/lib/quality'
+import { setQcRule, useQcRules } from '@/state/qcRules'
 import { STAFF } from '@/data/people'
 import { QcTeamFocus } from './QcTeamFocus'
 import { QcStaffDetail } from './QcStaffDetail'
@@ -386,7 +387,10 @@ function Scores({
 
 /** How work is checked, and what a score is allowed to mean. */
 function ScoringConfig() {
-  const [rules, setRules] = useState(QC_RULES)
+  /* Shared rather than local: "Scores are visible to the person rated" decides
+     what My work and How I'm doing will show, so a box ticked here has to reach
+     them. */
+  const rules = useQcRules()
   const off = rules.filter((r) => !r.on)
 
   return (
@@ -477,9 +481,7 @@ function ScoringConfig() {
                 type="checkbox"
                 checked={r.on}
                 style={{ marginTop: 2 }}
-                onChange={(e) =>
-                  setRules((prev) => prev.map((x) => (x.k === r.k ? { ...x, on: e.target.checked } : x)))
-                }
+                onChange={(e) => setQcRule(r.k, e.target.checked)}
               />
               <span>
                 <b>{r.n}</b>

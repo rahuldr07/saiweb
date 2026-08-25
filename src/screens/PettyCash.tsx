@@ -1,5 +1,17 @@
 import { useMemo, useRef } from 'react'
-import { Banner, Btn, Card, Label, Kpi, Kpis, PageHead, Row, Rows, SectionHead } from '@/components/ui'
+import {
+  Banner,
+  Btn,
+  Card,
+  focusElement,
+  Label,
+  Kpi,
+  Kpis,
+  PageHead,
+  Row,
+  Rows,
+  SectionHead,
+} from '@/components/ui'
 import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -54,13 +66,7 @@ function PettyCash() {
   const last = lastCount(counts)
   const due = countDue(counts, cfg)
 
-  const focusCounts = () => {
-    const el = countsPanel.current
-    if (!el) return
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    el.classList.add('lit')
-    setTimeout(() => el.classList.remove('lit'), 1500)
-  }
+  const focusCounts = () => focusElement(countsPanel.current)
 
   /* ── the two things you can do to the box ──────────────────────────────── */
 

@@ -65,7 +65,3 @@ export const NAV: NavGroup[] = [
 export const ROUTE_LABEL: Record<string, string> = Object.fromEntries(
   NAV.flatMap((g) => g.t.map((t) => [t[1], t[0]])),
 )
-
-export const ROUTE_GROUP: Record<string, string> = Object.fromEntries(
-  NAV.flatMap((g) => g.t.map((t) => [t[1], g.l])),
-)

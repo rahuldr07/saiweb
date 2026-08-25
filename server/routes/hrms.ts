@@ -12,6 +12,7 @@ import {
   pettyCash,
 } from '../db/schema'
 import { needs, type Ctx } from '../context'
+import { readDecision } from './validate'
 
 export const hrmsRoutes = new Hono<Ctx>()
 
@@ -76,11 +77,8 @@ hrmsRoutes.get('/leave', async (c) => {
 
 hrmsRoutes.post('/leave/:id/decision', needs('people'), async (c) => {
   const id = c.req.param('id')
-  const body = (await c.req.json()) as { status: 'approved' | 'rejected' }
-
-  if (body.status !== 'approved' && body.status !== 'rejected') {
-    return c.json({ error: 'A decision is either approved or rejected' }, 400)
-  }
+  const read = readDecision(await c.req.json().catch(() => null))
+  if (!read.ok) return c.json({ error: read.error }, 400)
 
   const result = await withTenant(c.get('tenantId'), async (tx) => {
     const [row] = await tx.select().from(leaveRequests).where(eq(leaveRequests.id, id)).limit(1)
@@ -94,7 +92,7 @@ hrmsRoutes.post('/leave/:id/decision', needs('people'), async (c) => {
 
     await tx
       .update(leaveRequests)
-      .set({ status: body.status, decidedById: c.get('personId'), decidedAt: new Date() })
+      .set({ status: read.value, decidedById: c.get('personId'), decidedAt: new Date() })
       .where(eq(leaveRequests.id, id))
     return { ok: true as const }
   })

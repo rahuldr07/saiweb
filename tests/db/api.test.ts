@@ -115,6 +115,32 @@ describe.skipIf(!configured)('the API', () => {
     })
   })
 
+  /*
+   * The bootstrap. Everything else in this file names a workspace in a header,
+   * which is what a client can only do *after* this exchange — and for a while
+   * nothing tested the step before it, so nobody noticed that a correct email
+   * and password could not get anybody in: `/me` refused without a workspace,
+   * and the only place to learn a workspace id refused for the same reason.
+   */
+  describe('before a workspace has been chosen', () => {
+    it('still answers which workspaces they are in', async () => {
+      const res = await call('/api/memberships')
+      expect(res.status).toBe(200)
+
+      const body = (await res.json()) as { id: string; current: boolean }[]
+      expect(body.map((m) => m.id)).toEqual([keystone])
+      /* None is current yet — that is the state this call exists to end. */
+      expect(body.every((m) => !m.current)).toBe(true)
+    })
+
+    it('refuses everything that does need one, rather than guessing', async () => {
+      for (const path of ['/api/me', '/api/orders', '/api/counties']) {
+        const res = await call(path)
+        expect(res.status, `${path} answered without a workspace`).toBe(400)
+      }
+    })
+  })
+
   describe('inside a workspace they belong to', () => {
     it('says who they are and what they may do', async () => {
       const res = await call('/api/me', keystone)

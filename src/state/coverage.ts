@@ -51,9 +51,6 @@ export const currentCheck = (): LinkCheckConfig => coverage.check
 export const sameCounty = (c: County, n: string, st: string) =>
   c.n.toLowerCase() === n.toLowerCase().trim() && c.st === st
 
-export const findCountyIn = (counties: County[], n: string, st?: string) =>
-  counties.find((c) => c.n.toLowerCase() === n.toLowerCase().trim() && (!st || c.st === st))
-
 /* ── counties ───────────────────────────────────────────────────────────── */
 
 /** Adds a county, or replaces the one identified by `was`. */

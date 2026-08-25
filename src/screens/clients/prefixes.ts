@@ -39,8 +39,6 @@ const snapshot = () => prefixes
 export const usePrefixes = (): Record<string, string[]> =>
   useSyncExternalStore(subscribe, snapshot, snapshot)
 
-export const prefixesOf = (clientName: string): string[] => prefixes[clientName] ?? []
-
 /**
  * Which client already claims a prefix that would collide with this one, or null.
  *

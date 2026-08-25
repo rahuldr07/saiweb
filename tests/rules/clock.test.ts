@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { SEED_NOW, now, resetClock, setClock } from '@/lib/clock'
 import { daysSince, dueMeta, fmtDate } from '@/lib/format'
+import { atRiskCount, openCount, pastDueCount } from '@/lib/derived'
+import { ORDERS } from '@/data/production'
 
 /**
  * The clock used to be a literal read directly by forty-odd call sites. These
@@ -53,6 +55,36 @@ describe('swapping it', () => {
     expect(daysSince(then)).toBe(10)
     setClock(() => new Date(2026, 7, 13))
     expect(daysSince(then)).toBe(20)
+  })
+})
+
+/*
+ * The counts the dashboard and the sidebar badge read.
+ *
+ * They were computed once at module load, which is indistinguishable from
+ * correct while the clock is pinned and silently wrong the moment it is not.
+ * These assert they move, which is the only way that regression announces
+ * itself before real orders do.
+ */
+describe('the counts the shell reads', () => {
+  it('follow the clock rather than the module load', () => {
+    setClock(() => SEED_NOW)
+    const atSeed = { past: pastDueCount(), risk: atRiskCount(), open: openCount() }
+
+    /* A fortnight on, every open order is long past its promise. */
+    setClock(() => new Date(SEED_NOW.getTime() + 14 * 24 * 3600_000))
+    expect(pastDueCount()).toBeGreaterThan(atSeed.past)
+    expect(atRiskCount()).toBe(0)
+
+    /* Long before any of them arrived, none is due yet. */
+    setClock(() => new Date(SEED_NOW.getTime() - 60 * 24 * 3600_000))
+    expect(pastDueCount()).toBe(0)
+  })
+
+  it('never counts a delivered order as outstanding', () => {
+    setClock(() => new Date(SEED_NOW.getTime() + 365 * 24 * 3600_000))
+    expect(openCount()).toBe(ORDERS.filter((o) => !o.done).length)
+    expect(pastDueCount()).toBeLessThanOrEqual(openCount())
   })
 })
 

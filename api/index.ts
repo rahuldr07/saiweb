@@ -13,6 +13,7 @@
 import { handle } from 'hono/vercel'
 import app from '../server/index'
 import { assertServerRoleIsSafe, isConfigured } from '../server/db/client'
+import { assertAuthSecretIsSet } from '../server/auth'
 
 export const config = {
   runtime: 'nodejs',
@@ -27,7 +28,8 @@ export const config = {
  * and every request on a bad role is failed closed rather than served.
  */
 let roleChecked: Promise<void> | null = null
-const checkRole = () => (roleChecked ??= assertServerRoleIsSafe())
+const checkRole = () =>
+  (roleChecked ??= Promise.resolve().then(assertAuthSecretIsSet).then(assertServerRoleIsSafe))
 
 const handler = handle(app)
 

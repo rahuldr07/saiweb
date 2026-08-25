@@ -19,6 +19,7 @@ import {
 } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { SkeletonRows, SkeletonValue } from '@/components/async'
+import { useBudgetHelp } from '@/components/budgetHelp'
 import { useStaffEditor } from './company/forms/useStaffEditor'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
@@ -102,6 +103,7 @@ export default function PersonDetail() {
   const navigate = useNavigate()
   const { me, can } = useSession()
   const { openModal } = useUi()
+  const budgetHelp = useBudgetHelp()
   const { editStaff } = useStaffEditor()
   const staff = useStaff()
   const perms = usePerms()
@@ -284,30 +286,6 @@ export default function PersonDetail() {
     })
   }
 
-  const budgetHelp = () =>
-    openModal({
-      title: 'What “inside your budget” means',
-      body: (
-        <>
-          <Rows>
-            <Row
-              title="The stage budget"
-              detail="the share of the client promise this stage is allowed"
-              right={<span className="gr">set per product</span>}
-            />
-            <Row title="Inside budget" detail="you finished the stage within that share" />
-            <Row
-              title="Compared against"
-              detail="other people doing the same stages, not the company average"
-            />
-          </Rows>
-          {modalNote(
-            'Stages differ enormously — RTS finishes inside budget almost every time and Search barely 60% of the time. Comparing you against the company average would say more about which stage you work on than about you.',
-          )}
-        </>
-      ),
-    })
-
   /* ── the header ────────────────────────────────────────────────────────── */
 
   const head = (
@@ -421,7 +399,7 @@ export default function PersonDetail() {
       {sd && qavg !== null && t ? (
         <Card padded style={{ marginTop: 16 }}>
           <div
-            className="rw"
+            className="rw tagged"
             style={{ background: TINT[sd[1]] ?? 'var(--tint)', borderRadius: 9, padding: '13px 15px' }}
           >
             <span>

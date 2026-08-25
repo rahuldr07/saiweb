@@ -1,4 +1,4 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { Component, useEffect, type ErrorInfo, type ReactNode } from 'react'
 import { Btn, Card, Empty } from './ui'
 
 /**
@@ -66,7 +66,13 @@ export function LoadFailed({
   error?: unknown
   onRetry?: () => void
 }) {
-  const detail = error instanceof Error ? error.message : null
+  /* The message is a developer's sentence — "Cannot read properties of undefined"
+     — and in front of somebody trying to get through their day it is noise at
+     best. It stays inline in development, where it saves a round trip, and goes
+     to the console in a build, where the person who needs it can still find it
+     and the person who does not is spared it. `what` already names the failure,
+     which is the part a reader can act on. */
+  const detail = import.meta.env.DEV && error instanceof Error ? error.message : null
   return (
     <Card>
       <Empty
@@ -83,6 +89,21 @@ export function LoadFailed({
       </Empty>
     </Card>
   )
+}
+
+/**
+ * What the router shows when a screen throws and nothing below caught it.
+ *
+ * Without one of these TanStack renders its own default, which puts the error
+ * message and a button that prints the stack in front of whoever was using the
+ * screen. This names what failed, offers the way back, and leaves the detail
+ * where it belongs.
+ */
+export function RouteError({ error, reset }: { error: unknown; reset?: () => void }) {
+  useEffect(() => {
+    console.error('Route error:', error)
+  }, [error])
+  return <LoadFailed what="This screen" error={error} onRetry={reset} />
 }
 
 /* ── error boundary ─────────────────────────────────────────────────────── */

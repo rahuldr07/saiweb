@@ -1,10 +1,10 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { auth } from './auth'
+import { assertAuthSecretIsSet, auth } from './auth'
 import { assertServerRoleIsSafe } from './db/client'
-import { authenticate, type Ctx } from './context'
-import { sessionRoutes } from './routes/session'
+import { requireSession, requireWorkspace, type Ctx } from './context'
+import { preflightRoutes, sessionRoutes } from './routes/session'
 import { productionRoutes } from './routes/production'
 import { referenceRoutes } from './routes/reference'
 import { hrmsRoutes } from './routes/hrms'
@@ -41,7 +41,12 @@ app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw))
    used by the thing that decides whether to route traffic here. */
 app.get('/api/health', (c) => c.json({ ok: true }))
 
-app.use('/api/*', authenticate)
+/* Order matters. Everything under /api needs a session; the memberships route
+   is mounted between the two checks because it is what a client calls to find
+   out which workspace to ask for. Everything after it needs a workspace too. */
+app.use('/api/*', requireSession)
+app.route('/api', preflightRoutes)
+app.use('/api/*', requireWorkspace)
 
 app.route('/api', sessionRoutes)
 app.route('/api', productionRoutes)
@@ -58,11 +63,14 @@ const port = Number(process.env.PORT ?? 8787)
  * server looks entirely healthy — so the only safe response is to not start.
  */
 export const start = () =>
-  assertServerRoleIsSafe().then(() =>
-    serve({ fetch: app.fetch, port }, (info) => {
-      console.log(`API listening on http://localhost:${info.port}`)
-    }),
-  )
+  Promise.resolve()
+    .then(assertAuthSecretIsSet)
+    .then(assertServerRoleIsSafe)
+    .then(() =>
+      serve({ fetch: app.fetch, port }, (info) => {
+        console.log(`API listening on http://localhost:${info.port}`)
+      }),
+    )
 
 /* Not started on import, so the tests can mount the same app without binding a
    port or racing each other for one — and so the Vercel function, which imports
