@@ -25,13 +25,23 @@ export const parseIso = (v: string): Date => {
   return new Date(y, m - 1, d)
 }
 
-/** First and last day of a labelled month, as ISO dates. */
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/**
+ * First and last day of a labelled month, as ISO dates.
+ *
+ * Read out of the label itself. This used to count from the label's *position*
+ * in `INVOICE_MONTHS` against a hardcoded March 2026 — which agreed with the
+ * label only for as long as the register happened to begin in March and skip no
+ * month. Drop the oldest month from the data and every bound on the screen
+ * shifts by one, silently, while each still carries the right name.
+ */
 export function monthBounds(month: string): [string, string] {
-  const i = INVOICE_MONTHS.indexOf(month)
-  if (i < 0) return ['', '']
-  const first = new Date(2026, 2 + i, 1)
-  const last = new Date(2026, 3 + i, 0)
-  return [iso(first), iso(last)]
+  const [mon, year] = month.split(' ')
+  const m = MONTHS.indexOf(mon)
+  const y = Number(year)
+  if (m < 0 || !Number.isFinite(y)) return ['', '']
+  return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))]
 }
 
 export interface DateRange {
