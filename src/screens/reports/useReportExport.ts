@@ -1,4 +1,5 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef } from 'react'
+import { createStore, useStore } from '@/lib/store'
 import type { ReportCsv } from '@/lib/report-csv'
 
 /**
@@ -21,17 +22,7 @@ import type { ReportCsv } from '@/lib/report-csv'
  * the current closure instead, and the shell reads through it.
  */
 
-let builder: (() => ReportCsv) | null = null
-const listeners = new Set<() => void>()
-
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => builder
+const store = createStore<(() => ReportCsv) | null>(null)
 
 /** Called by the active tab. Registers once; the ref keeps it current. */
 export function useReportExport(make: () => ReportCsv): void {
@@ -45,17 +36,14 @@ export function useReportExport(make: () => ReportCsv): void {
 
   useEffect(() => {
     const stable = () => latest.current()
-    builder = stable
-    emit()
+    store.set(stable)
     return () => {
-      if (builder === stable) {
-        builder = null
-        emit()
-      }
+      /* Only if it is still ours: the next tab registers before this one tears
+         down, and clearing unconditionally would disable its button. */
+      if (store.get() === stable) store.set(null)
     }
   }, [])
 }
 
 /** Read by the shell. Null while no tab has registered — the button disables. */
-export const useReportExporter = (): (() => ReportCsv) | null =>
-  useSyncExternalStore(subscribe, snapshot, snapshot)
+export const useReportExporter = (): (() => ReportCsv) | null => useStore(store)

@@ -1,5 +1,5 @@
-import { useSyncExternalStore } from 'react'
 import { QC_RULES } from '@/lib/quality'
+import { createStore, useStore } from '@/lib/store'
 import type { QcRule } from '@/lib/quality'
 
 /**
@@ -16,30 +16,16 @@ import type { QcRule } from '@/lib/quality'
  * produces a new one, which is what `useSyncExternalStore` needs to see.
  */
 
-let rules: QcRule[] = QC_RULES
+const store = createStore<QcRule[]>(QC_RULES)
 
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => rules
-
-export const useQcRules = (): QcRule[] => useSyncExternalStore(subscribe, snapshot, snapshot)
+export const useQcRules = (): QcRule[] => useStore(store)
 
 /** For the plain reads that are not inside a component. */
-export const ruleOn = (key: string): boolean => rules.find((r) => r.k === key)?.on ?? false
+export const ruleOn = (key: string): boolean => store.get().find((r) => r.k === key)?.on ?? false
 
 export function setQcRule(key: string, on: boolean): void {
-  rules = rules.map((r) => (r.k === key ? { ...r, on } : r))
-  emit()
+  store.update((rules) => rules.map((r) => (r.k === key ? { ...r, on } : r)))
 }
 
 /** Puts the seed back. For tests, which must not inherit each other's settings. */
-export function resetQcRules(): void {
-  rules = QC_RULES
-  emit()
-}
+export const resetQcRules = store.reset

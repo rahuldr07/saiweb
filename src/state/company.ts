@@ -1,9 +1,9 @@
-import { useSyncExternalStore } from 'react'
 import { PAYCFG } from '@/data/hrms'
 import { DEPTLIST, PERMS, ROLELIST, STATUS, TENANTS } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { CLIENTS } from '@/data/catalog'
 import { BUDGET, SLA, type SlaRule } from '@/data/budget'
+import { createStore, useStore, useStoreSlice } from '@/lib/store'
 import type { Client, Dept, PayConfig, Perm, Person, Role, Tenant } from '@/data/types'
 
 /**
@@ -17,7 +17,7 @@ import type { Client, Dept, PayConfig, Perm, Person, Role, Tenant } from '@/data
  * is what this exists for.
  *
  * The seed objects are the starting value and are never written to. Every change
- * produces a new one, so `useSyncExternalStore` can see it and no other importer
+ * produces a new one, so the store's subscribers can see it and no other importer
  * of `PAYCFG` is silently altered underneath.
  */
 
@@ -95,25 +95,15 @@ const SEED: CompanyState = {
   perms: PERMS,
 }
 
-let state: CompanyState = SEED
+const store = createStore<CompanyState>(SEED)
 
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => state
-
-export const useCompany = (): CompanyState => useSyncExternalStore(subscribe, snapshot, snapshot)
+export const useCompany = (): CompanyState => useStore(store)
 
 /**
  * The live salary structure, for the plain functions in `lib/payroll.ts` that
  * cannot use a hook. Reading through here is what makes the register move.
  */
-export const currentPayCfg = (): PayConfig => state.pay
+export const currentPayCfg = (): PayConfig => store.get().pay
 
 /**
  * Sets one payroll setting.
@@ -124,7 +114,7 @@ export const currentPayCfg = (): PayConfig => state.pay
  * space.
  */
 export function setPayCfg<K extends keyof PayConfig>(key: K, value: string | boolean): void {
-  const current = state.pay[key]
+  const current = store.get().pay[key]
   let next: PayConfig[K]
 
   if (typeof current === 'boolean') {
@@ -139,98 +129,90 @@ export function setPayCfg<K extends keyof PayConfig>(key: K, value: string | boo
     next = v as PayConfig[K]
   }
 
-  state = { ...state, pay: { ...state.pay, [key]: next } }
-  emit()
+  store.update((prev) => ({ ...prev, pay: { ...prev.pay, [key]: next } }))
 }
 
 /** Sets one field of the workspace's own profile. Blank is refused. */
 export function setProfile(key: keyof CompanyState['profile'], value: string): void {
   const v = value.trim()
   if (!v) return
-  state = { ...state, profile: { ...state.profile, [key]: v } }
-  emit()
+  store.update((prev) => ({ ...prev, profile: { ...prev.profile, [key]: v } }))
 }
 
 /* ── the pipeline ───────────────────────────────────────────────────────── */
 
-export const useDepartments = (): Dept[] => useSyncExternalStore(subscribe, () => state.depts, () => state.depts)
-export const useStatuses = () => useSyncExternalStore(subscribe, () => state.statuses, () => state.statuses)
-export const useNaming = (): NamingRow[] => useSyncExternalStore(subscribe, () => state.naming, () => state.naming)
+export const useDepartments = (): Dept[] => useStoreSlice(store, (c) => c.depts)
+export const useStatuses = () => useStoreSlice(store, (c) => c.statuses)
+export const useNaming = (): NamingRow[] => useStoreSlice(store, (c) => c.naming)
 
 /** Swaps a department with its neighbour. The order of this list is the pipeline. */
 export function moveDept(id: string, dir: -1 | 1): void {
-  const i = state.depts.findIndex((d) => d.id === id)
+  const i = store.get().depts.findIndex((d) => d.id === id)
   const j = i + dir
-  if (i < 0 || j < 0 || j >= state.depts.length) return
-  const depts = [...state.depts]
+  if (i < 0 || j < 0 || j >= store.get().depts.length) return
+  const depts = [...store.get().depts]
   ;[depts[i], depts[j]] = [depts[j], depts[i]]
-  state = { ...state, depts }
-  emit()
+  store.update((prev) => ({ ...prev, depts }))
 }
 
 /** Same, for the status list — position in it is what "main line" means. */
 export function moveStatus(key: string, dir: -1 | 1): void {
-  const i = state.statuses.findIndex(([k]) => k === key)
+  const i = store.get().statuses.findIndex(([k]) => k === key)
   const j = i + dir
-  if (i < 0 || j < 0 || j >= state.statuses.length) return
-  const statuses = [...state.statuses]
+  if (i < 0 || j < 0 || j >= store.get().statuses.length) return
+  const statuses = [...store.get().statuses]
   ;[statuses[i], statuses[j]] = [statuses[j], statuses[i]]
-  state = { ...state, statuses }
-  emit()
+  store.update((prev) => ({ ...prev, statuses }))
 }
 
 /** Renames one concept. Blank is refused — a nameless concept helps nobody. */
 export function setNaming(concept: string, name: string): void {
   const v = name.trim()
   if (!v) return
-  state = {
-    ...state,
-    naming: state.naming.map((r) => (r.concept === concept ? { ...r, name: v } : r)),
-  }
-  emit()
+  store.update((prev) => ({
+    ...prev,
+    naming: prev.naming.map((r) => (r.concept === concept ? { ...r, name: v } : r)),
+  }))
 }
 
 /* ── where due dates come from ──────────────────────────────────────────── */
 
-export const useSla = (): SlaRule[] => useSyncExternalStore(subscribe, () => state.sla, () => state.sla)
-export const useBudget = (): Budget => useSyncExternalStore(subscribe, () => state.budget, () => state.budget)
-export const useClock = (): ClockCfg => useSyncExternalStore(subscribe, () => state.clock, () => state.clock)
+export const useSla = (): SlaRule[] => useStoreSlice(store, (c) => c.sla)
+export const useBudget = (): Budget => useStoreSlice(store, (c) => c.budget)
+export const useClock = (): ClockCfg => useStoreSlice(store, (c) => c.clock)
 
 /** The live rules and split, for the plain functions in `lib/sla.ts`. */
-export const currentSla = (): SlaRule[] => state.sla
-export const currentBudget = (): Budget => state.budget
+export const currentSla = (): SlaRule[] => store.get().sla
+export const currentBudget = (): Budget => store.get().budget
 
 /** A promise is at least an hour and at most a fortnight. */
 export function setSlaHours(i: number, v: string): void {
   const h = parseInt(v, 10)
   if (!(h > 0)) return
-  state = { ...state, sla: state.sla.map((r, j) => (j === i ? { ...r, h: Math.min(336, h) } : r)) }
-  emit()
+  store.update((prev) => ({ ...prev, sla: prev.sla.map((r, j) => (j === i ? { ...r, h: Math.min(336, h) } : r)) }))
 }
 
 /** New rules go in before the fallback, which always stays last. */
 export function addSla(rule: SlaRule): void {
-  const at = state.sla.findIndex((r) => r.cl.startsWith('—'))
-  const sla = [...state.sla]
+  const at = store.get().sla.findIndex((r) => r.cl.startsWith('—'))
+  const sla = [...store.get().sla]
   sla.splice(at < 0 ? sla.length : at, 0, rule)
-  state = { ...state, sla }
-  emit()
+  store.update((prev) => ({ ...prev, sla }))
 }
 
 export function removeSla(i: number): void {
-  const r = state.sla[i]
+  const r = store.get().sla[i]
   if (!r || r.cl.startsWith('—')) return
-  state = { ...state, sla: state.sla.filter((_, j) => j !== i) }
-  emit()
+  store.update((prev) => ({ ...prev, sla: prev.sla.filter((_, j) => j !== i) }))
 }
 
 /** One stage's share, on the base split or on one product's override. */
 export function setShare(pr: string, stage: string, v: string): void {
   const n = Math.max(0, Math.min(100, parseFloat(v)))
   if (!Number.isFinite(n)) return
-  const b = state.budget
-  state = {
-    ...state,
+  const b = store.get().budget
+  store.update((prev) => ({
+    ...prev,
     budget:
       pr === 'base'
         ? { ...b, base: { ...b.base, [stage]: n } }
@@ -238,48 +220,42 @@ export function setShare(pr: string, stage: string, v: string): void {
             ...b,
             over: b.over.map((o) => (o.pr === pr ? { ...o, shares: { ...o.shares, [stage]: n } } : o)),
           },
-  }
-  emit()
+  }))
 }
 
 export function setBuffer(v: string): void {
   const n = parseFloat(v)
   if (!Number.isFinite(n) || n < 0 || n > 50) return
-  state = { ...state, budget: { ...state.budget, buffer: n } }
-  emit()
+  store.update((prev) => ({ ...prev, budget: { ...prev.budget, buffer: n } }))
 }
 
 /** A new override starts from the base split rather than from nothing. */
 export function addOverride(pr: string): void {
-  if (state.budget.over.some((o) => o.pr === pr)) return
-  state = {
-    ...state,
-    budget: { ...state.budget, over: [...state.budget.over, { pr, shares: { ...state.budget.base } }] },
-  }
-  emit()
+  if (store.get().budget.over.some((o) => o.pr === pr)) return
+  store.update((prev) => ({
+    ...prev,
+    budget: { ...prev.budget, over: [...prev.budget.over, { pr, shares: { ...prev.budget.base } }] },
+  }))
 }
 
 export function removeOverride(pr: string): void {
-  state = { ...state, budget: { ...state.budget, over: state.budget.over.filter((o) => o.pr !== pr) } }
-  emit()
+  store.update((prev) => ({ ...prev, budget: { ...prev.budget, over: prev.budget.over.filter((o) => o.pr !== pr) } }))
 }
 
 export function setClock<K extends keyof Omit<ClockCfg, 'pause'>>(key: K, value: string): void {
-  state = { ...state, clock: { ...state.clock, [key]: value } }
-  emit()
+  store.update((prev) => ({ ...prev, clock: { ...prev.clock, [key]: value } }))
 }
 
 export function setPause(stage: string, on: boolean): void {
-  state = { ...state, clock: { ...state.clock, pause: { ...state.clock.pause, [stage]: on } } }
-  emit()
+  store.update((prev) => ({ ...prev, clock: { ...prev.clock, pause: { ...prev.clock.pause, [stage]: on } } }))
 }
 
 /* ── the records the forms write ────────────────────────────────────────── */
 
-export const useStaff = (): Person[] => useSyncExternalStore(subscribe, () => state.staff, () => state.staff)
-export const useClients = (): Client[] => useSyncExternalStore(subscribe, () => state.clients, () => state.clients)
-export const useRoles = (): Role[] => useSyncExternalStore(subscribe, () => state.roles, () => state.roles)
-export const usePerms = (): Perm[] => useSyncExternalStore(subscribe, () => state.perms, () => state.perms)
+export const useStaff = (): Person[] => useStoreSlice(store, (c) => c.staff)
+export const useClients = (): Client[] => useStoreSlice(store, (c) => c.clients)
+export const useRoles = (): Role[] => useStoreSlice(store, (c) => c.roles)
+export const usePerms = (): Perm[] => useStoreSlice(store, (c) => c.perms)
 
 const nextId = (prefix: string, taken: string[]) => {
   let n = 1
@@ -293,67 +269,61 @@ const keyOf = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0,
 /* staff */
 
 export function saveStaff(person: Person, id?: string): void {
-  state = {
-    ...state,
+  store.update((prev) => ({
+    ...prev,
     staff: id
-      ? state.staff.map((s) => (s.id === id ? { ...s, ...person, id } : s))
-      : [...state.staff, { ...person, id: nextId('p', state.staff.map((s) => s.id)) }],
-  }
-  emit()
+      ? prev.staff.map((s) => (s.id === id ? { ...s, ...person, id } : s))
+      : [...prev.staff, { ...person, id: nextId('p', prev.staff.map((s) => s.id)) }],
+  }))
 }
 
 export function removeStaff(id: string): void {
-  state = { ...state, staff: state.staff.filter((s) => s.id !== id) }
-  emit()
+  store.update((prev) => ({ ...prev, staff: prev.staff.filter((s) => s.id !== id) }))
 }
 
 /* clients */
 
 export function saveClient(next: Client, was?: string): void {
-  state = {
-    ...state,
+  store.update((prev) => ({
+    ...prev,
     clients: was
-      ? state.clients.map((c) => (c.n === was ? { ...c, ...next } : c))
-      : [...state.clients, next],
-  }
-  emit()
+      ? prev.clients.map((c) => (c.n === was ? { ...c, ...next } : c))
+      : [...prev.clients, next],
+  }))
 }
 
 export function removeClient(name: string): void {
-  state = { ...state, clients: state.clients.filter((c) => c.n !== name) }
-  emit()
+  store.update((prev) => ({ ...prev, clients: prev.clients.filter((c) => c.n !== name) }))
 }
 
 /* departments */
 
 export function saveDept(next: Omit<Dept, 'id'>, id?: string): void {
-  const old = id ? state.depts.find((d) => d.id === id)?.n : null
+  const old = id ? store.get().depts.find((d) => d.id === id)?.n : null
   const depts = id
-    ? state.depts.map((d) => (d.id === id ? { ...d, ...next } : d))
-    : [...state.depts, { ...next, id: nextId('d', state.depts.map((d) => d.id)) }]
+    ? store.get().depts.map((d) => (d.id === id ? { ...d, ...next } : d))
+    : [...store.get().depts, { ...next, id: nextId('d', store.get().depts.map((d) => d.id)) }]
 
   /* A rename has to carry through everything that named the old one, or a
      department quietly loses its people and its QC pairing. */
   const renamed = old && old !== next.n
-  state = {
-    ...state,
+  store.update((prev) => ({
+    ...prev,
     depts: renamed ? depts.map((d) => (d.pair === old ? { ...d, pair: next.n } : d)) : depts,
     staff: renamed
-      ? state.staff.map((s) => ({ ...s, dep: s.dep.map((x) => (x === old ? next.n : x)) }))
-      : state.staff,
-  }
-  emit()
+      ? prev.staff.map((s) => ({ ...s, dep: s.dep.map((x) => (x === old ? next.n : x)) }))
+      : prev.staff,
+  }))
 }
 
 export function removeDept(id: string): void {
-  const d = state.depts.find((x) => x.id === id)
+  const d = store.get().depts.find((x) => x.id === id)
   if (!d) return
-  state = {
-    ...state,
-    depts: state.depts.filter((x) => x.id !== id).map((x) => (x.pair === d.n ? { ...x, pair: null } : x)),
-    staff: state.staff.map((s) => ({ ...s, dep: s.dep.filter((x) => x !== d.n) })),
-  }
-  emit()
+  store.update((prev) => ({
+    ...prev,
+    depts: prev.depts.filter((x) => x.id !== id).map((x) => (x.pair === d.n ? { ...x, pair: null } : x)),
+    staff: prev.staff.map((s) => ({ ...s, dep: s.dep.filter((x) => x !== d.n) })),
+  }))
 }
 
 /* roles */
@@ -367,76 +337,67 @@ export function saveRole(next: Omit<Role, 'id'>, id?: string): string {
   const permissions =
     id === 'admin' ? [...new Set([...next.p, ...ADMIN_FLOOR])] : [...next.p]
   const role = { ...next, p: permissions }
-  const made = id ?? nextId('r', state.roles.map((r) => r.id))
-  state = {
-    ...state,
+  const made = id ?? nextId('r', store.get().roles.map((r) => r.id))
+  store.update((prev) => ({
+    ...prev,
     roles: id
-      ? state.roles.map((r) => (r.id === id ? { ...r, ...role } : r))
-      : [...state.roles, { ...role, id: made }],
-  }
-  emit()
+      ? prev.roles.map((r) => (r.id === id ? { ...r, ...role } : r))
+      : [...prev.roles, { ...role, id: made }],
+  }))
   return made
 }
 
 /** Everyone holding a removed role drops back to Staff, never to nothing. */
 export function removeRole(id: string): void {
-  const r = state.roles.find((x) => x.id === id)
+  const r = store.get().roles.find((x) => x.id === id)
   if (!r || r.lock) return
-  state = {
-    ...state,
-    roles: state.roles.filter((x) => x.id !== id),
-    staff: state.staff.map((s) => (s.r === id ? { ...s, r: 'staff' } : s)),
-  }
-  emit()
+  store.update((prev) => ({
+    ...prev,
+    roles: prev.roles.filter((x) => x.id !== id),
+    staff: prev.staff.map((s) => (s.r === id ? { ...s, r: 'staff' } : s)),
+  }))
 }
 
 /* permissions */
 
 export function savePerm(wording: string, k?: string): void {
   if (k) {
-    state = { ...state, perms: state.perms.map((p) => (p.k === k ? { ...p, n: wording } : p)) }
+    store.update((prev) => ({ ...prev, perms: prev.perms.map((p) => (p.k === k ? { ...p, n: wording } : p)) }))
   } else {
     let key = keyOf(wording)
     let n = 2
-    while (state.perms.some((p) => p.k === key)) key = `${keyOf(wording)}${n++}`
-    state = { ...state, perms: [...state.perms, { k: key, n: wording, sys: false }] }
+    while (store.get().perms.some((p) => p.k === key)) key = `${keyOf(wording)}${n++}`
+    store.update((prev) => ({ ...prev, perms: [...prev.perms, { k: key, n: wording, sys: false }] }))
   }
-  emit()
 }
 
 /** Removing a permission takes it off every role that had it ticked. */
 export function removePerm(k: string): void {
-  const p = state.perms.find((x) => x.k === k)
+  const p = store.get().perms.find((x) => x.k === k)
   if (!p || p.sys) return
-  state = {
-    ...state,
-    perms: state.perms.filter((x) => x.k !== k),
-    roles: state.roles.map((r) => ({ ...r, p: r.p.filter((x) => x !== k) })),
-  }
-  emit()
+  store.update((prev) => ({
+    ...prev,
+    perms: prev.perms.filter((x) => x.k !== k),
+    roles: prev.roles.map((r) => ({ ...r, p: r.p.filter((x) => x !== k) })),
+  }))
 }
 
 /* statuses */
 
 export function saveStatus(name: string, colour: string, k?: string): void {
   if (k) {
-    state = { ...state, statuses: state.statuses.map((s) => (s[0] === k ? [k, [name, colour]] : s)) }
+    store.update((prev) => ({ ...prev, statuses: prev.statuses.map((s) => (s[0] === k ? [k, [name, colour]] : s)) }))
   } else {
     let key = keyOf(name)
     let n = 2
-    while (state.statuses.some(([x]) => x === key)) key = `${keyOf(name)}${n++}`
-    state = { ...state, statuses: [...state.statuses, [key, [name, colour]]] }
+    while (store.get().statuses.some(([x]) => x === key)) key = `${keyOf(name)}${n++}`
+    store.update((prev) => ({ ...prev, statuses: [...prev.statuses, [key, [name, colour]]] }))
   }
-  emit()
 }
 
 export function removeStatus(k: string): void {
-  state = { ...state, statuses: state.statuses.filter(([x]) => x !== k) }
-  emit()
+  store.update((prev) => ({ ...prev, statuses: prev.statuses.filter(([x]) => x !== k) }))
 }
 
 /** Puts the seed back. For tests, which must not inherit each other's settings. */
-export function resetCompany(): void {
-  state = SEED
-  emit()
-}
+export const resetCompany = store.reset
