@@ -7,13 +7,12 @@ import { QcDefects, QcMarks, QcOverBudget } from './QcFocus'
 import { ASSIGN_STAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { median } from '@/lib/metrics'
-import { standing, type RatedPerson, type StageWorkResult } from '@/lib/quality'
+import { markTone, standing, type RatedPerson, type StageWorkResult } from '@/lib/quality'
 import { hh } from '@/lib/sla'
 import type { QcEntry } from '@/data/quality'
 import type { Range } from '@/lib/range'
 
 const AXIS = { Accuracy: 'acc', Completeness: 'comp', Formatting: 'fmt' } as const
-const markTone = (v: number) => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
 
 /**
  * Everything about one person's quality, with the clock beside it.

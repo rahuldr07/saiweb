@@ -5,6 +5,7 @@ import { useTimeclock } from '@/state/timeclock'
 import { LEAVE, LEAVEPOLICY, LEAVETYPES, TIMECFG } from '@/data/hrms'
 import { CLASHRULES } from '@/lib/leave'
 import type { LeaveType } from '@/data/types'
+import { r2 } from '@/lib/format'
 
 /**
  * The rules every request is judged against.
@@ -17,7 +18,6 @@ import type { LeaveType } from '@/data/types'
 
 const COLS = '190px 110px 110px 120px 1fr 110px'
 
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 /** A number with its unit and the reason it matters. */
 function NumberField({

@@ -11,7 +11,7 @@
  * one number is how a discrepancy stops existing.
  */
 import type { PettyConfig, PettyCount, PettyEntry } from '@/data/types'
-import { now } from './clock'
+import { daysSince } from '@/lib/format'
 
 /** An entry with the balance either side of it. */
 export interface LedgerRow extends PettyEntry {
@@ -46,10 +46,6 @@ export function expectedAt(entries: PettyEntry[], at: Date): number {
 /** The most recent count, or null if nobody has ever counted it. */
 export const lastCount = (counts: PettyCount[]): PettyCount | null =>
   [...counts].sort((a, b) => b.d.getTime() - a.d.getTime())[0] ?? null
-
-/** Whole days between then and now. */
-export const daysSince = (d: Date): number =>
-  Math.floor((now().getTime() - d.getTime()) / 86_400_000)
 
 /**
  * Whether the box is overdue a count. Never counted is always due — an

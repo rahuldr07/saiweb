@@ -17,9 +17,8 @@ import { curStage, type Arrival, type Assignment, type DeptRow, type WorkRow } f
 import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
 import type { CsvRow } from './csv'
+import { r2 } from '@/lib/format'
 
-/** Two decimals, the way the design rounds an hours figure. */
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 export interface ReportCsv {
   /** Stem only — `csvName` adds the date stamp and extension. */

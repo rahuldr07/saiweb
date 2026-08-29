@@ -16,6 +16,7 @@ import { fmtDate } from './format'
 import { now } from '@/lib/clock'
 import { COVSTAGES, coversPlace, coversProduct } from './coverage'
 import type { Order, OrderStatus, Person, Rule, RuleCondition } from '@/data/types'
+import { midnight } from '@/lib/format'
 
 /** The register's status key for each pipeline stage. */
 const STAGE_STATUS: Record<string, OrderStatus> = {
@@ -570,10 +571,9 @@ export function previewAssign(
 export const STAGE_HOURS = 1.5
 
 const stageIdx = (s: string) => ASSIGN_STAGES.indexOf(s)
-const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
 
 export const ageHrs = (o: Arrival) =>
-  Math.round((midnight(now()) - midnight(o.date)) / 36e5) + (now().getHours() + now().getMinutes() / 60 - o.hr)
+  Math.round((midnight(now()).getTime() - midnight(o.date).getTime()) / 36e5) + (now().getHours() + now().getMinutes() / 60 - o.hr)
 
 export const doneCount = (o: Arrival) =>
   Math.max(0, Math.min(ASSIGN_STAGES.length, Math.floor(ageHrs(o) / STAGE_HOURS)))

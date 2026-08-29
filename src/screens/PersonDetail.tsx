@@ -30,7 +30,7 @@ import { ASSIGN_STAGES, COVSTAGES, STAGES } from '@/data/org'
 import { board } from '@/lib/engine'
 import { covWord } from '@/lib/coverage'
 import { median } from '@/lib/metrics'
-import { standing, stageWorkOf, type StageWork } from '@/lib/quality'
+import { markTone, stageWorkOf, standing, type StageWork } from '@/lib/quality'
 import { DEFAULT_RANGE, inRange, resolveRange } from '@/lib/range'
 import { fmtDate, initials } from '@/lib/format'
 import { roleName } from '@/lib/permissions'
@@ -44,7 +44,6 @@ type Tab = (typeof TABS)[number]
 /** Last four only. Anything more should be a deliberate act. */
 const maskAadhaar = (a: string) => (a ? `XXXX XXXX ${a.replace(/\s/g, '').slice(-4)}` : '')
 
-const markTone = (v: number) => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
 
 /** The label/value line the design uses down the side of the Overview cards. */
 function DetailRow({

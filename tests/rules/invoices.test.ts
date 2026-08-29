@@ -8,11 +8,11 @@ import {
   monthInRange,
   normalise,
   outstandingOf,
-  parseIso,
   rangeForMonth,
   rangeMonth,
   sumBy,
 } from '@/lib/invoices'
+import { parseIso } from '@/lib/format'
 import { INVOICES } from '@/data/business'
 
 /**

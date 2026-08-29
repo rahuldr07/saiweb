@@ -16,13 +16,12 @@ import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { fmtDate } from '@/lib/format'
+import { daysSince, fmtDate } from '@/lib/format'
 import { inr } from '@/lib/payroll'
 import { csvName, downloadCSV } from '@/lib/csv'
 import {
   countDrift,
   countDue,
-  daysSince,
   expectedAt,
   lastCount,
   overCeiling,
