@@ -143,6 +143,26 @@
   overflow-x: visible;
 }
 
+/*
+ * The page header's action row, when there is no room for it on one line.
+ *
+ * `.hd` already wraps, so a long title pushes the actions onto their own line.
+ * What it cannot do is help once they are there: `.hd .r` is `flex: none` and
+ * does not wrap, so a row of two filters and two buttons stays one unbroken
+ * 564px line inside a 550px column. It does not clip — it reaches 14px past the
+ * right edge every other block on the page lines up on, and sits in the page
+ * padding. Orders at tablet width is the case that shows it.
+ *
+ * Capping the width at the container and letting the contents wrap fixes it
+ * where it happens and changes nothing where the row already fits. The design
+ * does the same thing itself below 560px; this only stops it being the one
+ * width where the rule is missing.
+ */
+.hd .r {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
 /* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */
 @theme {
   --color-nav: #131a2b;
