@@ -249,35 +249,64 @@ export default function MyPerformance() {
       />
 
       <Kpis>
+        {/* The answer to the question the page title asks, in the first place
+            anybody looks. It used to appear only in a panel below the tiles,
+            under a heading that opened by saying it did not mean much — true,
+            and no help at all to somebody wanting to know how they are doing. */}
         <Kpi
-          title="Checks on your work"
+          title="Your score"
+          value={mineAvg !== null ? <span className="ok">{mineAvg.toFixed(2)}</span> : '—'}
+          /* Where you sit, rather than the two numbers you sit between. The
+             spread is deliberately measured over the whole log while the score
+             follows the range, so quoting both invited the one thing a figure
+             must never do: a seven-day score of 4.90 printed beside the claim
+             that everyone here is 4.91 to 4.96. This says the same thing and
+             stays true whichever range is chosen; the numbers are on hover. */
+          detail={
+            mineAvg === null || !spread
+              ? 'out of 5'
+              : mineAvg < spread.lo
+                ? 'out of 5 — just below the usual range here'
+                : mineAvg > spread.hi
+                  ? 'out of 5 — at the top of the range here'
+                  : 'out of 5 — in line with everyone here'
+          }
+          hint={
+            spread
+              ? `Everyone here averages ${spread.lo.toFixed(2)} to ${spread.hi.toFixed(2)} across the full log`
+              : 'The average of every rating in range'
+          }
+          onClick={() => showChecks('all')}
+        />
+        <Kpi
+          title="Work checked"
           value={rows.length}
-          detail={range.label}
+          detail="pieces of your work a colleague reviewed"
           hint="Every check in range"
           onClick={() => showChecks('all')}
         />
         <Kpi
-          title="Clean"
+          title="No issues found"
           value={<span className="ok">{clean}</span>}
-          detail={`${rows.length ? Math.round((clean / rows.length) * 100) : 0}% with nothing raised`}
+          detail={`${rows.length ? Math.round((clean / rows.length) * 100) : 0}% of the checks`}
           hint="The ones with nothing raised"
           onClick={() => showChecks('clean')}
         />
         <Kpi
-          title="Repeating"
+          title="Keeps happening"
           value={<span className={habits.length ? 'warn' : 'ok'}>{habits.length}</span>}
           tone={habits.length ? 'warn' : undefined}
-          detail={habits.length ? 'worth changing a habit for' : 'nothing is recurring'}
+          detail={habits.length ? 'the same issue more than once' : 'nothing came up twice'}
           hint="The ones worth changing a habit for"
           onClick={showHabits}
         />
         <Kpi
-          title="Inside your budget"
+          title="Finished in time"
           value={t ? `${t.onBudget}%` : '—'}
           valueTone={t ? (t.vsPeers >= -5 ? 'ok' : 'warn') : undefined}
           tone={t && t.vsPeers < -5 ? 'warn' : undefined}
-          detail={t ? `others on the same stages: ${t.expected}%` : 'no timed work in range'}
-          hint="How this compares"
+          detail={t ? `of your work — others doing the same: ${t.expected}%` : 'no timed work in range'}
+          hint="How often you finish inside the time allowed for the stage"
           onClick={can('assign') ? () => focusSection('mfDept') : budgetHelp}
         />
       </Kpis>
@@ -290,33 +319,15 @@ export default function MyPerformance() {
         </Card>
       ) : (
         <>
-          {mineAvg !== null && spread ? (
-            <Card padded style={{ marginTop: 16 }}>
-              <div
-                className="rw"
-                style={{ background: 'var(--tint)', borderRadius: 9, padding: '13px 15px' }}
-              >
-                <span className="gr" style={{ fontSize: '14.5px' }}>
-                  =
-                </span>
-                <span>
-                  <b>Your score is {mineAvg.toFixed(2)} — and on its own it does not mean much</b>
-                  <div className="sd">
-                    Across everyone here the scores run {spread.lo.toFixed(2)} to{' '}
-                    {spread.hi.toFixed(2)}. A gap that small is noise, not a ranking — which is why
-                    this page leads with reasons rather than with the number.
-                  </div>
-                </span>
-                <span />
-              </div>
-            </Card>
-          ) : null}
-
+          {/* The panel that used to sit here said the score and the spread over
+              again, a line below the tile that now says both. Two readings of
+              one number is one more than anybody needs before the part they can
+              act on. */}
           {habits.length ? (
             <>
               <SectionHead id="mfHabits">
-                Worth changing — {habits.length} thing{habits.length === 1 ? '' : 's'} that came up
-                more than once
+                What to improve — {habits.length} thing{habits.length === 1 ? '' : 's'} that came
+                up more than once
               </SectionHead>
               {habits.map(([reason, n]) => {
                 const stillHappening = recent.filter((x) => x.note === reason).length
@@ -356,7 +367,7 @@ export default function MyPerformance() {
                             →
                           </span>
                           <span>
-                            <b>What to do differently</b>
+                            <b>What to do next</b>
                             <div className="sd">
                               {QC_FIX[reason] ?? 'No practice recorded for this one yet.'}
                             </div>
@@ -388,7 +399,7 @@ export default function MyPerformance() {
 
           {oneOffs.length ? (
             <>
-              <SectionHead>Happened once — worth knowing, not worth worrying about</SectionHead>
+              <SectionHead>Worth knowing — these came up once</SectionHead>
               <Card>
                 <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
                   {oneOffs.map(([reason]) => {
@@ -418,7 +429,7 @@ export default function MyPerformance() {
 
           <div className="two" style={{ marginTop: 18 }}>
             <Card padded>
-              <Label>Where your marks come off, and where they never do</Label>
+              <Label>What you’re doing well, and where marks come off</Label>
               {axes.map((a) => (
                 <div
                   key={a.name}
@@ -462,11 +473,8 @@ export default function MyPerformance() {
                     ✓
                   </span>
                   <span>
-                    <b>{listOf(strongest.map((c) => c.name))} — nothing raised at all</b>
-                    <div className="sd">
-                      Across {rows.length} checks. Worth knowing what you are already doing right,
-                      not just what you are not.
-                    </div>
+                    <b>Doing well: {listOf(strongest.map((c) => c.name))}</b>
+                    <div className="sd">Nothing raised across {rows.length} checks.</div>
                   </span>
                   <span />
                 </div>
@@ -474,7 +482,7 @@ export default function MyPerformance() {
             </Card>
 
             <Card padded>
-              <Label>Your time against the budget</Label>
+              <Label>How long your work takes</Label>
               {t ? (
                 <>
                   <div
@@ -483,7 +491,7 @@ export default function MyPerformance() {
                     <b className="mono" style={{ fontSize: '26px' }}>
                       {t.ratio.toFixed(2)}×
                     </b>
-                    <span className="gr">of the time your stage is allowed, typically</span>
+                    <span className="gr">of the time allowed for your stage, typically</span>
                   </div>
                   <span className="bar" style={{ height: 12 }}>
                     <i
