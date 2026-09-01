@@ -53,7 +53,7 @@ export const COUNTIES: County[] = [
         u: "alleghenycounty.us/RealEstate/Search",
         s: "broken",
         err: "404 — page no longer exists",
-        since: new Date('2026-07-29T12:00:00.000Z'),
+        since: new Date(2026, 6, 29, 17, 30),
       },
       assessor: { u: "alleghenycounty.us/assessment", s: "ok" },
       judgment: { u: "ujsportal.pacourts.us/CaseSearch", s: "ok" },
@@ -61,7 +61,7 @@ export const COUNTIES: County[] = [
         u: "alleghenycounty.us/taxes",
         s: "slow",
         err: "Took 14s to respond",
-        since: new Date('2026-08-01T12:00:00.000Z'),
+        since: new Date(2026, 7, 1, 17, 30),
       },
     },
   },
@@ -86,7 +86,7 @@ export const COUNTIES: County[] = [
         u: "fultonassessor.org",
         s: "moved",
         err: "Redirects to fultoncountyga.gov/assessor",
-        since: new Date('2026-08-01T12:00:00.000Z'),
+        since: new Date(2026, 7, 1, 17, 30),
       },
       judgment: { u: "search.gsccca.org/Lien", s: "ok" },
       tax: { u: "fultoncountytaxes.org", s: "ok" },
@@ -114,7 +114,7 @@ export const COUNTIES: County[] = [
         u: "gs.shelbycountytn.gov/caseSearch",
         s: "auth",
         err: "Now asks for a login",
-        since: new Date('2026-07-26T12:00:00.000Z'),
+        since: new Date(2026, 6, 26, 17, 30),
       },
       tax: { u: "shelbycountytrustee.com", s: "ok" },
     },
@@ -151,7 +151,7 @@ export const COUNTIES: County[] = [
         u: "killingworthct.com/assessor",
         s: "broken",
         err: "Connection timed out",
-        since: new Date('2026-07-23T12:00:00.000Z'),
+        since: new Date(2026, 6, 23, 17, 30),
       },
       judgment: { u: "civilinquiry.jud.ct.gov", s: "ok" },
       tax: { u: "killingworthct.com/taxcollector", s: "ok" },
@@ -177,7 +177,7 @@ export const LINKTYPES: LinkType[] = [
   { k: "tax", n: "Tax", req: true, note: "Collector — amounts, status, payment history" },
 ]
 
-export const LINKCHECK: LinkCheckConfig = { every: 3, last: new Date('2026-08-01T12:00:00.000Z'), running: false, notify: "admins" }
+export const LINKCHECK: LinkCheckConfig = { every: 3, last: new Date(2026, 7, 1, 17, 30), running: false, notify: "admins" }
 
 export const BADSTATES: LinkStatus[] = ["broken", "moved", "auth", "slow"]
 

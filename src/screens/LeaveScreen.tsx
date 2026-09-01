@@ -8,7 +8,7 @@ import { STAFF } from '@/data/people'
 import { leaveBalance } from '@/lib/payroll'
 import { CLASHRULES, approvesFor, leaveCheck, managerOf } from '@/lib/leave'
 import { whoName } from '@/lib/permissions'
-import { fmtDate } from '@/lib/format'
+import { fmtDate, r2 } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { ApplyLeave } from './leave/RequestLeave'
 import { LeavePolicy } from './leave/LeavePolicy'
@@ -32,7 +32,6 @@ const COLS = '170px 140px 190px 70px 1fr 170px'
 /** How many rows before the table stops and says how many there were. */
 const PAGE = 40
 
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 function LeaveScreen() {
   const navigate = useNavigate()

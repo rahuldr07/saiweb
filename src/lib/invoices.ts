@@ -7,6 +7,7 @@
  * other, which is the failure this arrangement exists to prevent.
  */
 import { INVOICES } from '@/data/business'
+import { iso, parseIso, r2 } from '@/lib/format'
 import type { Invoice } from '@/data/types'
 
 /** The months invoices actually exist for, in order, rather than a hardcoded list. */
@@ -16,22 +17,23 @@ export const INVOICE_MONTHS: string[] = [
   ).keys(),
 ]
 
-/** `<input type="date">` wants YYYY-MM-DD whatever the app displays. */
-export const iso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-export const parseIso = (v: string): Date => {
-  const [y, m, d] = v.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
-/** First and last day of a labelled month, as ISO dates. */
+/**
+ * First and last day of a labelled month, as ISO dates.
+ *
+ * Read out of the label itself. This used to count from the label's *position*
+ * in `INVOICE_MONTHS` against a hardcoded March 2026 — which agreed with the
+ * label only for as long as the register happened to begin in March and skip no
+ * month. Drop the oldest month from the data and every bound on the screen
+ * shifts by one, silently, while each still carries the right name.
+ */
 export function monthBounds(month: string): [string, string] {
-  const i = INVOICE_MONTHS.indexOf(month)
-  if (i < 0) return ['', '']
-  const first = new Date(2026, 2 + i, 1)
-  const last = new Date(2026, 3 + i, 0)
-  return [iso(first), iso(last)]
+  const [mon, year] = month.split(' ')
+  const m = MONTHS.indexOf(mon)
+  const y = Number(year)
+  if (m < 0 || !Number.isFinite(y)) return ['', '']
+  return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))]
 }
 
 export interface DateRange {
@@ -110,9 +112,6 @@ export const sameRange = (a: DateRange, b: DateRange) =>
   (a.from ?? null) === (b.from ?? null) && (a.to ?? null) === (b.to ?? null)
 
 /* ── money ──────────────────────────────────────────────────────────────── */
-
-/** Cents, not floats. Summing invoice lines otherwise drifts by a penny. */
-export const r2 = (n: number) => Math.round(n * 100) / 100
 
 export const sumBy = (list: Invoice[], k: 'amt' | 'paid') =>
   r2(list.reduce((a, x) => a + x[k], 0))

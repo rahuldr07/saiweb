@@ -15,7 +15,7 @@ export const INVOICES: Invoice[] = [
     amt: 13945.9,
     paid: 13945.9,
     orders: 201,
-    issued: new Date('2026-02-28T18:30:00.000Z'),
+    issued: new Date(2026, 2, 1),
     st: "paid",
   },
   {
@@ -27,7 +27,7 @@ export const INVOICES: Invoice[] = [
     amt: 15938.17,
     paid: 15938.17,
     orders: 230,
-    issued: new Date('2026-03-31T18:30:00.000Z'),
+    issued: new Date(2026, 3, 1),
     st: "paid",
   },
   {
@@ -39,7 +39,7 @@ export const INVOICES: Invoice[] = [
     amt: 14942.04,
     paid: 14942.04,
     orders: 215,
-    issued: new Date('2026-04-30T18:30:00.000Z'),
+    issued: new Date(2026, 4, 1),
     st: "paid",
   },
   {
@@ -51,7 +51,7 @@ export const INVOICES: Invoice[] = [
     amt: 18926.58,
     paid: 18926.58,
     orders: 273,
-    issued: new Date('2026-05-31T18:30:00.000Z'),
+    issued: new Date(2026, 5, 1),
     st: "paid",
   },
   {
@@ -63,7 +63,7 @@ export const INVOICES: Invoice[] = [
     amt: 21914.99,
     paid: 9629.9,
     orders: 316,
-    issued: new Date('2026-06-30T18:30:00.000Z'),
+    issued: new Date(2026, 6, 1),
     st: "part",
   },
   {
@@ -75,7 +75,7 @@ export const INVOICES: Invoice[] = [
     amt: 13945.9,
     paid: 0,
     orders: 201,
-    issued: new Date('2026-07-31T18:30:00.000Z'),
+    issued: new Date(2026, 7, 1),
     st: "open",
   },
   {
@@ -87,7 +87,7 @@ export const INVOICES: Invoice[] = [
     amt: 3059.28,
     paid: 3059.28,
     orders: 114,
-    issued: new Date('2026-02-28T18:30:00.000Z'),
+    issued: new Date(2026, 2, 1),
     st: "paid",
   },
   {
@@ -99,7 +99,7 @@ export const INVOICES: Invoice[] = [
     amt: 3496.32,
     paid: 3496.32,
     orders: 130,
-    issued: new Date('2026-03-31T18:30:00.000Z'),
+    issued: new Date(2026, 3, 1),
     st: "paid",
   },
   {
@@ -111,7 +111,7 @@ export const INVOICES: Invoice[] = [
     amt: 3277.8,
     paid: 3277.8,
     orders: 122,
-    issued: new Date('2026-04-30T18:30:00.000Z'),
+    issued: new Date(2026, 4, 1),
     st: "paid",
   },
   {
@@ -123,7 +123,7 @@ export const INVOICES: Invoice[] = [
     amt: 4151.88,
     paid: 212.6,
     orders: 154,
-    issued: new Date('2026-05-31T18:30:00.000Z'),
+    issued: new Date(2026, 5, 1),
     st: "part",
   },
   {
@@ -135,7 +135,7 @@ export const INVOICES: Invoice[] = [
     amt: 4807.44,
     paid: 0,
     orders: 179,
-    issued: new Date('2026-06-30T18:30:00.000Z'),
+    issued: new Date(2026, 6, 1),
     st: "open",
   },
   {
@@ -147,7 +147,7 @@ export const INVOICES: Invoice[] = [
     amt: 3059.28,
     paid: 0,
     orders: 114,
-    issued: new Date('2026-07-31T18:30:00.000Z'),
+    issued: new Date(2026, 7, 1),
     st: "open",
   },
   {
@@ -159,7 +159,7 @@ export const INVOICES: Invoice[] = [
     amt: 495.6,
     paid: 495.6,
     orders: 30,
-    issued: new Date('2026-02-28T18:30:00.000Z'),
+    issued: new Date(2026, 2, 1),
     st: "paid",
   },
   {
@@ -171,7 +171,7 @@ export const INVOICES: Invoice[] = [
     amt: 566.4,
     paid: 566.4,
     orders: 34,
-    issued: new Date('2026-03-31T18:30:00.000Z'),
+    issued: new Date(2026, 3, 1),
     st: "paid",
   },
   {
@@ -183,7 +183,7 @@ export const INVOICES: Invoice[] = [
     amt: 531,
     paid: 531,
     orders: 32,
-    issued: new Date('2026-04-30T18:30:00.000Z'),
+    issued: new Date(2026, 4, 1),
     st: "paid",
   },
   {
@@ -195,7 +195,7 @@ export const INVOICES: Invoice[] = [
     amt: 672.6,
     paid: 312.02,
     orders: 41,
-    issued: new Date('2026-05-31T18:30:00.000Z'),
+    issued: new Date(2026, 5, 1),
     st: "part",
   },
   {
@@ -207,7 +207,7 @@ export const INVOICES: Invoice[] = [
     amt: 778.8,
     paid: 0,
     orders: 47,
-    issued: new Date('2026-06-30T18:30:00.000Z'),
+    issued: new Date(2026, 6, 1),
     st: "open",
   },
   {
@@ -219,7 +219,7 @@ export const INVOICES: Invoice[] = [
     amt: 495.62,
     paid: 0,
     orders: 30,
-    issued: new Date('2026-07-31T18:30:00.000Z'),
+    issued: new Date(2026, 7, 1),
     st: "open",
   },
   {
@@ -231,7 +231,7 @@ export const INVOICES: Invoice[] = [
     amt: 149.24,
     paid: 149.24,
     orders: 3,
-    issued: new Date('2026-02-28T18:30:00.000Z'),
+    issued: new Date(2026, 2, 1),
     st: "paid",
   },
   {
@@ -243,7 +243,7 @@ export const INVOICES: Invoice[] = [
     amt: 170.56,
     paid: 170.56,
     orders: 3,
-    issued: new Date('2026-03-31T18:30:00.000Z'),
+    issued: new Date(2026, 3, 1),
     st: "paid",
   },
   {
@@ -255,7 +255,7 @@ export const INVOICES: Invoice[] = [
     amt: 159.9,
     paid: 159.9,
     orders: 3,
-    issued: new Date('2026-04-30T18:30:00.000Z'),
+    issued: new Date(2026, 4, 1),
     st: "paid",
   },
   {
@@ -267,7 +267,7 @@ export const INVOICES: Invoice[] = [
     amt: 202.54,
     paid: 15.3,
     orders: 3,
-    issued: new Date('2026-05-31T18:30:00.000Z'),
+    issued: new Date(2026, 5, 1),
     st: "part",
   },
   {
@@ -279,7 +279,7 @@ export const INVOICES: Invoice[] = [
     amt: 234.52,
     paid: 0,
     orders: 4,
-    issued: new Date('2026-06-30T18:30:00.000Z'),
+    issued: new Date(2026, 6, 1),
     st: "open",
   },
   {
@@ -291,7 +291,7 @@ export const INVOICES: Invoice[] = [
     amt: 149.24,
     paid: 0,
     orders: 3,
-    issued: new Date('2026-07-31T18:30:00.000Z'),
+    issued: new Date(2026, 7, 1),
     st: "open",
   },
   {
@@ -303,7 +303,7 @@ export const INVOICES: Invoice[] = [
     amt: 17.22,
     paid: 17.22,
     orders: 1,
-    issued: new Date('2026-02-28T18:30:00.000Z'),
+    issued: new Date(2026, 2, 1),
     st: "paid",
   },
   {
@@ -315,7 +315,7 @@ export const INVOICES: Invoice[] = [
     amt: 19.68,
     paid: 19.68,
     orders: 1,
-    issued: new Date('2026-03-31T18:30:00.000Z'),
+    issued: new Date(2026, 3, 1),
     st: "paid",
   },
   {
@@ -327,7 +327,7 @@ export const INVOICES: Invoice[] = [
     amt: 18.45,
     paid: 16.1,
     orders: 1,
-    issued: new Date('2026-04-30T18:30:00.000Z'),
+    issued: new Date(2026, 4, 1),
     st: "part",
   },
   {
@@ -339,7 +339,7 @@ export const INVOICES: Invoice[] = [
     amt: 23.37,
     paid: 0,
     orders: 2,
-    issued: new Date('2026-05-31T18:30:00.000Z'),
+    issued: new Date(2026, 5, 1),
     st: "overdue",
   },
   {
@@ -351,7 +351,7 @@ export const INVOICES: Invoice[] = [
     amt: 27.06,
     paid: 0,
     orders: 2,
-    issued: new Date('2026-06-30T18:30:00.000Z'),
+    issued: new Date(2026, 6, 1),
     st: "open",
   },
   {
@@ -363,7 +363,7 @@ export const INVOICES: Invoice[] = [
     amt: 17.22,
     paid: 0,
     orders: 1,
-    issued: new Date('2026-07-31T18:30:00.000Z'),
+    issued: new Date(2026, 7, 1),
     st: "open",
   },
 ]
@@ -391,17 +391,17 @@ export const LEADS: Lead[] = [
     notes: [
       {
         w: "hw",
-        at: new Date('2026-04-28T12:00:00.000Z'),
+        at: new Date(2026, 3, 28, 17, 30),
         t: "Sent intro email with our TX county list and a sample two-owner report.",
       },
       {
         w: "hw",
-        at: new Date('2026-05-05T12:00:00.000Z'),
+        at: new Date(2026, 4, 5, 17, 30),
         t: "Dana replied — they use two vendors in TX and are unhappy with turnaround on the Gulf counties. Asked what we quote for Harris and Galveston.",
       },
       {
         w: "hw",
-        at: new Date('2026-05-07T12:00:00.000Z'),
+        at: new Date(2026, 4, 7, 17, 30),
         t: "Quoted COS $21 / TOS $29, 24h including weekends. Said she would take it to Marcus.",
       },
     ],
@@ -417,15 +417,15 @@ export const LEADS: Lead[] = [
       { n: "Sandra Voss", role: "Owner", e: "DST@mavsign.com", p: "(877) 708-4383", main: true },
     ],
     notes: [
-      { w: "hw", at: new Date('2026-04-28T12:00:00.000Z'), t: "Cold email — no reply." },
+      { w: "hw", at: new Date(2026, 3, 28, 17, 30), t: "Cold email — no reply." },
       {
         w: "hw",
-        at: new Date('2026-06-23T12:00:00.000Z'),
+        at: new Date(2026, 5, 23, 17, 30),
         t: "Called. Sandra runs it herself, about 40 searches a month, all DFW. Currently in-house but losing a searcher next month.",
       },
       {
         w: "hw",
-        at: new Date('2026-06-28T12:00:00.000Z'),
+        at: new Date(2026, 5, 28, 17, 30),
         t: "Sent a sample report and the DFW coverage sheet. She said to check back once her searcher leaves.",
       },
     ],
@@ -456,17 +456,17 @@ export const LEADS: Lead[] = [
     notes: [
       {
         w: "hw",
-        at: new Date('2026-07-16T12:00:00.000Z'),
+        at: new Date(2026, 6, 16, 17, 30),
         t: "Heather made contact through the website. Firm does residential closings across south-east PA.",
       },
       {
         w: "hw",
-        at: new Date('2026-07-18T12:00:00.000Z'),
+        at: new Date(2026, 6, 18, 17, 30),
         t: "Call with Heather and Ruth. Ruth places the orders, Alan signs. Around 25 a month, mostly current-owner.",
       },
       {
         w: "hw",
-        at: new Date('2026-07-23T12:00:00.000Z'),
+        at: new Date(2026, 6, 23, 17, 30),
         t: "Sent sample plus Allegheny and Montgomery coverage. Ruth asked whether we can match their existing format — said yes, we learn it from three samples.",
       },
     ],
@@ -484,7 +484,7 @@ export const LEADS: Lead[] = [
     notes: [
       {
         w: "hw",
-        at: new Date('2026-07-16T12:00:00.000Z'),
+        at: new Date(2026, 6, 16, 17, 30),
         t: "Cold email sent to the vendor team address. Nothing back yet.",
       },
     ],
@@ -506,10 +506,10 @@ export const LEADS: Lead[] = [
       },
     ],
     notes: [
-      { w: "hw", at: new Date('2026-06-01T12:00:00.000Z'), t: "Referred by a Keystone contact." },
+      { w: "hw", at: new Date(2026, 5, 1, 17, 30), t: "Referred by a Keystone contact." },
       {
         w: "hw",
-        at: new Date('2026-06-06T12:00:00.000Z'),
+        at: new Date(2026, 5, 6, 17, 30),
         t: "Owen is locked into a contract until March. Asked to be picked up again in Q1.",
       },
     ],
@@ -533,12 +533,12 @@ export const LEADS: Lead[] = [
     notes: [
       {
         w: "hw",
-        at: new Date('2026-05-21T12:00:00.000Z'),
+        at: new Date(2026, 4, 21, 17, 30),
         t: "Good first call — 60 a month across OR and WA.",
       },
       {
         w: "hw",
-        at: new Date('2026-06-12T12:00:00.000Z'),
+        at: new Date(2026, 5, 12, 17, 30),
         t: "Lost. Went with an incumbent who dropped their price. Priya said to try again at renewal in about a year.",
       },
     ],

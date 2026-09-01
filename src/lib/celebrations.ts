@@ -17,6 +17,7 @@
  */
 import { parseUsDate } from './format'
 import type { Person } from '@/data/types'
+import { midnight } from '@/lib/format'
 
 export type CelebrationKind = 'birthday' | 'anniversary'
 
@@ -31,7 +32,6 @@ export interface Celebration {
   inDays: number
 }
 
-const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
 const dayGap = (from: Date, to: Date) =>
   Math.round((midnight(to).getTime() - midnight(from).getTime()) / 86400000)

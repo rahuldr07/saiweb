@@ -5,11 +5,9 @@ import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
 import { useClients } from '@/state/company'
 import { useClientEditor } from './forms/useClientEditor'
-import { money } from '@/lib/format'
+import { money, r2 } from '@/lib/format'
 import { csvName, downloadCSV } from '@/lib/csv'
 
-/** Two decimals, so a subtraction of two money figures cannot show a long tail. */
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 /**
  * The client list.

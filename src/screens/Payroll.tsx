@@ -28,6 +28,7 @@ import {
   type PayTotals,
 } from '@/lib/payroll'
 import { fmtDate, initials } from '@/lib/format'
+import { now } from '@/lib/clock'
 import { csvName, downloadCSV, type CsvRow } from '@/lib/csv'
 import { registerRows } from '@/lib/payroll-csv'
 import type { Person, RunState } from '@/data/types'
@@ -158,7 +159,7 @@ function Payroll() {
           totals={totals}
           onApprove={() => {
             run.by = me.n
-            run.at = fmtDate(new Date())
+            run.at = fmtDate(now())
             setState('approved')
           }}
           onCancel={closeModal}

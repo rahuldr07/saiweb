@@ -7,6 +7,7 @@ import { CLIENTS, PRODUCTS } from '@/data/catalog'
 import { ORDERS } from '@/data/production'
 import { budgetOK, curStageOf, hh, isDefaultRule, orderPlan, shareTotal } from '@/lib/sla'
 import { Due } from '@/components/ui'
+import { r2 } from '@/lib/format'
 import {
   addOverride,
   addSla,
@@ -33,7 +34,6 @@ import {
 const SUBS = ['Client promise', 'Stage budgets', 'How the clock runs'] as const
 type Sub = (typeof SUBS)[number]
 
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 export function SlaTab({ initialSub }: { initialSub?: string }) {
   const [sub, setSub] = useState<Sub>(

@@ -348,6 +348,9 @@ Each of these was applied to the source, the suite run, and the source restored.
 
 ## Still open
 
+*Two of these have since closed — see the second review below, which was
+written against `d081f43` and says which.*
+
 - **The screens still render from `src/data/`.** Capabilities come from the
   database; the rows do not. The endpoints exist and the shapes match, so the
   swap is mechanical — but it is per screen and has not been done. A navigation
@@ -362,3 +365,147 @@ Each of these was applied to the source, the suite run, and the source restored.
   the writes those screens need — but the API cannot yet run the business.
 - **The design export is still deleted.** It was recovered from `157e3fb^` for
   this review and used for the comparison, but not restored.
+
+---
+
+# Second review — `d081f43`, 08/29/2026
+
+A fresh read of `main` after the nine design-fidelity pull requests, on
+`claude/main-code-review-cleanup-u3h3bk`. Method: `npm install`, then lint,
+`tsc -b`, the suite and a production build — all four clean on arrival — then a
+read of the rule libraries, the state modules and the seed data, and the suite
+re-run under five timezones.
+
+| | |
+| --- | --- |
+| 41,253 | lines across `src/` and `server/` |
+| 31 | routes |
+| 72 | API endpoints, 4 of them writes |
+| 210 | tests, from 74 |
+
+## What the first review left open, re-checked
+
+| | Status at `d081f43` |
+| --- | --- |
+| Screens render from `src/data/` | still open — only `SignIn` and `SessionProvider` call the API |
+| Dashboard loads the delivery history | still open — `useDeliveries()` for its on-time KPI |
+| Three detail drill-downs never built | **closed** — `PersonDetail`, `ClientDetail` and `LeadDetail` all exist |
+| New lead raises a toast | **closed** — `NewLead.tsx` is the capture form |
+| The write surface is thin | still open — exactly four write endpoints, against 68 reads |
+| The design export is still deleted | still open — no `reference/` in the tree |
+
+## Findings
+
+### G1 — The seed showed a different world depending on where you opened it · blocker
+
+The extraction wrote every seed date as a UTC instant, so a calendar day
+arrived as IST midnight. Read anywhere west of India — which is every client
+this application is built for — it is the day before.
+
+```
+src/data/business.ts   issued: new Date('2026-02-28T18:30:00.000Z')   ← labelled "Mar 2026"
+```
+
+Measured by running the same code under five timezones:
+
+| | Kolkata | UTC | New York | Honolulu | Sydney |
+| --- | --- | --- | --- | --- | --- |
+| Invoices outside their labelled month | 0/30 | **30/30** | **30/30** | **30/30** | **30/30** |
+| Orders shown overdue | 3 | 5 | 6 | 7 | 2 |
+| On-time KPI | 90.079% | 90.079% | 90.079% | 90.079% | **89.615%** |
+| Delivery rows disagreeing with their own `dk` | 0 | 0 | 0 | **767** | 0 |
+
+So the invoice register's month filter returned nothing at all for any viewer
+outside India, on every month, and the overdue count on Orders was a function
+of where the browser was.
+
+`format.ts` already documents the rule this breaks — `parseUsDate` exists
+precisely because reading a date as UTC "moves a date by a day depending on the
+timezone the browser happens to be in", and `SEED_NOW` is a local-time
+construction for the same reason. The five seed modules were the one place not
+following it.
+
+**Fixed.** The 308 date literals are written the way the rest of the codebase
+writes dates, `new Date(2026, 2, 1)`; the delivery history, which arrives as
+strings and cannot be, is revived into the same wall clock in one place. Every
+figure above is now identical from UTC−10 to UTC+11, and is the one the design
+shows. `dates.test.ts` holds it — including a check that compares the hour and
+not only the day, so it fails in the UTC that CI runs in rather than only in a
+far-western zone.
+
+### G2 — Nine copies of one store · medium
+
+Nine modules held an external store — the county record, company settings, the
+QC rules, the hiring board, order edits, my-work updates, the petty cash box,
+client prefixes and the report builder. Each had written out the same listener
+set, `emit`, `subscribe` and snapshot getter. Ten lines, nine times, where a fix
+to one would have reached only the copy it was made in.
+
+**Fixed.** `lib/store.ts` holds the shape; each module keeps what it holds and
+what may be written to it. 358 lines out, 204 in.
+
+### G3 — The clock invariant had already drifted back · medium
+
+F5 injected the clock and every date in the application is measured against it.
+`Payroll.tsx:161` called `new Date()`, so approving a run stamped it with a date
+the rest of the register disagreed with, and the value could not be pinned in a
+test. The invariant was documented and nothing enforced it.
+
+**Fixed**, and now enforced: an eslint rule rejects `new Date()` and `Date.now()`
+outside the clock module, the entry point, the server and the database fixtures.
+Verified by reintroducing the call and watching lint reject it.
+
+### G4 — `monthBounds` read a month's position, not the month · low
+
+It counted from an index into `INVOICE_MONTHS` against a hardcoded March 2026,
+while the label it was handed already said which month it was. Drop the oldest
+month from the register and every bound shifts by one, silently, each still
+carrying the right name.
+
+**Fixed** — it reads the label. Identical on all six seeded months, and right on
+months the register does not hold.
+
+### G5 — Twenty-two copies of seven helpers · low
+
+`r2` eight times, `iso` and `parseIso` three each, `midnight` three times in two
+spellings, `daysSince` twice under one name from two modules, and
+`LOCAL_OFFSET_H` twice. Two of the seven carry a business rule rather than
+plumbing, and those are the ones that mattered: `markTone`, which decides
+whether a QC mark reads as bad, a warning or clean, was copied into three
+screens; the email pattern and its error sentence into three forms.
+
+**Fixed.** The rules go beside what they interpret — `markTone` next to
+`QC_SCALE`, the email rule into `lib/forms.ts` — and the plumbing into
+`format.ts` beside the formatting already there.
+
+### G6 — `payslipOf` divided by a count it had not checked · low
+
+`otPay` and `settlement` both guard the same divisor with `Math.max(1, …)`; the
+payslip did not, so a month with no working days would have put `Infinity` and
+`NaN` on the slip. Not reachable from the seed data.
+
+**Fixed**, for consistency with its two siblings rather than as a live fix.
+
+## Still open after this pass
+
+- **Everything the first review left open and the table above still marks open.**
+  The screen-to-API swap is the large one, and G1 does not change its shape.
+- **The seed data files are auto-generated, and the generator is not in the
+  repository.** G1 was fixed in the generated output; a regeneration would
+  reintroduce it. `dates.test.ts` will fail loudly if that happens, which is the
+  best guard available from inside this tree, but the extraction script is where
+  the rule belongs.
+- **Seven mutable stores have a `reset()` and no test that needs one.** Orders
+  and client prefixes are exercised and reset in `afterEach`; the county record,
+  company settings, QC rules, hiring board, my-work updates and the petty box
+  are not. The hook is now free with `createStore`, so what is missing is the
+  tests, not the plumbing.
+- **`DECLTYPES` is declared and never read.** The old tax regime's declared
+  deductions exist as a table and as the `declared` parameter of `taxUnder`,
+  which every caller leaves at zero — so an employee on the old regime is taxed
+  as though they had declared nothing. Either the screen that collects them is
+  missing or the table should go.
+- **Payroll mutates the imported seed directly.** `run.state`, `run.by` and
+  `run.at` are written onto `PAYRUNS` and a `useReducer` counter forces the
+  re-render, which is the one screen not following the store convention the
+  other nine now share.

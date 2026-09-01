@@ -182,6 +182,16 @@ export const QC_SCALE: [score: number, label: string, kind: ChipKind][] = [
   [5, 'Good', 'v'],
 ]
 
+/**
+ * Where a mark sits on that scale, as the class name that colours it.
+ *
+ * The two thresholds are a judgement about the work — below Average is bad,
+ * Average itself is a warning, Good is the only clean mark — so they belong
+ * next to the scale rather than restated in each of the three screens that
+ * render a mark.
+ */
+export const markTone = (v: number): 'bad' | 'warn' | 'ok' => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
+
 /** One number could not say *what* was wrong. Three can. */
 export const QC_CRITERIA: [name: string, question: string][] = [
   ['Accuracy', 'Do the typed values match the instrument?'],

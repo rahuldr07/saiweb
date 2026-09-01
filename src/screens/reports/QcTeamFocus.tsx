@@ -1,14 +1,13 @@
 import { Banner, Card, Chip, Label, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead } from '@/components/FocusKpis'
-import { QC_SCALE, type RatedPerson } from '@/lib/quality'
+import { markTone, QC_SCALE, type RatedPerson } from '@/lib/quality'
 import { hh } from '@/lib/sla'
 import { fmtDate } from '@/lib/format'
 import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
 import type { Range } from '@/lib/range'
 
-const markTone = (v: number) => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
 
 /** What one headline quality figure actually contains. */
 export function QcTeamFocus({

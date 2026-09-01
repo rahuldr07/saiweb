@@ -13,7 +13,7 @@ import { SLA, type SlaRule } from '@/data/budget'
 
 export { SLA }
 export type { SlaRule }
-import { hrs } from '@/lib/format'
+import { hrs, r2 } from '@/lib/format'
 import { now } from '@/lib/clock'
 import type { Assignments, Order, Tier } from '@/data/types'
 
@@ -146,7 +146,6 @@ export const curStageOf = (o: Plannable): string | null => {
   return i < 0 ? ASSIGN_STAGES[0] : i >= ASSIGN_STAGES.length ? null : ASSIGN_STAGES[i]
 }
 
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 export interface PlanRow extends Checkpoint {
   at: Date

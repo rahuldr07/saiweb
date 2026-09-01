@@ -6,6 +6,7 @@ import { leaveCheck, type Note } from '@/lib/leave'
 import { whoName } from '@/lib/permissions'
 import { now } from '@/lib/clock'
 import type { Leave } from '@/data/types'
+import { iso, parseIso } from '@/lib/format'
 
 /**
  * Applying for leave.
@@ -19,14 +20,6 @@ import type { Leave } from '@/data/types'
 
 /** Lengths people actually ask for, rather than a free number. */
 const LENGTHS = [1, 2, 3, 4, 5, 7, 10, 14]
-
-const iso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
-const parseIso = (v: string) => {
-  const [y, m, d] = v.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 /** One of the form's live verdicts, in the banner style that matches its weight. */
 function NoteBanner({ note }: { note: Note }) {

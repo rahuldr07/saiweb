@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from 'react'
 import { COUNTIES, LINKCHECK, LINKTYPES } from '@/data/catalog'
 import { now } from '@/lib/clock'
+import { createStore, useStore } from '@/lib/store'
 import type { County, CountyLink, LinkCheckConfig, LinkType } from '@/data/types'
 
 /**
@@ -13,7 +13,7 @@ import type { County, CountyLink, LinkCheckConfig, LinkType } from '@/data/types
  * the two screens disagree about how many links exist.
  *
  * The seed arrays are the starting value and are never written to. Every change
- * produces new ones, which is what lets `useSyncExternalStore` see it and what
+ * produces new ones, which is what lets the store's subscribers see it and what
  * stops an edit here from silently altering what other importers of `COUNTIES`
  * observe.
  */
@@ -25,28 +25,18 @@ interface Coverage {
   check: LinkCheckConfig
 }
 
-let coverage: Coverage = { counties: COUNTIES, linkTypes: LINKTYPES, check: LINKCHECK }
+const store = createStore<Coverage>({ counties: COUNTIES, linkTypes: LINKTYPES, check: LINKCHECK })
 
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => coverage
-
-export const useCoverage = (): Coverage => useSyncExternalStore(subscribe, snapshot, snapshot)
+export const useCoverage = (): Coverage => useStore(store)
 
 /**
  * The live arrays, for the plain functions in `lib/derived.ts` that cannot use a
  * hook. Reading through here rather than importing the seed directly is what
  * keeps the link monitor's figures and this screen's edits in agreement.
  */
-export const currentCounties = (): County[] => coverage.counties
-export const currentLinkTypes = (): LinkType[] => coverage.linkTypes
-export const currentCheck = (): LinkCheckConfig => coverage.check
+export const currentCounties = (): County[] => store.get().counties
+export const currentLinkTypes = (): LinkType[] => store.get().linkTypes
+export const currentCheck = (): LinkCheckConfig => store.get().check
 
 export const sameCounty = (c: County, n: string, st: string) =>
   c.n.toLowerCase() === n.toLowerCase().trim() && c.st === st
@@ -58,16 +48,19 @@ export function saveCounty(
   next: { n: string; st: string; idx: number | null; links: Record<string, CountyLink> },
   was?: { n: string; st: string },
 ): void {
-  const counties = was
-    ? coverage.counties.map((c) => (sameCounty(c, was.n, was.st) ? { ...c, ...next } : c))
-    : [...coverage.counties, next as County]
-  coverage = { ...coverage, counties }
-  emit()
+  store.update((coverage) => ({
+    ...coverage,
+    counties: was
+      ? coverage.counties.map((c) => (sameCounty(c, was.n, was.st) ? { ...c, ...next } : c))
+      : [...coverage.counties, next as County],
+  }))
 }
 
 export function removeCounty(n: string, st: string): void {
-  coverage = { ...coverage, counties: coverage.counties.filter((c) => !sameCounty(c, n, st)) }
-  emit()
+  store.update((coverage) => ({
+    ...coverage,
+    counties: coverage.counties.filter((c) => !sameCounty(c, n, st)),
+  }))
 }
 
 /* ── one link on one county ─────────────────────────────────────────────── */
@@ -86,7 +79,7 @@ export function saveLink(
   k: string,
   patch: { url?: string; markOk?: boolean },
 ): void {
-  coverage = {
+  store.update((coverage) => ({
     ...coverage,
     counties: coverage.counties.map((c) => {
       if (!sameCounty(c, countyName, st)) return c
@@ -105,8 +98,7 @@ export function saveLink(
       const { err: _err, since: _since, ...cleared } = link
       return { ...c, links: { ...c.links, [k]: patch.markOk || link !== prev ? cleared : prev } }
     }),
-  }
-  emit()
+  }))
 }
 
 /* ── link types ─────────────────────────────────────────────────────────── */
@@ -121,16 +113,17 @@ export const linkTypeKey = (name: string) =>
  * in, and the checker starts covering it on the next run.
  */
 export function saveLinkType(t: { n: string; note: string; req: boolean }, k?: string): void {
-  if (k) {
-    coverage = {
-      ...coverage,
-      linkTypes: coverage.linkTypes.map((x) => (x.k === k ? { ...x, ...t } : x)),
+  store.update((coverage) => {
+    if (k) {
+      return {
+        ...coverage,
+        linkTypes: coverage.linkTypes.map((x) => (x.k === k ? { ...x, ...t } : x)),
+      }
     }
-  } else {
     let key = linkTypeKey(t.n)
     let n = 2
     while (coverage.linkTypes.some((x) => x.k === key)) key = `${linkTypeKey(t.n)}${n++}`
-    coverage = {
+    return {
       ...coverage,
       linkTypes: [...coverage.linkTypes, { k: key, ...t }],
       counties: coverage.counties.map((c) => ({
@@ -138,39 +131,38 @@ export function saveLinkType(t: { n: string; note: string; req: boolean }, k?: s
         links: { ...c.links, [key]: { u: '', s: 'none' } },
       })),
     }
-  }
-  emit()
+  })
 }
 
 export function removeLinkType(k: string): void {
-  coverage = {
+  store.update((coverage) => ({
     ...coverage,
     linkTypes: coverage.linkTypes.filter((x) => x.k !== k),
     counties: coverage.counties.map((c) => {
       const { [k]: _gone, ...links } = c.links
       return { ...c, links }
     }),
-  }
-  emit()
+  }))
 }
 
 export function moveLinkType(k: string, dir: -1 | 1): void {
+  const coverage = store.get()
   const i = coverage.linkTypes.findIndex((x) => x.k === k)
   const j = i + dir
   if (i < 0 || j < 0 || j >= coverage.linkTypes.length) return
   const linkTypes = [...coverage.linkTypes]
   ;[linkTypes[i], linkTypes[j]] = [linkTypes[j], linkTypes[i]]
-  coverage = { ...coverage, linkTypes }
-  emit()
+  store.set({ ...coverage, linkTypes })
 }
 
 /** How many counties hold this type, and how many of those are not working. */
 export function typeUsage(k: string, bad: readonly string[]) {
-  const held = coverage.counties.filter((c) => c.links[k]?.u).length
+  const { counties } = store.get()
+  const held = counties.filter((c) => c.links[k]?.u).length
   return {
     held,
-    missing: coverage.counties.length - held,
-    bad: coverage.counties.filter((c) => c.links[k] && bad.includes(c.links[k].s)).length,
+    missing: counties.length - held,
+    bad: counties.filter((c) => c.links[k] && bad.includes(c.links[k].s)).length,
   }
 }
 
@@ -178,13 +170,11 @@ export function typeUsage(k: string, bad: readonly string[]) {
 
 export function setCheckEvery(days: number): void {
   if (!(days > 0)) return
-  coverage = { ...coverage, check: { ...coverage.check, every: days } }
-  emit()
+  store.update((coverage) => ({ ...coverage, check: { ...coverage.check, every: days } }))
 }
 
 export function setCheckNotify(notify: string): void {
-  coverage = { ...coverage, check: { ...coverage.check, notify } }
-  emit()
+  store.update((coverage) => ({ ...coverage, check: { ...coverage.check, notify } }))
 }
 
 /**
@@ -198,6 +188,7 @@ export function setCheckNotify(notify: string): void {
  * screen must never fake.
  */
 export function runLinkCheck(): { checked: number; stillBroken: number } {
+  const coverage = store.get()
   let checked = 0
   const counties = coverage.counties.map((c) => {
     const links = { ...c.links }
@@ -210,22 +201,19 @@ export function runLinkCheck(): { checked: number; stillBroken: number } {
     }
     return { ...c, links }
   })
-  coverage = { ...coverage, counties, check: { ...coverage.check, last: now() } }
-  emit()
+  store.set({ ...coverage, counties, check: { ...coverage.check, last: now() } })
   return { checked, stillBroken: brokenCount() }
 }
 
 /** Links in a state the workspace treats as failing. */
 const FAILING = ['broken', 'moved', 'auth', 'slow']
-const brokenCount = () =>
-  coverage.counties.reduce(
-    (n, c) =>
-      n + coverage.linkTypes.filter((t) => c.links[t.k] && FAILING.includes(c.links[t.k].s)).length,
+const brokenCount = () => {
+  const { counties, linkTypes } = store.get()
+  return counties.reduce(
+    (n, c) => n + linkTypes.filter((t) => c.links[t.k] && FAILING.includes(c.links[t.k].s)).length,
     0,
   )
+}
 
 /** Puts the seed back. For tests, which must not inherit each other's edits. */
-export function resetCoverage(): void {
-  coverage = { counties: COUNTIES, linkTypes: LINKTYPES, check: LINKCHECK }
-  emit()
-}
+export const resetCoverage = store.reset

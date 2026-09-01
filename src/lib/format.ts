@@ -14,7 +14,19 @@ import { now } from './clock'
 export const TZ = 'ET'
 export const TZ2 = 'IST'
 
+/** The operator's zone runs 9h30m ahead of the client's. */
+export const LOCAL_OFFSET_H = 9.5
+
 export const pad = (n: number | string) => String(n).padStart(2, '0')
+
+/**
+ * Two decimal places, as a number rather than a string.
+ *
+ * Money and part-days both need it: summing invoice lines in floats drifts by a
+ * penny, and half a day of leave prints as 0.5 rather than 0.49999999999999994.
+ * Eight modules had written this line out for themselves.
+ */
+export const r2 = (n: number) => Math.round(n * 100) / 100
 
 export type DateFormat = 'MM/DD/YYYY' | 'DD/MM/YYYY'
 let dateFormat: DateFormat = 'MM/DD/YYYY'
@@ -39,6 +51,24 @@ export const parseUsDate = (v: string): Date => {
   const [m, d, y] = v.split('/').map(Number)
   return new Date(y, m - 1, d)
 }
+
+/** `<input type="date">` wants YYYY-MM-DD whatever the app displays. */
+export const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+
+/** The inverse, and local for the same reason `parseUsDate` is. */
+export const parseIso = (v: string): Date => {
+  const [y, m, d] = v.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+/**
+ * The start of a date's day.
+ *
+ * Notice, ageing and "days until" are all counted between midnights rather than
+ * between timestamps — comparing a date against an instant made a request
+ * starting today read as minus one day's notice.
+ */
+export const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
 export const fmtTime = (d: Date) => {
   let h = d.getHours()

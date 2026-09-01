@@ -1,8 +1,8 @@
-import { useSyncExternalStore } from 'react'
 import { ORDERS } from '@/data/production'
 import { PRODUCTS } from '@/data/catalog'
 import { slaHours } from '@/lib/sla'
 import { now } from '@/lib/clock'
+import { createStore, useStore } from '@/lib/store'
 import type { Assignments, Order, OrderStatus } from '@/data/types'
 
 /**
@@ -76,27 +76,14 @@ interface Working {
 
 const EMPTY: Working = { edits: {}, costs: [], notes: [], rated: false }
 
-let state: Record<string, Working> = {}
+const store = createStore<Record<string, Working>>({})
 
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => state
+export const useOrderState = (): Record<string, Working> => useStore(store)
 
-export const useOrderState = (): Record<string, Working> =>
-  useSyncExternalStore(subscribe, snapshot, snapshot)
+export const workingOn = (id: string): Working => store.get()[id] ?? EMPTY
 
-export const workingOn = (id: string): Working => state[id] ?? EMPTY
-
-const change = (id: string, fn: (w: Working) => Working) => {
-  state = { ...state, [id]: fn(state[id] ?? EMPTY) }
-  emit()
-}
+const change = (id: string, fn: (w: Working) => Working) =>
+  store.update((state) => ({ ...state, [id]: fn(state[id] ?? EMPTY) }))
 
 /**
  * What the package holds when nobody has touched it.
@@ -111,7 +98,7 @@ export const SEED_DOCS: OrderDoc[] = [
   { id: 'd3', kind: 'Scrivener’s Affidavit', recorded: '01/14/2026', bookPage: '738/76', instrument: '2026-000096', image: true, extraction: 'review' },
 ]
 
-export const docsOf = (id: string): OrderDoc[] => state[id]?.docs ?? SEED_DOCS
+export const docsOf = (id: string): OrderDoc[] => store.get()[id]?.docs ?? SEED_DOCS
 
 export function addDoc(id: string): void {
   change(id, (w) => {
@@ -186,7 +173,4 @@ export function addNote(id: string, text: string, by: string, defect = false): v
 export const markRated = (id: string) => change(id, (w) => ({ ...w, rated: true }))
 
 /** Puts the seed back. For tests, which must not inherit each other's edits. */
-export function resetOrders(): void {
-  state = {}
-  emit()
-}
+export const resetOrders = store.reset

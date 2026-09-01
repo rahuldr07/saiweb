@@ -13,6 +13,7 @@ import { money } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { leadAge } from '@/lib/derived'
 import type { Lead } from '@/data/types'
+import { EMAIL_ERROR, isEmail } from '@/lib/forms'
 
 /**
  * Adding a lead.
@@ -56,8 +57,6 @@ const blank = (): Draft => ({
   note: '',
   flag: false,
 })
-
-const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 /** The next free `l…` id, so removing one does not strand the counter. */
 const nextLeadId = () => {
@@ -106,7 +105,7 @@ function NewLead() {
     if (!f.co.trim()) return setErr('A company name is required.')
     if (!f.cn.trim() && !f.ce.trim())
       return setErr('Give at least a name or an email — otherwise there is nobody to contact.')
-    if (f.ce.trim() && !EMAIL.test(f.ce.trim())) return setErr('That email does not look right.')
+    if (f.ce.trim() && !isEmail(f.ce)) return setErr(EMAIL_ERROR)
     if (!f.note.trim())
       return setErr('Write a first note — it is what the follow-up clock runs from.')
 

@@ -3,10 +3,9 @@ import { Banner, Btn } from '@/components/ui'
 import { money } from '@/lib/format'
 import { removeClient, saveClient, useClients } from '@/state/company'
 import type { Client } from '@/data/types'
+import { EMAIL_ERROR, isEmail } from '@/lib/forms'
 
 const TERMS = ['Net 15', 'Net 30', 'Net 45', 'Per order', 'Prepaid']
-const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
-
 /**
  * A client.
  *
@@ -47,7 +46,7 @@ export function ClientForm({
       return setError(`There is already a client called ${client}.`)
     const clash = clients.find((x) => x.n !== name && x.dn === code)
     if (clash) return setError(`${code} is already used by ${clash.n}.`)
-    if (email && !EMAIL.test(email)) return setError('That email does not look right.')
+    if (email && !isEmail(email)) return setError(EMAIL_ERROR)
 
     const next: Client = {
       ...(c ?? { orders: 0, inv: 0, total: 0, paid: 0 }),

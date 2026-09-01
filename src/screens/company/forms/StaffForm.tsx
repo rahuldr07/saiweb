@@ -7,8 +7,7 @@ import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { removeStaff, saveStaff, useCompany, useRoles, useStaff } from '@/state/company'
 import type { Person } from '@/data/types'
-
-const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+import { EMAIL_ERROR, isEmail } from '@/lib/forms'
 
 /**
  * A person's record.
@@ -80,7 +79,7 @@ export function StaffForm({
     const name = n.trim()
     const mail = email.trim().toLowerCase()
     if (!name) return setError('A name is required.')
-    if (!EMAIL.test(mail)) return setError('That email does not look right.')
+    if (!isEmail(mail)) return setError(EMAIL_ERROR)
     if (staff.some((x) => x.id !== id && (x.e ?? '').toLowerCase() === mail))
       return setError(`${mail} already belongs to someone here.`)
 

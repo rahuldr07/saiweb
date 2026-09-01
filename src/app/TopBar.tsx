@@ -1,16 +1,13 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
-import { fmtTime, initials, TZ, TZ2 } from '@/lib/format'
+import { fmtTime, initials, LOCAL_OFFSET_H, TZ, TZ2 } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { alerts } from '@/lib/derived'
 import { DEMO_IDENTITY } from '@/lib/demo'
 import { useCoverage } from '@/state/coverage'
 import { ROUTE_LABEL } from './nav'
 import { Empty, Row, Rows } from '@/components/ui'
-
-/** The operator's zone runs 9h30m ahead of the client's. */
-const LOCAL_OFFSET_H = 9.5
 
 export function TopBar({ current }: { current: string }) {
   const { me, tenant, theme, toggleTheme, navOpen, setNavOpen, roleLabel, can } = useSession()

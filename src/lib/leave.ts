@@ -14,6 +14,7 @@ import { STAFF } from '@/data/people'
 import { leaveBalance } from './payroll'
 import { now } from './clock'
 import type { Leave, Person } from '@/data/types'
+import { midnight, r2 } from '@/lib/format'
 
 /** What to do when a request would leave a department below cover. */
 export const CLASHRULES: Record<string, [label: string, detail: string]> = {
@@ -50,7 +51,6 @@ export const approvesFor = (id: string) =>
 
 const overlaps = (aFrom: Date, aTo: Date, bFrom: Date, bTo: Date) => aFrom <= bTo && bFrom <= aTo
 
-const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
 
 /** Others in the same department already off across these dates. */
 export function clashesWith(pid: string, from: Date, to: Date): Leave[] {
@@ -111,7 +111,6 @@ export interface LeaveCheck {
   overBalance: number
 }
 
-const r2 = (n: number) => Math.round(n * 100) / 100
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
@@ -127,7 +126,7 @@ export function leaveCheck(pid: string, typeKey: string, days: number, from: Dat
   const clash = clashesWith(pid, from, to)
   const type = LEAVETYPES.find((x) => x.k === typeKey)
   const short = cover ? Math.max(0, LEAVEPOLICY.minCover - cover.left) : 0
-  const notice = Math.round((midnight(from) - midnight(now())) / 86400000)
+  const notice = Math.round((midnight(from).getTime() - midnight(now()).getTime()) / 86400000)
 
   const notes: Note[] = []
   let blocked = false

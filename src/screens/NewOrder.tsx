@@ -10,7 +10,7 @@ import { board, previewAssign } from '@/lib/engine'
 import { LSTATE, findCounty } from '@/lib/derived'
 import { whoName } from '@/lib/permissions'
 import { TIERS, dueFor, isDefaultRule, slaRuleFor, tierOf } from '@/lib/sla'
-import { TZ, TZ2, fmtDate, fmtDT, initials, money } from '@/lib/format'
+import { fmtDate, fmtDT, initials, LOCAL_OFFSET_H, money, TZ, TZ2 } from '@/lib/format'
 import { now } from '@/lib/clock'
 import type { Assignments, CountyLink, Order } from '@/data/types'
 
@@ -25,9 +25,6 @@ import type { Assignments, CountyLink, Order } from '@/data/types'
  */
 
 const statusLabel = (k: string) => STATUS[k]?.[0] ?? k
-
-/** The operator's zone runs 9h30m ahead of the client's. */
-const LOCAL_OFFSET_H = 9.5
 
 const NO_LINK: CountyLink = { u: '', s: 'none' }
 

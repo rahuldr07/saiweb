@@ -1,8 +1,7 @@
 import { QC_DAYS } from '@/data/quality'
-import { fmtDate } from '@/lib/format'
+import { fmtDate, iso } from '@/lib/format'
 import {
   QC_PRESETS,
-  iso,
   rangeFloor,
   resolveRange,
   setPreset,

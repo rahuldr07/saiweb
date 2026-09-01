@@ -1,5 +1,5 @@
-import { useSyncExternalStore } from 'react'
 import { COUNTS, PETTY, PETTYCFG } from '@/data/hrms'
+import { createStore, useStore } from '@/lib/store'
 import type { PettyConfig, PettyCount, PettyEntry } from '@/data/types'
 
 /**
@@ -21,47 +21,31 @@ interface Box {
   cfg: PettyConfig
 }
 
-let box: Box = { entries: PETTY, counts: COUNTS, cfg: PETTYCFG }
+const store = createStore<Box>({ entries: PETTY, counts: COUNTS, cfg: PETTYCFG })
 
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => box
-
-export const useBox = (): Box => useSyncExternalStore(subscribe, snapshot, snapshot)
+export const useBox = (): Box => useStore(store)
 
 /** Next free id in a `P1, P2, …` series, so a recorded entry cannot collide. */
 const nextId = (prefix: string, ids: string[]) =>
   prefix + (ids.reduce((max, id) => Math.max(max, Number(id.replace(/\D/g, '')) || 0), 0) + 1)
 
 export function recordEntry(e: Omit<PettyEntry, 'id'>): PettyEntry {
-  const entry: PettyEntry = { ...e, id: nextId('P', box.entries.map((x) => x.id)) }
-  box = { ...box, entries: [...box.entries, entry] }
-  emit()
+  const entry: PettyEntry = { ...e, id: nextId('P', store.get().entries.map((x) => x.id)) }
+  store.update((box) => ({ ...box, entries: [...box.entries, entry] }))
   return entry
 }
 
 export function recordCount(c: Omit<PettyCount, 'id'>): void {
-  box = {
+  store.update((box) => ({
     ...box,
     counts: [{ ...c, id: nextId('C', box.counts.map((x) => x.id)) }, ...box.counts],
-  }
-  emit()
+  }))
 }
 
 /** Changes one setting. The caller has already decided the value is usable. */
 export function setConfig<K extends keyof PettyConfig>(key: K, value: PettyConfig[K]): void {
-  box = { ...box, cfg: { ...box.cfg, [key]: value } }
-  emit()
+  store.update((box) => ({ ...box, cfg: { ...box.cfg, [key]: value } }))
 }
 
 /** Puts the seed back. For tests, which must not inherit each other's entries. */
-export function resetBox(): void {
-  box = { entries: PETTY, counts: COUNTS, cfg: PETTYCFG }
-  emit()
-}
+export const resetBox = store.reset

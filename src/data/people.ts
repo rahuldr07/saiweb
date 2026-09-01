@@ -577,7 +577,7 @@ export const STAFF: Person[] = [
   {
     id: "nb",
     n: "Neil Barrow",
-    leaving: new Date('2026-08-11T18:30:00.000Z'),
+    leaving: new Date(2026, 7, 12),
     dep: ["RTS"],
     r: "staff",
     cap: 39,

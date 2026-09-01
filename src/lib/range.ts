@@ -1,5 +1,6 @@
 import { now } from './clock'
 import { QC_DAYS } from '@/data/quality'
+import { iso, parseIso } from '@/lib/format'
 
 /**
  * Date ranges for the report tabs.
@@ -30,15 +31,6 @@ export interface RangeState {
 }
 
 export const DEFAULT_RANGE: RangeState = { preset: '30' }
-
-/** `<input type="date">` wants YYYY-MM-DD whatever the app displays. */
-export const iso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
-const parseIso = (v: string): Date => {
-  const [y, m, d] = v.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 export function resolveRange(state: RangeState): Range {
   const t = now()

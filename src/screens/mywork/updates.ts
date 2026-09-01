@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from 'react'
 import { UPDATES } from '@/data/production'
 import { now } from '@/lib/clock'
+import { createStore, useStore } from '@/lib/store'
 import type { Update } from '@/data/types'
 
 /**
@@ -15,30 +15,16 @@ import type { Update } from '@/data/types'
  * is the rule.
  */
 
-let updates: Update[] = UPDATES
+const store = createStore<Update[]>(UPDATES)
 
-const listeners = new Set<() => void>()
-const emit = () => {
-  for (const l of listeners) l()
-}
-const subscribe = (fn: () => void) => {
-  listeners.add(fn)
-  return () => listeners.delete(fn)
-}
-const snapshot = () => updates
-
-export const useUpdates = (): Update[] => useSyncExternalStore(subscribe, snapshot, snapshot)
+export const useUpdates = (): Update[] => useStore(store)
 
 /** Newest first, so the seed array is never written to. */
 export function postUpdate(who: string, kind: Update['kind'], body: string): Update {
-  const entry: Update = { id: `U${9000 + updates.length}`, who, d: now(), kind, b: body }
-  updates = [entry, ...updates]
-  emit()
+  const entry: Update = { id: `U${9000 + store.get().length}`, who, d: now(), kind, b: body }
+  store.update((prev) => [entry, ...prev])
   return entry
 }
 
 /** Puts the seed back. For tests, which must not inherit each other's notes. */
-export function resetUpdates(): void {
-  updates = UPDATES
-  emit()
-}
+export const resetUpdates = store.reset

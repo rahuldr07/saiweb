@@ -15,7 +15,8 @@
  * and never otherwise.
  *
  * The dates are ISO strings on the wire and `Date`s in memory, revived once on
- * first load rather than on every read.
+ * first load rather than on every read — as the design's own wall clock, for the
+ * reason `reviveDate` gives below.
  */
 
 export interface Delivery {
@@ -45,9 +46,37 @@ type RawDelivery = Omit<Delivery, 'd'> & { d: string }
  */
 let pending: Promise<Delivery[]> | null = null
 
+/**
+ * The design's clock, read as the reader's own.
+ *
+ * The seed is the design's world, and the design was authored in IST — so the
+ * wire format holds `2026-05-06T08:30:00.000Z`, which is 2pm on the 6th where it
+ * was written. Revived as a bare instant it becomes 10.30pm on the *5th* in
+ * Honolulu, and the figures a screen derives from it stop being the design's:
+ * all 767 rows disagreed with their own `dk` display date there, and the 30-day
+ * on-time window enclosed a different set of rows in Sydney than in New York.
+ *
+ * Every other seed date is written as a local-time construction for exactly this
+ * reason. These arrive as strings, so the same thing is done here instead: the
+ * IST wall clock is read off the instant and rebuilt in the reader's zone, which
+ * is what makes one figure come out of one dataset everywhere.
+ */
+const IST_OFFSET_MS = 5.5 * 3600_000
+
+const reviveDate = (iso: string): Date => {
+  const ist = new Date(new Date(iso).getTime() + IST_OFFSET_MS)
+  return new Date(
+    ist.getUTCFullYear(),
+    ist.getUTCMonth(),
+    ist.getUTCDate(),
+    ist.getUTCHours(),
+    ist.getUTCMinutes(),
+  )
+}
+
 export function loadDeliveries(): Promise<Delivery[]> {
   pending ??= import('./deliveries.json').then((m) =>
-    (m.default as RawDelivery[]).map((r) => ({ ...r, d: new Date(r.d) })),
+    (m.default as RawDelivery[]).map((r) => ({ ...r, d: reviveDate(r.d) })),
   )
   return pending
 }

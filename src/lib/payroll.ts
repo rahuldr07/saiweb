@@ -185,7 +185,10 @@ export function payslipOf(p: Person, mn: string): Payslip {
     joined: false,
     present: 26,
   }
-  const perDay = st.gross / a.working
+  /* `Math.max(1, …)` for the same reason `otPay` and `settlement` do it: a month
+     with no working days would otherwise make every figure on the slip Infinity
+     or NaN, and a payslip is the last place to discover that. */
+  const perDay = st.gross / Math.max(1, a.working)
   /* Unpaid days, plus any part of the month before they joined. */
   const unpaid = a.lop + Math.max(0, a.working - (a.payable ?? a.working))
   const lopAmt = Math.round(perDay * unpaid)

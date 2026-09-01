@@ -26,8 +26,8 @@ import { useClientEditor } from './company/forms/useClientEditor'
 import { PrefixForm } from './clients/PrefixForm'
 import { removePrefix, usePrefixes } from './clients/prefixes'
 import { INVOICES, ISTATUS } from '@/data/business'
-import { balance, outstandingOf, r2 } from '@/lib/invoices'
-import { money } from '@/lib/format'
+import { balance, outstandingOf } from '@/lib/invoices'
+import { money, r2 } from '@/lib/format'
 import type { ChipKind } from '@/data/types'
 
 const TABS = ['Overview', 'Turnaround', 'Invoices', 'Order prefixes'] as const
