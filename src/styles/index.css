@@ -172,6 +172,84 @@ body.modalopen {
   max-width: 100%;
 }
 
+/*
+ * Scrollbars.
+ *
+ * The app scrolls in five places — the page, a table wider than its card, a
+ * modal taller than 88vh, the sidebar's nav list, and a strip of cards wider
+ * than its row — and each of them draws the operating system's own bar. In dark
+ * mode that is a pale slab down the side of a #0b1120 page.
+ *
+ * One thumb everywhere instead, taken from the muted text colour of the ground
+ * it sits on, over a transparent track that lets that ground through. The app's
+ * ground turns over with the theme and `--gr` turns with it. The sidebar's rail
+ * does not — `--nav` is near-black under both themes — so its list is stated
+ * separately, against `--navtx`.
+ *
+ * Two mechanisms, because an engine honours one of them and drops the other
+ * outright: the standard properties, and the WebKit pseudo-elements. Both are
+ * declared, held to one width and one pair of colours, so which one wins does
+ * not show. `scrollbar-color` is the only one of the three that inherits, so the
+ * width and the pseudo-elements are matched on every element rather than set
+ * once; and all of it hangs off `body` rather than the root, because the theme
+ * redefines its tokens on `body.dark` and the viewport takes the body's
+ * scrollbar when the root declares none of its own.
+ *
+ * Nothing here hides a bar. In every one of those regions the bar is the only
+ * thing on screen saying there is more to reach, which is the tab bar's lesson
+ * above.
+ */
+body,
+body * {
+  scrollbar-width: thin;
+}
+body {
+  scrollbar-color: color-mix(in srgb, var(--gr) 45%, transparent) transparent;
+}
+body::-webkit-scrollbar,
+body *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+body::-webkit-scrollbar-track,
+body *::-webkit-scrollbar-track,
+body::-webkit-scrollbar-corner,
+body *::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+body::-webkit-scrollbar-thumb,
+body *::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--gr) 45%, transparent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 99px;
+}
+body::-webkit-scrollbar-thumb:hover,
+body *::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--gr) 70%, transparent);
+}
+
+/* The nav list stands on the rail, so it takes the rail's own foreground. */
+.side nav {
+  scrollbar-color: color-mix(in srgb, var(--navtx) 40%, transparent) transparent;
+}
+.side nav::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--navtx) 40%, transparent);
+}
+.side nav::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--navtx) 65%, transparent);
+}
+
+/*
+ * A row of cards wider than the row — the hiring pipeline's stages, the
+ * attendance board's departments. Both carried the same inline `overflowX`;
+ * naming it puts them on the shared bar and keeps the content off it.
+ */
+.xscroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
 /* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */
 @theme {
   --color-nav: #131a2b;

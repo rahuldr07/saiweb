@@ -229,7 +229,7 @@ function Attendance() {
 
         <SectionHead>Today — who is in</SectionHead>
         <Card padded>
-          <div style={{ display: 'flex', gap: 12, overflowX: 'auto' }}>
+          <div className="xscroll" style={{ display: 'flex', gap: 12 }}>
             {[...groups].map(([dept, people]) => {
               const din = people.filter((p) => stateOf(p)[1] === 'v').length
               const off = people.filter((p) => stateOf(p)[0] === 'On leave').length

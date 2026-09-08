@@ -214,7 +214,7 @@ function Recruitment() {
       <SectionHead>The pipeline</SectionHead>
       <Card padded>
         {shown.length ? (
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+          <div className="xscroll" style={{ display: 'flex', gap: 10 }}>
             {HIRESTAGES.map((st) => (
               <StageColumn
                 key={st}
