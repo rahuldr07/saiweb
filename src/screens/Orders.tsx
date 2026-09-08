@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { Avatar, Banner, Btn, Due, PageHead, Select } from '@/components/ui'
+import { Avatar, Banner, Btn, Due, PageHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
@@ -170,35 +170,6 @@ export default function Orders() {
         }
         actions={
           <>
-            {/* Who and where sit beside the title, not in the filter bar: they
-                change what the whole screen is about, which the banner then
-                states in words. */}
-            <Select
-              label="Filter by department"
-              value={dept}
-              onChange={(v) => {
-                setDept(v)
-                /* The staff list narrows to that department, so a person who is
-                   not in it can no longer be the selected one. */
-                if (v !== 'all' && staff !== 'all' && !STAFF.find((s) => s.id === staff)?.dep.includes(v)) {
-                  setStaff('all')
-                }
-              }}
-              options={allFirst('All departments', [...STAGES])}
-              style={{ minWidth: 165 }}
-            />
-            <Select
-              label="Filter by staff member"
-              value={staff}
-              onChange={setStaff}
-              options={[
-                ['all', 'All staff'],
-                ...STAFF.filter((s) => s.dep.length && (dept === 'all' || s.dep.includes(dept))).map(
-                  (s) => [s.id, s.n] as [string, string],
-                ),
-              ]}
-              style={{ minWidth: 180 }}
-            />
             <Btn variant="ghost" onClick={exportOrders}>
               Export
             </Btn>
@@ -277,6 +248,30 @@ export default function Orders() {
             value: client,
             onChange: setClient,
             options: allFirst('All clients', uniq(ORDERS.map((o) => o.cl))),
+          },
+          {
+            label: 'Department',
+            value: dept,
+            onChange: (v) => {
+              setDept(v)
+              /* The staff list narrows to that department, so a person who is
+                 not in it can no longer be the selected one. */
+              if (v !== 'all' && staff !== 'all' && !STAFF.find((s) => s.id === staff)?.dep.includes(v)) {
+                setStaff('all')
+              }
+            },
+            options: allFirst('All departments', [...STAGES]),
+          },
+          {
+            label: 'Staff',
+            value: staff,
+            onChange: setStaff,
+            options: [
+              ['all', 'All staff'],
+              ...STAFF.filter((s) => s.dep.length && (dept === 'all' || s.dep.includes(dept))).map(
+                (s) => [s.id, s.n] as [string, string],
+              ),
+            ],
           },
         ]}
         cols={[
