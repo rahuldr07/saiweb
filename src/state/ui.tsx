@@ -45,6 +45,13 @@ export function UiProvider({ children }: { children: ReactNode }) {
      nobody is watching for it. */
   useEffect(() => () => clearTimeout(timer.current), [])
 
+  /* The mask sits over the page, not in place of it, so without this the page
+     underneath still scrolls — two independently scrolling regions at once. */
+  useEffect(() => {
+    document.body.classList.toggle('modalopen', modal !== null)
+    return () => document.body.classList.remove('modalopen')
+  }, [modal])
+
   const value = useMemo<UiValue>(
     () => ({
       modal,
