@@ -98,6 +98,15 @@
 }
 
 /*
+ * The mask sits fixed over the page rather than replacing it, so without this
+ * the page underneath keeps its own scroll — one scrollbar for the modal's
+ * content, another for the page behind it. `UiProvider` toggles the class.
+ */
+body.modalopen {
+  overflow: hidden;
+}
+
+/*
  * A KPI tile may not widen its own grid track.
  *
  * `.kpis` asks for `minmax(168px, 1fr)`, but a grid item's automatic minimum is
