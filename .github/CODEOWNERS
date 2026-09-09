@@ -1,0 +1,5 @@
+# One human owns the repository, so one rule covers every path. A per-path rule
+# would resolve to the same owner and change nothing about who GitHub requests
+# on a review, so there are none.
+
+* @rahuldr07

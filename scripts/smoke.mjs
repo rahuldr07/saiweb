@@ -5,11 +5,17 @@
  *   npm run build && npm run preview &
  *   npm run smoke
  *
- * This is not in CI, because it needs a browser download that the rest of the
- * suite does not. It is here because a route can typecheck, lint, pass its unit
- * tests and still render an empty page — lazy chunks, a bad import, a hook order
- * that only breaks at runtime. Those cost minutes to find this way and an
- * afternoon to find any other way.
+ * This needs the whole application standing up, which is why CI gives it a job of
+ * its own: a production build served on the origin `SMOKE_URL` names (`vite
+ * preview` on 4173 by default), the API on 8787 for the preview server to proxy
+ * `/api` to, a seeded database to sign in against, and `APP_URL` set to that same
+ * preview origin — Better Auth trusts the origin it names, and defaults to the
+ * dev server's, so every sign-in is otherwise refused as a foreign one.
+ *
+ * It is here because a route can typecheck, lint, pass its unit tests and still
+ * render an empty page — lazy chunks, a bad import, a hook order that only breaks
+ * at runtime. Those cost minutes to find this way and an afternoon to find any
+ * other way.
  *
  * A fresh browser per route keeps one bad page from taking the run down with it.
  */

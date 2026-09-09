@@ -152,12 +152,13 @@ connection string.
 
 ### Screens
 
-Six groups, twenty-two screens in the sidebar, plus five detail screens reached
-from a register row — order, person, client, lead, and the new-lead form.
+Six groups, twenty-one screens in the sidebar, plus seven reached from a register
+or a button on one — order, person, client, lead and payslip detail, and the
+forms for a new lead and a new order.
 
 | Group | Screens |
 | --- | --- |
-| Production | My work · My payslips · How I'm doing · Dashboard · Orders (+ order detail) · Assignment · Order intake · Commitment report |
+| Production | My work · My payslips · How I'm doing · Dashboard · Orders (+ order detail · new order) · Assignment · Order intake · Commitment report |
 | People | Person detail, from the roster or an assignment strip |
 | Business | Leads (+ lead detail · new lead) · Invoicing |
 | HRMS | Attendance · Leave · Payroll · Payslips · Recruitment · Petty cash |
@@ -223,15 +224,31 @@ npm test            # everything
 npm run test:watch  # while working
 ```
 
-Three more checks need a built app and a browser, so they are not in CI:
+Four more checks need a built app and a browser. One of them, `smoke`, also runs
+in CI, in a job of its own — a browser download and a running API are slow and
+flaky enough that folding them into the main job would hide a lint failure behind
+a dropped page. The other three — `check`, `profile` and `shots` — run nowhere
+but a developer's machine.
 
 ```bash
-npm run build && npm run preview &
+npm run build
+APP_URL=http://localhost:4173 npm run server &   # the API on :8787
+npm run preview &                                # the built app on :4173
+
 npm run smoke     # every route renders, with no console errors
 npm run check     # navigation, form validation, and the writes that leave a trace
 npm run profile   # JS per route, longest task, total blocking time
-npm run shots     # screenshots of every screen, light and dark, desktop and phone
+npm run shots     # the fixed list of screens in scripts/shots.mjs
 ```
+
+`APP_URL` there is not optional. `smoke` and `check` sign in through the real
+form, and Better Auth checks the browser's origin against `trustedOrigins`, which
+is `APP_URL` and defaults to the dev server's `:5173`
+([`server/auth.ts`](server/auth.ts)) — but both drive `vite preview`, which
+serves on `:4173`. Left at the default, sign-in is refused as a foreign origin
+and the run exits before it has tested a single route. Both need the database
+seeded too, since they sign in as a real account: `db:push`, `db:rls` and
+`db:seed` above.
 
 `shots` earns its place: the last design pass found four defects by looking at
 the screens and none by reading the code — a timeline whose timestamps sat on
@@ -306,3 +323,34 @@ The `person`, `client` and `lead` drill-downs the original design has are now
 built, and the registers link to them. What remains is the write surface: four
 endpoints write, so edits made on a detail screen live in the page's own state
 rather than going anywhere.
+
+## Contributing
+
+Four gates. CI runs the same four scripts on every pull request and on pushes to
+`main` ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)), against a real
+Postgres so the isolation tests are not the ones that get skipped.
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+[`CLAUDE.md`](CLAUDE.md) carries the four invariants that live across files
+rather than inside the one you are editing: time is read through `now()`,
+`design.css` is a port that additions do not go into, the screens still render
+from `src/data/` while the API runs alongside them, and the design's short field
+names stay short. Each is easy to break without the code in front of you saying
+so.
+
+Pull requests open with
+[the template](.github/PULL_REQUEST_TEMPLATE.md), which asks for those gates, for
+screenshots when anything visual changed, and for the reason, if `design.css` had
+to change.
+
+`npm run shots` is not a sweep of the application. It takes a fixed list —
+fourteen screenshots across nine routes, of which three are dark and two are at
+phone width ([`scripts/shots.mjs`](scripts/shots.mjs)). Payroll, Attendance and
+Petty cash are not on it, so a change to one of those produces no screenshot at
+all. Add a row to `shots` there for the screen you changed, then run it.

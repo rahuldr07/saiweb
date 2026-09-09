@@ -1,18 +1,30 @@
 name: CI
 
 on:
+  # Pull requests are the gate, and main is what deploys. Building every branch
+  # push as well runs the whole Postgres pipeline twice for one PR, in two
+  # concurrency groups, so neither run cancels the other.
   push:
-    branches: ['**']
+    branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Superseding a pull request run is free: the newer push is the one under
+  # review. Superseding a push to main is not — it leaves the earlier merge with
+  # no run that ever finished, on the branch that deploys.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   check:
-    name: lint · types · build · tests
+    name: check
     runs-on: ubuntu-latest
+    # A step that hangs — a Postgres that never reports healthy, a push waiting
+    # on a prompt — otherwise holds a runner for the six-hour default.
+    timeout-minutes: 15
 
     # Tenant isolation is enforced by Postgres, so the tests that cover it need a
     # real Postgres. The rule tests do not, and run without touching this.
@@ -44,19 +56,24 @@ jobs:
 
       - run: npm ci
 
+      # The scripts, not the commands behind them. A developer runs `npm run
+      # lint`; if the script and CI drift, CI stops being evidence about what a
+      # developer will see.
       - name: Lint
         run: npm run lint
 
       - name: Typecheck
-        run: npx tsc -b
+        run: npm run typecheck
 
       - name: Build
-        run: npx vite build
+        run: npm run build
 
       # Same three commands the README gives a developer. If the documented setup
-      # breaks, CI should be what notices.
+      # breaks, CI should be what notices. `--force` is the one thing added to
+      # them: drizzle.config.ts sets `strict`, so push waits on a confirmation
+      # nobody is here to give.
       - name: Create schema
-        run: npx drizzle-kit push --force
+        run: npm run db:push -- --force
 
       - name: Apply row-level security
         run: npm run db:rls
@@ -66,3 +83,106 @@ jobs:
 
       - name: Test
         run: npm test
+
+      # Fails on high and critical, and reports the rest without failing.
+      # Moderate is left out deliberately: a gate that is red every week is a
+      # gate people learn to click past. So is `--omit=dev` — it barely changes
+      # this report, because the test and build toolchain is listed either way,
+      # so it would only imply a separation that is not there.
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+  # Kept apart from `check` on purpose. This job needs a browser download and a
+  # running API, and it is the slowest and flakiest thing here — folded into
+  # `check` a dropped page would hide a lint failure behind it.
+  browser:
+    name: browser
+    runs-on: ubuntu-latest
+    # The wait loops below give the API and the preview server sixty seconds
+    # each; a browser that hangs on a route has no such bound of its own.
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: titlecrm
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/titlecrm
+      APP_DATABASE_URL: postgres://app_user:ci-password@localhost:5432/titlecrm
+      BETTER_AUTH_SECRET: ci-only-secret-not-used-for-anything-real
+      # The smoke run drives the built bundle on `vite preview`, which serves on
+      # 4173 rather than the dev server's 5173. That is the origin the browser
+      # sends, so it is the one Better Auth has to trust and CORS has to allow —
+      # left at the default, every sign-in is refused as a foreign origin.
+      APP_URL: http://localhost:4173
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+
+      - name: Create schema
+        run: npm run db:push -- --force
+
+      - name: Apply row-level security
+        run: npm run db:rls
+
+      # Every route is behind sign-in, and the smoke run signs in through the
+      # real form, so it needs real accounts to sign in as.
+      - name: Seed
+        run: npm run db:seed
+
+      - name: Start the API and the built front end
+        run: |
+          npm run server &
+          npm run preview &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8787/api/health >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:8787/api/health >/dev/null || {
+            echo 'the API never answered on 8787'; exit 1;
+          }
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:4173/ >/dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:4173/ >/dev/null || {
+            echo 'the preview server never answered on 4173'; exit 1;
+          }
+
+      # The run reports to stdout and writes nothing, so the per-route list that
+      # explains a failure is gone once the job ends unless CI keeps a copy.
+      # `shell: bash` is what supplies pipefail; without it the pipe swallows the
+      # exit code and a failed run reads as a pass.
+      - name: Smoke
+        shell: bash
+        run: npm run smoke 2>&1 | tee smoke-results.txt
+
+      - name: Save the smoke output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: smoke-results.txt
+          if-no-files-found: warn

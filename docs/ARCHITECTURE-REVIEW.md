@@ -9,7 +9,15 @@ against the recovered Claude Design export.
 Every claim below cites the file and line it came from. Build and lint were run
 locally; bundle figures are read from `dist/` after `npm run build`.
 
-## Where it stands
+## Where it stood — 08/14/2026
+
+Counted at `157e3fb`. This table is a snapshot of that commit, not a description
+of the repository now: `tests/` and a CI workflow both exist, there are four
+write endpoints rather than one, and the delivery chunk is no longer pulled onto
+routes that do not read it — it is fetched on demand by the four screens that do
+(`Dashboard`, `MyPerformance`, `PersonDetail` and `Reports`).
+What has *not* closed since is collected under **Still open** at the end of this
+document.
 
 | | |
 | --- | --- |
@@ -388,7 +396,7 @@ re-run under five timezones.
 | | Status at `d081f43` |
 | --- | --- |
 | Screens render from `src/data/` | still open — only `SignIn` and `SessionProvider` call the API |
-| Dashboard loads the delivery history | still open — `useDeliveries()` for its on-time KPI |
+| Dashboard loads the delivery history | still open — and four screens do, not one: `useDeliveries()` is called by `Dashboard`, `MyPerformance`, `PersonDetail` and `Reports` |
 | Three detail drill-downs never built | **closed** — `PersonDetail`, `ClientDetail` and `LeadDetail` all exist |
 | New lead raises a toast | **closed** — `NewLead.tsx` is the capture form |
 | The write surface is thin | still open — exactly four write endpoints, against 68 reads |
@@ -509,3 +517,45 @@ payslip did not, so a month with no working days would have put `Infinity` and
   `run.at` are written onto `PAYRUNS` and a `useReducer` counter forces the
   re-render, which is the one screen not following the store convention the
   other nine now share.
+
+---
+
+# Still open — checked 09/09/2026
+
+Both reviews above are snapshots and stay that way. This is the one list of what
+neither of them closed, re-checked against the working tree on the date in the
+heading. Nothing here is new analysis; the reasoning is in the review that first
+raised each item.
+
+- **The screens still render from `src/data/`.** Two modules under `src/` call
+  the API — `src/state/session.tsx` and `src/screens/SignIn.tsx` — so
+  capabilities come from the database and every row on every screen still comes
+  from the bundle. A navigation group at a time, not a screen at a time.
+- **Four screens still load the delivery history** from the bundle rather than
+  from an endpoint: Dashboard for its on-time KPI
+  (`src/screens/Dashboard.tsx:39-40`), and `MyPerformance.tsx:68`,
+  `PersonDetail.tsx:116` and `Reports.tsx:65` for their own figures. All four go
+  through `useDeliveries()` (`src/lib/useDeliveries.ts:14`), so the 767 rows are
+  one shared request rather than four — but they are still the bundle's rows.
+  They stay that way until those figures come from the API.
+- **The write surface is still four endpoints**: stage assignment
+  (`server/routes/production.ts:148`), a leave decision
+  (`server/routes/hrms.ts:78`), a rule toggle and tenant settings
+  (`server/routes/config.ts:26,82`).
+- **The seed generator is not in the repository.** `src/data/*.ts` carry an
+  `AUTO-GENERATED` header and `scripts/` holds only the four browser checks, so
+  a defect fixed in the generated output is a defect a regeneration undoes.
+  `tests/rules/dates.test.ts` is the guard.
+- **The design export is still not in the tree.** No `reference/`; it has to be
+  recovered from `157e3fb^` to diff against.
+- **Six stores expose a `reset()` no test calls** — company settings, the county
+  record, the QC rules, the hiring board, my-work updates and the petty box.
+  Only `resetOrders` and `resetPrefixes` are exercised
+  (`tests/rules/orderStore.test.ts:27-28`). The second review said seven and
+  then listed six; six is right.
+- **`DECLTYPES` is declared and never read.** `src/data/hrms.ts:1064` is its
+  only occurrence in the tree, so an employee on the old tax regime is still
+  taxed as though they had declared nothing.
+- **Payroll still mutates the imported seed.** `src/screens/Payroll.tsx:101` and
+  `:161-162` write onto `PAYRUNS`, with the `useReducer` counter at `:58`
+  forcing the re-render.

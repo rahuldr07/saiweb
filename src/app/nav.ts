@@ -1,5 +1,5 @@
 /**
- * The sidebar: six groups, twenty-two screens. Labels, routes and glyphs are the
+ * The sidebar: six groups, twenty-one screens. Labels, routes and glyphs are the
  * design's own — including the typographic icons, which are Unicode rather than
  * an icon font so the shell carries no image weight at all.
  */

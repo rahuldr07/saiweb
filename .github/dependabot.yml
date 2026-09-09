@@ -1,0 +1,28 @@
+version: 2
+
+updates:
+  # Minor and patch land as one pull request a week. Ungrouped, a lockfile this
+  # size opens a dozen near-identical pull requests that get merged unread,
+  # which is the same as not reviewing dependencies at all. Majors stay
+  # separate: those are the ones worth reading.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        patterns: ['*']
+        update-types:
+          - minor
+          - patch
+
+  # The workflow pins actions by major tag, so this is mostly security and
+  # runner-image churn — one grouped pull request is enough.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']

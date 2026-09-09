@@ -20,5 +20,16 @@ export default defineConfig({
     /* The isolation tests share one database; running the files in parallel would
        have them truncating each other's fixtures. */
     fileParallelism: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      /* Only the code these two suites are meant to cover: the domain rules, the
+         stores behind them — several of which sit beside the screen they serve,
+         under `src/screens` — and the API. Components are left out because
+         nothing renders them here, and counting them would bury the number that
+         matters. No thresholds until there is a measurement worth holding to. */
+      include: ['src/lib/**', 'src/state/**', 'src/screens/**/*.ts', 'server/**'],
+      exclude: ['**/*.tsx', 'src/lib/use*.ts', 'server/db/seed.ts', 'server/db/reset.ts'],
+    },
   },
 })

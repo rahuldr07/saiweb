@@ -38,4 +38,7 @@ smoke-results.txt
 # Design-review screenshots
 shots/
 
+# Coverage reports
+coverage/
+
 .vercel
