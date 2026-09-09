@@ -15,6 +15,17 @@ Thumbs.db
 *.tsbuildinfo
 node_modules/.tmp
 
+# TypeScript output never belongs beside its source. A stray emit here wins
+# over the .tsx it was built from in Vite's resolution order, so the app serves
+# the stale copy and every later edit looks like it did nothing.
+src/**/*.js
+server/**/*.js
+api/**/*.js
+tests/**/*.js
+/drizzle.config.js
+/vite.config.js
+/vitest.config.js
+
 .vscode/*
 !.vscode/extensions.json
 .idea
