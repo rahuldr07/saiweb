@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { ATT, LOANS, OT } from '@/data/hrms'
+import { ATT, OT } from '@/data/hrms'
+import { LOANS } from '@/data/loans'
 import { STAFF } from '@/data/people'
 import { resetClock, setClock } from '@/lib/clock'
 import { otMinsFor, otPay, paidStaff, payTotals, payslipOf, settlement, words } from '@/lib/payroll'
@@ -194,8 +195,8 @@ describe('the rest of a settlement', () => {
     ])
   })
 
-  it('recovers what is still outstanding on an advance, as the last line', () => {
-    /* Neil's ₹30,000 advance has ₹10,000 repaid, so ₹20,000 comes back off the
+  it('recovers what is still outstanding on a loan, as the last line', () => {
+    /* Neil's ₹24,000 loan has ₹16,000 repaid, so ₹8,000 comes back off the
        settlement. Salary is 20914 ÷ 27 × 28 days; September accrues 14 days of
        paid leave against 3 taken, so 11 × 11417 ÷ 26 = ₹4,830 is encashed; five
        completed years at 11417 × 15 ÷ 26 = ₹32,934. */
@@ -205,12 +206,12 @@ describe('the rest of a settlement', () => {
       ['Salary to the last working day', 21689],
       ['Leave encashment — 11 days of paid leave', 4830],
       ['Gratuity — 5 completed years at 15 days of basic', 32934],
-      ['Advance outstanding, recovered', -20000],
+      ['Advance outstanding, recovered', -8000],
     ])
-    expect(f.total).toBe(39453)
+    expect(f.total).toBe(51453)
 
-    const advance = LOANS.find((l) => l.who === 'nb')
-    expect(advance && advance.amt - advance.paid).toBe(20000)
+    const loan = LOANS.find((l) => l.who === 'nb')
+    expect(loan && loan.amt - loan.paid).toBe(8000)
   })
 
   it('leaves the advance line off when there is nothing to recover', () => {
@@ -277,42 +278,51 @@ describe('the month as a whole', () => {
     /* 28 people at the structure their CTC gives them, each cut by their unpaid
        days, plus Kavitha's ₹4,200 of arrears and ₹323 of approved overtime.
        Neil is the only gross under the ESI ceiling and Harry the only one above
-       the rebate threshold, which is why those two totals are one person each. */
+       the rebate threshold, which is why those two totals are one person each.
+       July's own loan ledger recovers ₹21,000 that month — Rajesh's ₹6,000
+       EMI, Neil's ₹4,000, Damodaran's ₹6,000 and Vikki's ₹5,000 — so ded and
+       net carry that on top of the statutory deductions. */
     const t = payTotals(JUL)
     expect(t.list).toHaveLength(28)
     expect(t.gross).toBe(876006)
-    expect(t.ded).toBe(65482)
-    expect(t.net).toBe(812764)
+    expect(t.ded).toBe(77482)
+    expect(t.net).toBe(800764)
     expect(t.pf).toBe(45094)
     expect(t.erpf).toBe(45640)
     expect(t.esi).toBe(151)
     expect(t.pt).toBe(5600)
     expect(t.tds).toBe(5637)
     expect(t.grat).toBe(22801)
+    expect(t.loans).toBe(21000)
   })
 
   it('pays a full month for a month it has no attendance for', () => {
     /* An unrecognised month falls back to a notional 26 working days with none
        of them unpaid, so an empty month label produces a complete register —
-       and a dearer one than the July it stands in for. */
+       and a dearer one than the July it stands in for. An empty label is also
+       a month the loan ledger has never recorded, so every currently-active
+       loan/advance shows its live, clamped instalment: Rajesh ₹6,000, Neil
+       ₹4,000, Damodaran ₹6,000, and Sathya's single-instalment ₹12,000
+       advance, which is being recovered in full — ₹28,000 in all. */
     const t = payTotals('')
     expect(t.list).toHaveLength(28)
     expect(t.lop).toEqual([])
     expect(t.gross).toBe(879811)
     expect(t.gross).toBeGreaterThan(payTotals(JUL).gross)
-    expect(t.ded).toBe(66034)
-    expect(t.net).toBe(813777)
+    expect(t.ded).toBe(85034)
+    expect(t.net).toBe(794777)
     expect(t.pf).toBe(45640)
     expect(t.esi).toBe(157)
     expect(t.pt).toBe(5600)
     expect(t.tds).toBe(5637)
+    expect(t.loans).toBe(28000)
   })
 
-  it('recovers the advances in a month that does not exist', () => {
-    /* ₹5,000 and ₹4,000 of instalments come out of the empty month too — the
-       advance is not tied to a month, only to what is left owing. */
+  it('recovers the live, active loans in a month that does not exist', () => {
+    /* A month never seen by the ledger is the live preview — what the very
+       next run would recover, not tied to any specific month. */
     const t = payTotals('')
-    expect(t.ded - (t.pf + t.esi + t.pt + t.tds)).toBe(9000)
+    expect(t.ded - (t.pf + t.esi + t.pt + t.tds)).toBe(28000)
   })
 })
 

@@ -274,12 +274,13 @@ export default function PayslipDetail() {
             }
             detail="The threshold is statutory, not a company choice."
           />
-          {s.emi && s.loan ? (
+          {s.loanDeds.map((d) => (
             <Why
-              head={`${inr(s.emi)} recovered against your advance`}
-              detail={`${inr(s.loan.paid)} of ${inr(s.loan.amt)} repaid so far. ${Math.ceil((s.loan.amt - s.loan.paid) / s.loan.emi)} instalments left.`}
+              key={d.loan.id}
+              head={`${inr(d.amount)} recovered against your ${d.loan.kind === 'loan' ? 'loan' : 'advance'}`}
+              detail={`${inr(d.loan.paid)} of ${inr(d.loan.amt)} repaid so far. ${Math.max(0, Math.ceil((d.loan.amt - d.loan.paid) / d.loan.emi))} instalment${Math.ceil((d.loan.amt - d.loan.paid) / d.loan.emi) === 1 ? '' : 's'} left.`}
             />
-          ) : null}
+          ))}
           {s.arr ? (
             <Why
               head={`Arrears of ${inr(s.arr)} for an earlier month`}

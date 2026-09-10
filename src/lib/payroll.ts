@@ -2,7 +2,6 @@ import {
   ARREARS,
   ATT,
   CLAIMS,
-  LOANS,
   OLDSLABS,
   OLDSTD,
   OT,
@@ -14,10 +13,12 @@ import {
   LEAVETYPES,
 } from '@/data/hrms'
 import { STAFF } from '@/data/people'
+import { LOANPAYMENTS, LOANS } from '@/data/loans'
+import { loanDeductionsFor, openLoansFor, outstanding, type LoanDeduction } from '@/lib/loans'
 import { currentPayCfg } from '@/state/company'
 import { pad } from './format'
 import { now } from '@/lib/clock'
-import type { Loan, Person, RunState } from '@/data/types'
+import type { Person, RunState } from '@/data/types'
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -108,8 +109,6 @@ export const claimsFor = (id: string, mn: string) =>
 
 export const arrearsFor = (id: string, mn: string) => ARREARS.filter((a) => a.who === id && a.mn === mn)
 
-export const loanFor = (id: string) => LOANS.find((l) => l.who === id && l.paid < l.amt)
-
 export interface PayslipAttendance {
   days: number
   working: number
@@ -123,8 +122,7 @@ export interface Payslip {
   st: Structure
   a: PayslipAttendance
   perDay: number
-  emi: number
-  loan: Loan | null
+  loanDeds: LoanDeduction[]
   arr: number
   lopDays: number
   unpaid: number
@@ -174,9 +172,9 @@ export function payslipOf(p: Person, mn: string): Payslip {
   const arrRows = arrearsFor(p.id, mn)
   const arr = arrRows.reduce((acc, x) => acc + x.amt, 0)
   const cl = claimsFor(p.id, mn).reduce((acc, x) => acc + x.amt, 0)
-  const ln = loanFor(p.id)
-  const emi = ln ? Math.min(ln.emi, ln.amt - ln.paid) : 0
-  const ded = epf + esi + pt + tds + emi
+  const loanDeds = loanDeductionsFor(p.id, mn, LOANS, LOANPAYMENTS)
+  const loanTotal = loanDeds.reduce((a, d) => a + d.amount, 0)
+  const ded = epf + esi + pt + tds + loanTotal
 
   const ot = otPay(p, mn)
   const otm = otMinsFor(p.id, mn)
@@ -196,7 +194,7 @@ export function payslipOf(p: Person, mn: string): Payslip {
   ]
   if (esi) dedRows.push(['ESI (employee)', esi])
   dedRows.push(['Income tax (TDS)', tds])
-  if (emi) dedRows.push(['Advance recovered', emi])
+  for (const d of loanDeds) dedRows.push([d.loan.kind === 'loan' ? 'Loan EMI' : 'Advance recovery', d.amount])
 
   const grossPay = gross + arr + ot
   return {
@@ -205,8 +203,7 @@ export function payslipOf(p: Person, mn: string): Payslip {
     st,
     a: { days: a.days, working: a.working, paidLeave: a.paidLeave, lop: a.lop },
     perDay,
-    emi,
-    loan: ln ?? null,
+    loanDeds,
     arr,
     lopDays: a.lop,
     unpaid,
@@ -293,8 +290,8 @@ export function settlement(p: Person, lastDay?: Date) {
   const plLeft = bal.pl?.left ?? 0
   const encash = Math.round((plLeft * st.basic) / 26)
   const grat = yrs !== null && yrs >= 5 ? Math.round(((st.basic * 15) / 26) * Math.floor(yrs)) : 0
-  const ln = loanFor(p.id)
-  const advance = ln ? -(ln.amt - ln.paid) : 0
+  const open = openLoansFor(p.id, LOANS)
+  const advance = open.length ? -open.reduce((a2, l) => a2 + outstanding(l), 0) : 0
 
   const lines: [string, number][] = [
     ['Salary to the last working day', salary],
@@ -324,6 +321,7 @@ export interface PayTotals {
   pt: number
   tds: number
   grat: number
+  loans: number
   lop: Payslip[]
 }
 
@@ -341,6 +339,7 @@ export function payTotals(mn: string): PayTotals {
     pt: sum((x) => x.pt),
     tds: sum((x) => x.tds),
     grat: sum((x) => x.st.grat),
+    loans: sum((x) => x.loanDeds.reduce((a, d) => a + d.amount, 0)),
     lop: list.filter((x) => x.unpaid > 0),
   }
 }

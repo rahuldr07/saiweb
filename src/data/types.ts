@@ -457,6 +457,41 @@ export interface Arrear {
   amt: number
 }
 
+export type LoanKind = 'loan' | 'advance'
+export type LoanStatus = 'requested' | 'active' | 'paused' | 'closed' | 'rejected'
+
+export interface LoanRecord {
+  id: string
+  who: string
+  kind: LoanKind
+  amt: number
+  emi: number
+  paid: number
+  st: LoanStatus
+  reqAt: Date
+  decidedBy?: string
+  decidedAt?: Date
+  takenOn?: Date
+  note: string
+}
+
+export interface LoanPayment {
+  id: string
+  loanId: string
+  mn: string
+  amt: number
+  at: Date
+}
+
+export interface LoanEvent {
+  id: string
+  loanId: string
+  at: Date
+  by: string
+  action: 'requested' | 'approved' | 'rejected' | 'paused' | 'resumed' | 'closed'
+  note?: string
+}
+
 export interface PettyEntry {
   id: string
   d: Date

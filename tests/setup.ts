@@ -10,11 +10,12 @@ import { resetUpdates } from '@/state/updates'
 import { resetBox } from '@/state/petty'
 import { resetOrders } from '@/state/orders'
 import { resetHiringBoard } from '@/state/hiring'
+import { resetLoans } from '@/state/loans'
 
 /**
  * Puts every piece of module-level state back between tests.
  *
- * Ten modules hold something a test can write to — nine stores and the clock —
+ * Eleven modules hold something a test can write to — ten stores and the clock —
  * and `store.reset` says in as many words that it exists "for tests, which must
  * not inherit each other". Only `resetOrders` and `resetClock` were ever called,
  * and only by the two files that happened to need them, so a test that changed
@@ -41,6 +42,7 @@ afterEach(() => {
   resetBox()
   resetOrders()
   resetHiringBoard()
+  resetLoans()
 
   /* Not a store — the memoised assignment run. Dropped last, because it is
      computed from the roster and the rules the stores above have just restored,
