@@ -30,7 +30,7 @@
     "@tanstack/react-router": "^1.170.27",
     "better-auth": "^1.6.28",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.13.2",
+    "hono": "^4.13.7",
     "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
