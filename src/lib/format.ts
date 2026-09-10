@@ -9,6 +9,7 @@
  *    return bare strings rather than markup.
  */
 import { now } from './clock'
+import type { ChipKind } from '@/data/types'
 
 /** Deadlines are stated in the client's zone; the operator's is secondary. */
 export const TZ = 'ET'
@@ -99,10 +100,20 @@ export const initials = (n: string) =>
 
 export type DueKind = 'late' | 'soon' | 'ok'
 
+/**
+ * How long before its deadline an order counts as "act now", in hours.
+ *
+ * The dashboard tile, the register's pill, the row colour and the countdown all
+ * have to agree on this window. Four modules had written `< 4` out for
+ * themselves, so widening it would have moved three of them and left the fourth
+ * quietly saying otherwise.
+ */
+export const SOON_HOURS = 4
+
 /** Late is computed from the due datetime — nobody marks it. */
 export function dueMeta(d: Date): { kind: DueKind; abs: string; rel: string } {
   const diff = (d.getTime() - now().getTime()) / 3600000
-  const kind: DueKind = diff < 0 ? 'late' : diff < 4 ? 'soon' : 'ok'
+  const kind: DueKind = diff < 0 ? 'late' : diff < SOON_HOURS ? 'soon' : 'ok'
   const rel =
     diff < 0
       ? `${Math.abs(Math.round(diff))}h overdue`
@@ -111,6 +122,39 @@ export function dueMeta(d: Date): { kind: DueKind; abs: string; rel: string } {
         : `in ${Math.round(diff / 24)}d`
   return { kind, abs: `${fmtDate(d)} ${fmtTime(d)}`, rel }
 }
+
+/** Enough of an order to judge where it stands. */
+export interface Dueable {
+  due: Date
+  done?: boolean
+}
+
+/** The four the register's pills divide every order into. */
+export type OrderState = 'done' | 'late' | 'soon' | 'open'
+
+/**
+ * Where an order stands, as one answer.
+ *
+ * Delivered is checked first: an order that shipped late is finished, not still
+ * owed. Everything after that is the deadline against the clock, so nothing here
+ * is a stored flag anybody has to maintain.
+ */
+export function orderState(o: Dueable): OrderState {
+  if (o.done) return 'done'
+  const { kind } = dueMeta(o.due)
+  return kind === 'ok' ? 'open' : kind
+}
+
+const ORDER_CHIP: Record<OrderState, ChipKind> = { done: 'v', late: 'd', soon: 'b', open: 'b' }
+
+/**
+ * The stage chip's colour, everywhere an order is listed.
+ *
+ * The dashboard had lost the delivered branch, so the one order that is both
+ * done and past its deadline read green on the register and blue here — two
+ * screens, one order, two answers about whether it still needs anybody.
+ */
+export const orderChipKind = (o: Dueable): ChipKind => ORDER_CHIP[orderState(o)]
 
 /** Days between a past date and the fixed clock. */
 export const daysSince = (d: Date) => Math.floor((now().getTime() - d.getTime()) / 86400000)

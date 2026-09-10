@@ -9,7 +9,6 @@ import {
   ATT,
   CLAIMS,
   LOANS,
-  MONTHDAYS,
   OLDSLABS,
   OLDSTD,
   OT,
@@ -116,9 +115,16 @@ export function payableDays(p: Person, mn: string, working: number): number {
   const [m, d, y] = p.doj.split('/').map(Number)
   const [mon, yr] = mn.split(' ')
   const mi = MON.indexOf(mon) + 1
-  if (y > +yr || (y === +yr && m > mi)) return 0 // had not joined yet
-  if (y < +yr || (y === +yr && m < mi)) return working // here for the whole month
-  const days = MONTHDAYS[mn]
+  const year = Number(yr)
+  /* Nothing to prorate against if the month is not a month, and a full month is
+     already what this function answers when it cannot prorate. */
+  if (!mi || !year) return working
+  if (y > year || (y === year && m > mi)) return 0 // had not joined yet
+  if (y < year || (y === year && m < mi)) return working // here for the whole month
+  /* Asked of the calendar rather than looked up in a table of the months the
+     seed data happens to carry: that table has five keys and the pay window
+     moves, so a sixth month divided by `undefined` and put NaN on a payslip. */
+  const days = new Date(year, mi, 0).getDate()
   return Math.max(0, Math.round((working * (days - d + 1)) / days))
 }
 

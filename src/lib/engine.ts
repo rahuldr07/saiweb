@@ -141,10 +141,19 @@ export function makeDay(): DayBucket[] {
 
 /* ── rules ──────────────────────────────────────────────────────────────── */
 
+/**
+ * Enough of an order for the rules to judge it.
+ *
+ * Deliberately not `Arrival`: the same rules are asked about an order being
+ * typed at intake and about a register row on the order screen, neither of which
+ * has arrived in a run.
+ */
+export type Candidate = Pick<Arrival, 'pr' | 'st' | 'cl'> & { co?: string | null }
+
 export const ruleOn = (id: string, rules: Rule[] = RULES) =>
   rules.find((x) => x.id === id)?.on ?? false
 
-export function ruleMatches(r: Rule, o: Arrival, stage: string): boolean {
+export function ruleMatches(r: Rule, o: Candidate, stage: string): boolean {
   const c: RuleCondition = r.cond ?? {}
   if (c.stage && c.stage !== stage) return false
   if (c.product && c.product !== o.pr) return false
@@ -200,10 +209,184 @@ export interface RunResult {
   ctx: RunContext
 }
 
+/* ── narrowing the pool ─────────────────────────────────────────────────── */
+
+/** One rule's consultation: what it was given and what it left. */
+export interface NarrowStep {
+  r: string
+  before: number
+  after: number
+  note: string
+}
+
+/** Which rule emptied the pool, and what kind of answer that is. */
+export interface NarrowStop {
+  why: ExclusionReason
+  /** Coverage stops twice for different reasons, so the rule id is kept. */
+  rule: string
+}
+
+export interface NarrowResult {
+  /** Everyone still eligible, emptiest desk first. Empty when `stop` is set. */
+  pool: Person[]
+  stop?: NarrowStop
+  /** Every rule consulted, in order — what the rule counters are built from. */
+  steps: NarrowStep[]
+  /** The subset a person should read: a rule that removed nobody says nothing. */
+  trace: TraceStep[]
+  /** The stage this one reviews, when it is a QC stage. */
+  paired?: string
+}
+
+export interface NarrowOptions {
+  /** Defaults to the seed roster and the live rules. */
+  ctx?: RunContext
+  /** How much each person already holds. A missing id reads as nought. */
+  load?: Record<string, number>
+  /** Who holds which stage of this order already — what self-review reads. */
+  taken?: Record<string, string | null | undefined>
+  /**
+   * Whether the daily target applies.
+   *
+   * The automatic pass deals a day and must respect it. Assigning by hand on an
+   * order screen must not: the load it counts against is that automatic deal,
+   * which routinely fills a department to its target, and refusing every manual
+   * placement afterwards would take the override away from the one person the
+   * screen exists for.
+   */
+  target?: boolean
+}
+
+/**
+ * Who may take one stage of one order, and what removed everybody else.
+ *
+ * Three places need this answer — the automatic pass, the intake preview, and
+ * "Assign all" on an order — and they were three copies. The copy on the order
+ * screen had already dropped coverage and routing, so it could hand a searcher
+ * an order the run itself excludes while the confirmation told the reader it
+ * followed the same rules.
+ */
+export function narrowPool(o: Candidate, stage: string, opts: NarrowOptions = {}): NarrowResult {
+  const cx = opts.ctx ?? defaultContext()
+  const { load = {}, taken = {}, target = true } = opts
+  const at = (id: string) => load[id] ?? 0
+  const whoName = (id: string | null | undefined) => cx.staff.find((s) => s.id === id)?.n ?? '—'
+  const paired: string | undefined = cx.pairs[stage]
+
+  const steps: NarrowStep[] = []
+  const trace: TraceStep[] = []
+  const step = (r: string, before: number, after: number, note: string, always = false) => {
+    steps.push({ r, before, after, note })
+    if (always || before !== after) trace.push({ r, left: after, note })
+  }
+  const stop = (why: ExclusionReason, rule: string): NarrowResult => ({
+    pool: [],
+    stop: { why, rule },
+    steps,
+    trace,
+    paired,
+  })
+
+  let pool = cx.staff.filter((s) => s.dep.includes(stage))
+  step('r1', pool.length, pool.length, `${pool.length} in ${stage}`, true)
+  if (!pool.length) return stop('no-dept', 'r1')
+
+  /* Routing narrows before any constraint on load. Every matching rule is
+     consulted even once the pool is empty, because a rule that never gets as far
+     as being asked cannot be reported as doing nothing. */
+  let emptiedBy: string | undefined
+  for (const r of cx.rules.filter((x) => x.k === 'route' && x.on && x.cond)) {
+    if (!ruleMatches(r, o, stage)) continue
+    const before = pool.length
+    pool = pool.filter((s) => r.pool?.includes(s.id))
+    step(r.id, before, pool.length, `${r.n} — ${before} → ${pool.length}`, true)
+    if (!pool.length && !emptiedBy) emptiedBy = r.id
+  }
+  if (!pool.length) return stop('no-dept', emptiedBy ?? 'r1')
+
+  /* Coverage runs before availability and load on purpose: someone who does not
+     cover Alaska is not "unavailable", they were never a candidate. */
+  if (ruleOn('r6', cx.rules) && cx.covStages.includes(stage)) {
+    const before = pool.length
+    pool = pool.filter((x) => cx.coversPlace(x.id, o.st, o.co ?? null))
+    step('r6', before, pool.length, `${stage} — covers ${o.co}, ${o.st} — ${before} → ${pool.length}`)
+    if (!pool.length) return stop('coverage', 'r6')
+  }
+
+  if (ruleOn('r7', cx.rules) && cx.covStages.includes(stage)) {
+    const before = pool.length
+    pool = pool.filter((x) => cx.coversProduct(x.id, o.pr))
+    step('r7', before, pool.length, `${stage} — works ${o.pr} — ${before} → ${pool.length}`)
+    if (!pool.length) return stop('coverage', 'r7')
+  }
+
+  if (ruleOn('r2', cx.rules)) {
+    const before = pool.length
+    pool = pool.filter((s) => s.avail === 'ok' && s.active !== false)
+    step('r2', before, pool.length, `availability — ${before} → ${pool.length}`)
+  }
+  if (!pool.length) return stop('unavailable', 'r2')
+
+  if (target && ruleOn('r3', cx.rules)) {
+    const before = pool.length
+    pool = pool.filter((s) => at(s.id) < s.cap)
+    step('r3', before, pool.length, `at target — ${before} → ${pool.length}`)
+  }
+  if (!pool.length) return stop('capacity', 'r3')
+
+  /* QC independence: a QC stage can never go to the person who did the work. */
+  if (ruleOn('r4', cx.rules) && paired) {
+    const before = pool.length
+    pool = pool.filter((s) => taken[paired] !== s.id)
+    step('r4', before, pool.length, `self-review — skipped ${whoName(taken[paired])}`)
+  }
+  if (!pool.length) return stop('self', 'r4')
+
+  pool.sort((a, b) => at(a.id) / a.cap - at(b.id) / b.cap)
+  const p = pool[0]
+  const note = `emptiest — ${p.n} at ${at(p.id)}/${p.cap}`
+  steps.push({ r: 'r8', before: pool.length, after: pool.length, note })
+  trace.push({ r: 'r8', left: 1, note })
+
+  return { pool, steps, trace, paired }
+}
+
+/** What an exception says, and who came closest to qualifying. */
+function refusal(
+  o: Arrival,
+  stage: string,
+  cx: RunContext,
+  { why, rule }: NarrowStop,
+  paired?: string,
+): { t: string; near?: string[] } {
+  const inDept = (covers: (id: string) => boolean) =>
+    cx.staff.filter((x) => x.dep.includes(stage) && x.active !== false && covers(x.id)).map((x) => x.id)
+
+  switch (why) {
+    case 'no-dept':
+      return { t: rule === 'r1' ? `Nobody belongs to ${stage}` : `A routing rule left nobody eligible` }
+    case 'coverage':
+      return rule === 'r6'
+        ? {
+            t: `Nobody in ${stage} covers ${o.co}, ${o.st}`,
+            near: inDept((id) => cx.coversPlace(id, o.st, null)),
+          }
+        : {
+            t: `Nobody in ${stage} who covers ${o.st} works ${o.pr}`,
+            near: inDept((id) => cx.coversPlace(id, o.st, o.co)),
+          }
+    case 'unavailable':
+      return { t: `Everyone eligible for ${stage} is on leave or off shift` }
+    case 'capacity':
+      return { t: `Everyone eligible for ${stage} is at their daily target` }
+    case 'self':
+      return { t: `The only person with room did the ${paired}` }
+  }
+}
+
 export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): RunResult {
   const cx: RunContext = { ...defaultContext(), ...overrides }
-  const { staff: STAFF, rules: RULES, assignStages: ASSIGN_STAGES, pairs: PAIRS } = cx
-  const whoName = (id: string | undefined) => STAFF.find((s) => s.id === id)?.n ?? '—'
+  const { staff: STAFF, rules: RULES, assignStages: ASSIGN_STAGES } = cx
 
   const load: Record<string, number> = {}
   const fired: Record<string, number> = {}
@@ -253,186 +436,34 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
              snapshot taken for a single stage must begin here — otherwise the
              Search QC card explains itself using the steps that chose Search. */
           const from = trace.length
-          let pool: Person[] = STAFF.filter((s) => s.dep.includes(stage))
-          trace.push({ r: 'r1', left: pool.length, note: `${pool.length} in ${stage}` })
-          bump(fired, 'r1')
-          bump(narrowed, 'r1', pool.length) // summed, so it can be reported as an average
-          if (!pool.length) {
+          const nar = narrowPool(o, stage, { ctx: cx, load, taken: onOrder })
+
+          nar.steps.forEach((s) => {
+            bump(fired, s.r)
+            /* r1 sums rather than counts, so it can be reported as an average
+               pool size; every other rule counts the times it changed an answer. */
+            if (s.r === 'r1') bump(narrowed, 'r1', s.after)
+            else if (s.before !== s.after) bump(narrowed, s.r)
+            if (s.r === 'r4' && s.before !== s.after) avoided++
+          })
+          trace.push(...nar.trace)
+
+          if (nar.stop) {
+            const { t, near } = refusal(o, stage, cx, nar.stop, nar.paired)
             exc.push({
               o,
               stage,
               dk: day.dk,
               today: o.today,
-              why: 'no-dept',
-              t: `Nobody belongs to ${stage}`,
+              why: nar.stop.why,
+              t,
+              ...(near ? { near } : {}),
               trace: trace.slice(from),
             })
             continue
           }
 
-          /* Routing rules narrow the pool before any constraint on load. */
-          for (const r of RULES.filter((x) => x.k === 'route' && x.on && x.cond)) {
-            if (ruleMatches(r, o, stage)) {
-              const before = pool.length
-              pool = pool.filter((s) => r.pool?.includes(s.id))
-              bump(fired, r.id)
-              if (before !== pool.length) bump(narrowed, r.id)
-              trace.push({ r: r.id, left: pool.length, note: `${r.n} — ${before} → ${pool.length}` })
-            }
-          }
-          if (!pool.length) {
-            exc.push({
-              o,
-              stage,
-              dk: day.dk,
-              today: o.today,
-              why: 'no-dept',
-              t: `A routing rule left nobody eligible`,
-              trace: trace.slice(from),
-            })
-            continue
-          }
-
-          /* Coverage runs before availability and load on purpose: someone who does
-             not cover Alaska is not "unavailable", they were never a candidate — and
-             the exception should say that rather than blaming the roster. */
-          if (ruleOn('r6', RULES) && cx.covStages.includes(stage)) {
-            const b = pool.length
-            pool = pool.filter((x) => cx.coversPlace(x.id, o.st, o.co))
-            bump(fired, 'r6')
-            if (b !== pool.length) {
-              bump(narrowed, 'r6')
-              trace.push({
-                r: 'r6',
-                left: pool.length,
-                note: `${stage} — covers ${o.co}, ${o.st} — ${b} → ${pool.length}`,
-              })
-            }
-            if (!pool.length) {
-              const stateOnly = STAFF.filter(
-                (x) => x.dep.includes(stage) && x.active !== false && cx.coversPlace(x.id, o.st, null),
-              )
-              exc.push({
-                o,
-                stage,
-                dk: day.dk,
-                today: o.today,
-                why: 'coverage',
-                t: `Nobody in ${stage} covers ${o.co}, ${o.st}`,
-                near: stateOnly.map((x) => x.id),
-                trace: trace.slice(from),
-              })
-              continue
-            }
-          }
-
-          if (ruleOn('r7', RULES) && cx.covStages.includes(stage)) {
-            const b = pool.length
-            pool = pool.filter((x) => cx.coversProduct(x.id, o.pr))
-            bump(fired, 'r7')
-            if (b !== pool.length) {
-              bump(narrowed, 'r7')
-              trace.push({
-                r: 'r7',
-                left: pool.length,
-                note: `${stage} — works ${o.pr} — ${b} → ${pool.length}`,
-              })
-            }
-            if (!pool.length) {
-              const placeOK = STAFF.filter(
-                (x) => x.dep.includes(stage) && x.active !== false && cx.coversPlace(x.id, o.st, o.co),
-              )
-              exc.push({
-                o,
-                stage,
-                dk: day.dk,
-                today: o.today,
-                why: 'coverage',
-                t: `Nobody in ${stage} who covers ${o.st} works ${o.pr}`,
-                near: placeOK.map((x) => x.id),
-                trace: trace.slice(from),
-              })
-              continue
-            }
-          }
-
-          if (ruleOn('r2', RULES)) {
-            const b = pool.length
-            pool = pool.filter((s) => s.avail === 'ok' && s.active !== false)
-            bump(fired, 'r2')
-            if (b !== pool.length) {
-              bump(narrowed, 'r2')
-              trace.push({ r: 'r2', left: pool.length, note: `availability — ${b} → ${pool.length}` })
-            }
-          }
-          if (!pool.length) {
-            exc.push({
-              o,
-              stage,
-              dk: day.dk,
-              today: o.today,
-              why: 'unavailable',
-              t: `Everyone eligible for ${stage} is on leave or off shift`,
-              trace: trace.slice(from),
-            })
-            continue
-          }
-
-          if (ruleOn('r3', RULES)) {
-            const b = pool.length
-            pool = pool.filter((s) => load[s.id] < s.cap)
-            bump(fired, 'r3')
-            if (b !== pool.length) {
-              bump(narrowed, 'r3')
-              trace.push({ r: 'r3', left: pool.length, note: `at target — ${b} → ${pool.length}` })
-            }
-          }
-          if (!pool.length) {
-            exc.push({
-              o,
-              stage,
-              dk: day.dk,
-              today: o.today,
-              why: 'capacity',
-              t: `Everyone eligible for ${stage} is at their daily target`,
-              trace: trace.slice(from),
-            })
-            continue
-          }
-
-          /* QC independence: a QC stage can never go to the person who did the work. */
-          const paired = PAIRS[stage]
-          if (ruleOn('r4', RULES) && paired) {
-            const b = pool.length
-            pool = pool.filter((s) => onOrder[paired] !== s.id)
-            bump(fired, 'r4')
-            if (b !== pool.length) {
-              avoided++
-              bump(narrowed, 'r4')
-              trace.push({
-                r: 'r4',
-                left: pool.length,
-                note: `self-review — skipped ${whoName(onOrder[paired])}`,
-              })
-            }
-          }
-          if (!pool.length) {
-            exc.push({
-              o,
-              stage,
-              dk: day.dk,
-              today: o.today,
-              why: 'self',
-              t: `The only person with room did the ${paired}`,
-              trace: trace.slice(from),
-            })
-            continue
-          }
-
-          pool.sort((a, b) => load[a.id] / a.cap - load[b.id] / b.cap)
-          bump(fired, 'r8')
-          const p = pool[0]
-          trace.push({ r: 'r8', left: 1, note: `emptiest — ${p.n} at ${load[p.id]}/${p.cap}` })
+          const p = nar.pool[0]
           load[p.id]++
           onOrder[stage] = p.id
           assigns.push({ o, stage, who: p.id, hr: slot.hr, dk: day.dk, today: o.today, trace: trace.slice(from) })
@@ -476,9 +507,6 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
 
 /* ── previewing one order ───────────────────────────────────────────────── */
 
-/** Enough of an order for the rules to judge it, before it exists. */
-export type Candidate = Pick<Arrival, 'pr' | 'st' | 'cl'> & { co?: string | null }
-
 export type PreviewSlot = { who: string; err?: undefined } | { who?: undefined; err: string }
 
 /**
@@ -503,63 +531,34 @@ export function previewAssign(
   const out: Record<string, PreviewSlot> = {}
 
   for (const stage of cx.assignStages) {
-    let pool = cx.staff.filter((s) => s.dep.includes(stage))
-    if (!pool.length) {
-      out[stage] = { err: 'nobody in the department' }
+    const nar = narrowPool(o, stage, { ctx: cx, load: at, taken: onOrder })
+    if (nar.stop) {
+      out[stage] = { err: previewErr(o, nar.stop) }
       continue
     }
-
-    for (const r of cx.rules.filter((x) => x.k === 'route' && x.on && x.cond)) {
-      if (ruleMatches(r, o as Arrival, stage)) pool = pool.filter((s) => r.pool?.includes(s.id))
-    }
-    if (!pool.length) {
-      out[stage] = { err: 'a routing rule left nobody' }
-      continue
-    }
-
-    if (ruleOn('r6', cx.rules) && cx.covStages.includes(stage)) {
-      pool = pool.filter((x) => cx.coversPlace(x.id, o.st, o.co ?? null))
-      if (!pool.length) {
-        out[stage] = { err: `nobody covers ${o.co ?? o.st}` }
-        continue
-      }
-    }
-
-    if (ruleOn('r7', cx.rules) && cx.covStages.includes(stage)) {
-      pool = pool.filter((x) => cx.coversProduct(x.id, o.pr))
-      if (!pool.length) {
-        out[stage] = { err: `nobody here works ${o.pr}` }
-        continue
-      }
-    }
-
-    if (ruleOn('r2', cx.rules)) pool = pool.filter((s) => s.avail === 'ok' && s.active !== false)
-    if (!pool.length) {
-      out[stage] = { err: 'nobody available' }
-      continue
-    }
-
-    if (ruleOn('r3', cx.rules)) pool = pool.filter((s) => (at[s.id] ?? 0) < s.cap)
-    if (!pool.length) {
-      out[stage] = { err: 'everyone at their target' }
-      continue
-    }
-
-    const paired = cx.pairs[stage]
-    if (ruleOn('r4', cx.rules) && paired) pool = pool.filter((s) => onOrder[paired] !== s.id)
-    if (!pool.length) {
-      out[stage] = { err: 'would be self-review' }
-      continue
-    }
-
-    pool.sort((a, b) => (at[a.id] ?? 0) / a.cap - (at[b.id] ?? 0) / b.cap)
-    const p = pool[0]
+    const p = nar.pool[0]
     at[p.id] = (at[p.id] ?? 0) + 1
     onOrder[stage] = p.id
     out[stage] = { who: p.id }
   }
 
   return out
+}
+
+/** The refusal in the words the intake form uses — a phrase, not a sentence. */
+function previewErr(o: Candidate, { why, rule }: NarrowStop): string {
+  switch (why) {
+    case 'no-dept':
+      return rule === 'r1' ? 'nobody in the department' : 'a routing rule left nobody'
+    case 'coverage':
+      return rule === 'r6' ? `nobody covers ${o.co ?? o.st}` : `nobody here works ${o.pr}`
+    case 'unavailable':
+      return 'nobody available'
+    case 'capacity':
+      return 'everyone at their target'
+    case 'self':
+      return 'would be self-review'
+  }
 }
 
 /* ── progress ───────────────────────────────────────────────────────────── */

@@ -53,12 +53,9 @@ export function anniversaryIn(original: Date, year: number): Date {
 }
 
 /** One person's next occurrence of a dated milestone, or null when unusable. */
-function next(
-  person: Person,
-  raw: string | undefined,
-  kind: CelebrationKind,
-  on: Date,
-): Celebration | null {
+function next(person: Person, raw: string, kind: CelebrationKind, on: Date): Celebration | null {
+  /* Blank is the record saying it was never taken — a date of birth is not asked
+     for at intake — and is not a milestone. */
   const original = raw ? parseUsDate(raw) : null
   if (!original || Number.isNaN(original.getTime())) return null
   /* A date in the future is a typo, not a milestone. */
@@ -92,7 +89,7 @@ export function celebrationsWithin(staff: Person[], on: Date, days: number): Cel
     for (const [raw, kind] of [
       [person.dob, 'birthday'],
       [person.doj, 'anniversary'],
-    ] as [string | undefined, CelebrationKind][]) {
+    ] as [string, CelebrationKind][]) {
       const c = next(person, raw, kind, on)
       if (c && c.inDays <= days) found.push(c)
     }

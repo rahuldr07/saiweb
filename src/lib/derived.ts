@@ -17,6 +17,7 @@ import { LEADS, STALE_BAD, STALE_WARN } from '@/data/business'
 import { STAFF } from '@/data/people'
 import { DEPTLIST } from '@/data/org'
 import { now } from '@/lib/clock'
+import { orderState } from '@/lib/format'
 import type { ChipKind, County, CountyLink, Lead, LinkStatus } from '@/data/types'
 
 export const days = (d: Date) => Math.floor((now().getTime() - d.getTime()) / 86400000)
@@ -24,9 +25,8 @@ export const days = (d: Date) => Math.floor((now().getTime() - d.getTime()) / 86
 /* ── orders ─────────────────────────────────────────────────────────────── */
 
 export const openOrders = () => ORDERS.filter((o) => !o.done)
-export const pastDue = () => openOrders().filter((o) => o.due < now())
-export const atRisk = () =>
-  openOrders().filter((o) => o.due >= now() && (o.due.getTime() - now().getTime()) / 3600000 < 4)
+export const pastDue = () => ORDERS.filter((o) => orderState(o) === 'late')
+export const atRisk = () => ORDERS.filter((o) => orderState(o) === 'soon')
 
 /*
  * Counts, not constants.

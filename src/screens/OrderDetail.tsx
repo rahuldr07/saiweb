@@ -19,6 +19,7 @@ import { useNotBuilt } from '@/components/notBuilt'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { useQcRules } from '@/state/qcRules'
+import { useRules } from '@/state/rules'
 import { CostForm } from './orders/CostForm'
 import { DefectForm } from './orders/DefectForm'
 import {
@@ -41,14 +42,14 @@ import { PRODUCTS, COUNTIES, LINKTYPES, LINKCHECK, BADSTATES } from '@/data/cata
 import { ASSIGN_STAGES, PAIRS, STAGES, STATUS } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
 import { BUDGET } from '@/data/budget'
-import { TZ, TZ2, fmtDT, fmtDate, hrs, money } from '@/lib/format'
+import { TZ, TZ2, fmtDT, fmtDate, hrs, money, orderChipKind, orderState } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { whoName } from '@/lib/permissions'
 import { LSTATE, days } from '@/lib/derived'
 import { QC_CRITERIA, QC_SCALE } from '@/lib/quality'
-import { arrivalAsOrder, arrivalById, board } from '@/lib/engine'
+import { arrivalAsOrder, arrivalById, board, narrowPool } from '@/lib/engine'
 import { SLA, hh, orderPlan, slaHours } from '@/lib/sla'
-import type { Assignments, OrderStatus, Person } from '@/data/types'
+import type { Assignments, OrderStatus } from '@/data/types'
 
 const st = (k: string) => STATUS[k]?.[0] ?? k
 
@@ -91,6 +92,7 @@ export default function OrderDetail() {
   const { toast, openModal, closeModal } = useUi()
   const notBuilt = useNotBuilt()
   const qcRules = useQcRules()
+  const { rules } = useRules()
   const [tab, setTab] = useState<Tab>('Details')
   const [note, setNote] = useState('')
 
@@ -219,18 +221,18 @@ export default function OrderDetail() {
     toast(`${stage} → ${whoName(value)}`)
   }
 
-  /** The same rules the automatic pass uses: department, availability, target, no self-review. */
-  const pickFor = (stage: string, taken: Assignments): Person | undefined => {
-    const load = board().run.load
-    const paired = PAIRS[stage]
-    return STAFF.filter(
-      (x) =>
-        x.dep.includes(stage) &&
-        x.avail === 'ok' &&
-        x.active !== false &&
-        (!paired || taken[paired] !== x.id),
-    ).sort((a, b) => (load[a.id] ?? 0) / a.cap - (load[b.id] ?? 0) / b.cap)[0]
-  }
+  /**
+   * The engine's own narrowing, asked about this order.
+   *
+   * Assigning by hand and the automatic pass go through this one implementation,
+   * so neither can drift into proposing somebody the other excludes: routing and
+   * coverage narrow the pool here because they narrow it there, and a rule
+   * switched off is off for both. The single difference is the daily target,
+   * which `narrowPool` takes as an option — see there for why assigning by hand
+   * does not answer to it.
+   */
+  const pickFor = (stage: string, taken: Assignments) =>
+    narrowPool(o, stage, { load: board().run.load, taken, target: false })
 
   const assignAll = () => {
     const open = ASSIGN_STAGES.filter((g) => !assign[g])
@@ -239,10 +241,20 @@ export default function OrderDetail() {
     const load = board().run.load
     const taken: Assignments = { ...assign }
     const preview = open.map((stage) => {
-      const person = pickFor(stage, taken)
+      const narrowed = pickFor(stage, taken)
+      const person = narrowed.pool[0]
       if (person) taken[stage] = person.id
-      return { stage, person }
+      return { stage, person, steps: narrowed.steps }
     })
+
+    /* Named from the rules the narrowing actually consulted rather than from a
+       list written out here. Everything but membership, self-review and the
+       tie-break can be switched off under Assignment → Rules, and a sentence
+       claiming a rule that is off is the same lie a second copy of the narrowing
+       would have told. Listed in the rules' own order, so the names line up with
+       the numbered list on that screen. */
+    const consulted = new Set(preview.flatMap((p) => p.steps.map((s) => s.r)))
+    const applied = rules.filter((r) => consulted.has(r.id)).map((r) => r.n)
 
     openModal({
       title: 'Assign the remaining stages',
@@ -260,9 +272,9 @@ export default function OrderDetail() {
                   <b>{stage}</b>
                   <div className="sd">
                     {person ? (
-                      `${person.n} — emptiest in that department at ${load[person.id] ?? 0}/${person.cap}`
+                      `${person.n} — emptiest of the eligible at ${load[person.id] ?? 0}/${person.cap}`
                     ) : (
-                      <span className="bad">nobody available</span>
+                      <span className="bad">nobody eligible</span>
                     )}
                   </div>
                 </span>
@@ -271,8 +283,10 @@ export default function OrderDetail() {
             ))}
           </div>
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-            This follows the same rules as the automatic pass — department membership, availability,
-            target, and no self-review.
+            These names come from the rules the automatic pass runs, as those rules stand right now:{' '}
+            {applied.join(' · ')}. One switched off under Assignment → Rules is off here too. The
+            daily target is the one this screen does not hold you to — the load beside each name is
+            today’s automatic deal, and assigning by hand is how you go past it.
           </p>
         </>
       ),
@@ -361,8 +375,8 @@ export default function OrderDetail() {
         sub={`${o.id} · ${o.cl} · ${o.pr} · ${o.co} County, ${o.st}`}
         actions={
           <>
-            <Chip kind={o.done ? 'v' : o.due < now() ? 'd' : 'b'}>{st(o.stt)}</Chip>
-            {o.due < now() && !o.done ? <span className="due late">{overdueBy}h overdue</span> : null}
+            <Chip kind={orderChipKind(o)}>{st(o.stt)}</Chip>
+            {orderState(o) === 'late' ? <span className="due late">{overdueBy}h overdue</span> : null}
             <Btn variant="ghost" onClick={() => navigate({ to: '/commitment' })}>
               Open report
             </Btn>

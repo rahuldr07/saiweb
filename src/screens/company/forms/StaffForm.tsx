@@ -6,7 +6,7 @@ import { inr } from '@/lib/payroll'
 import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { removeStaff, saveStaff, useCompany, useRoles, useStaff } from '@/state/company'
-import type { Person } from '@/data/types'
+import { newPerson, type Person } from '@/data/types'
 import { EMAIL_ERROR, isEmail } from '@/lib/forms'
 
 /**
@@ -85,7 +85,9 @@ export function StaffForm({
 
     saveStaff(
       {
-        ...(rec ?? ({} as Person)),
+        /* A new record starts complete: the form collects sixteen of the fields
+           a person must have, and the factory supplies the rest. */
+        ...(rec ?? newPerson()),
         n: name,
         e: mail,
         r: role,
@@ -106,7 +108,7 @@ export function StaffForm({
         /* Working a stage and its own QC is allowed, and flagged so the roster
            can show it — assignment filters them per order regardless. */
         conflict: dep.includes('Typing') && dep.includes('Typing QC'),
-      } as Person,
+      },
       id,
     )
     onDone(id ? `${name} saved` : `${name} added`)

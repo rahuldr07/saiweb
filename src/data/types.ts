@@ -104,6 +104,43 @@ export interface Person {
   leaving?: Date
 }
 
+/**
+ * A blank person, complete.
+ *
+ * Every field above without a `?` has to hold a value the moment somebody
+ * exists, and the staff form asks for fewer than that. The rest get their
+ * default here, once, rather than being asserted into place by a cast at each
+ * create path. The id is the exception: the register mints it on save, so the
+ * empty one never reaches the store.
+ */
+export const newPerson = (): Person => ({
+  id: '',
+  n: '',
+  dep: [],
+  r: 'staff',
+  cap: 0,
+  /* Nothing in hand on the first day — a count, not an unknown. */
+  open: 0,
+  avail: 'ok',
+  active: true,
+  /* The key SHIFTS gives the standard shift. Anything it does not name falls
+     back silently, which is how a shift nobody chose becomes a roster entry. */
+  shift: 'day',
+  mob: '',
+  addr: '',
+  emg: { n: '', rel: '', mob: '' },
+  aadhaar: '',
+  doj: '',
+  /* Never asked for at intake. Blank is "not recorded", which is what the
+     celebrations pass reads it as; a placeholder date would be a birthday. */
+  dob: '',
+  pan: '',
+  uan: '',
+  esicNo: '',
+  bank: { acct: '', ifsc: '', name: '' },
+  e: '',
+})
+
 export interface Shift {
   k: string
   n: string

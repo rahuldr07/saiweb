@@ -5,9 +5,9 @@ import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
 import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
-import { TZ, fmtDate } from '@/lib/format'
+import { TZ, fmtDate, orderChipKind } from '@/lib/format'
 import { now } from '@/lib/clock'
-import { atRiskCount, openCount, pastDueCount } from '@/lib/derived'
+import { atRiskCount, openCount, pastDue } from '@/lib/derived'
 import { board, curStage, stageCounts } from '@/lib/engine'
 import { ONTIMETARGET, onTime30 } from '@/lib/metrics'
 import { useDeliveries } from '@/lib/useDeliveries'
@@ -26,12 +26,14 @@ function Dashboard() {
   const navigate = useNavigate()
   const [pipe, setPipe] = useState<string | null>(null)
 
-  const pastDue = pastDueCount()
+  /* The tile's figure and the table's rows are the same list read twice, so the
+     count above cannot disagree with the rows under it. */
+  const overdue = pastDue()
   const atRisk = atRiskCount()
   const open = openCount()
 
   const counts = stageCounts(ORDERS)
-  const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : ORDERS.filter((o) => !o.done && o.due < now())
+  const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : overdue
 
   /* The one figure on this screen derived from the delivery history. It is
      fetched rather than bundled, so the tile shows a placeholder for the moment
@@ -68,11 +70,11 @@ function Dashboard() {
         <Kpi
           title="Past due"
           icon="▲"
-          value={pastDue}
-          tone={pastDue ? 'alert' : undefined}
+          value={overdue.length}
+          tone={overdue.length ? 'alert' : undefined}
           detail={
-            <span className={pastDue ? 'bad' : 'ok'}>
-              {pastDue ? 'client already owed an explanation' : 'nothing overdue'}
+            <span className={overdue.length ? 'bad' : 'ok'}>
+              {overdue.length ? 'client already owed an explanation' : 'nothing overdue'}
             </span>
           }
           onClick={() => navigate({ to: '/orders', search: { pill: 'late' } })}
@@ -179,7 +181,7 @@ function Dashboard() {
                       </div>
                     </div>
                     <div className="cell">
-                      <Chip kind={o.due < now() && !o.done ? 'd' : 'b'}>{st(o.stt)}</Chip>
+                      <Chip kind={orderChipKind(o)}>{st(o.stt)}</Chip>
                     </div>
                     <div className="cell">
                       <Due at={o.due} />

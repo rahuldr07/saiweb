@@ -7,8 +7,7 @@ import { useUi } from '@/state/ui'
 import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
 import { STAFF } from '@/data/people'
-import { TZ, fmtDT } from '@/lib/format'
-import { now } from '@/lib/clock'
+import { SOON_HOURS, TZ, fmtDT, orderChipKind, orderState, type OrderState } from '@/lib/format'
 import { whoName } from '@/lib/permissions'
 import { hh, orderAtRisk, orderPlan } from '@/lib/sla'
 import { csvName, downloadCSV } from '@/lib/csv'
@@ -53,18 +52,20 @@ export default function Orders() {
     [scope, staff, dept, product, client],
   )
 
+  const inState = (k: OrderState) => base.filter((o) => orderState(o) === k).length
+
   const rows: DataRow[] = base.map((o) => {
     const plan = orderPlan(o)
     return {
       id: o.id,
-      k: o.done ? 'done' : o.due < now() ? 'late' : (o.due.getTime() - now().getTime()) / 3600000 < 4 ? 'soon' : 'open',
+      k: orderState(o),
       onClick: () => navigate({ to: '/orders/$orderId', params: { orderId: o.id } }),
       search: `${o.id} ${o.prop} ${o.cl} ${o.co} ${o.st} ${o.pr}`,
       c: [
         { v: o.id, mono: true, s: o.cl },
         { v: o.pr },
         { v: o.prop, s: `${o.co}, ${o.st}` },
-        { v: st(o.stt), chip: o.done ? 'v' : o.due < now() ? 'd' : 'b' },
+        { v: st(o.stt), chip: orderChipKind(o) },
         {
           raw: (
             <>
@@ -215,26 +216,12 @@ export default function Orders() {
         onPill={setPill}
         pills={[
           { key: 'all', label: 'All', count: base.length },
-          {
-            key: 'late',
-            label: 'Past due',
-            count: base.filter((o) => !o.done && o.due < now()).length,
-            urgent: true,
-          },
-          {
-            key: 'soon',
-            label: 'Due < 4h',
-            count: base.filter(
-              (o) => !o.done && o.due >= now() && (o.due.getTime() - now().getTime()) / 3600000 < 4,
-            ).length,
-            urgent: true,
-          },
-          {
-            key: 'open',
-            label: 'On track',
-            count: base.filter((o) => !o.done && (o.due.getTime() - now().getTime()) / 3600000 >= 4).length,
-          },
-          { key: 'done', label: 'Delivered', count: base.filter((o) => o.done).length },
+          /* Each count is the same judgement as the row key it filters on, so a
+             pill can never claim a number its own filter cannot produce. */
+          { key: 'late', label: 'Past due', count: inState('late'), urgent: true },
+          { key: 'soon', label: `Due < ${SOON_HOURS}h`, count: inState('soon'), urgent: true },
+          { key: 'open', label: 'On track', count: inState('open') },
+          { key: 'done', label: 'Delivered', count: inState('done') },
         ]}
         filters={[
           {
