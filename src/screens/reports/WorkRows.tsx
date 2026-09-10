@@ -4,11 +4,6 @@ import { Avatar, Chip, Empty } from '@/components/ui'
 import { whoName } from '@/lib/permissions'
 import type { Arrival } from '@/lib/engine'
 
-/**
- * One assigned stage. The department's list knows *who* has it; the person's
- * list knows *which stage* it is — the other four cells are the same, so both
- * shapes are accepted here rather than duplicating the row.
- */
 export interface WorkItem {
   o: Arrival
   fin: boolean
@@ -16,12 +11,6 @@ export interface WorkItem {
   who?: string
   stage?: string
 }
-
-/**
- * One stage of work, told from the department's side (who has it) or the
- * person's side (which stage it is). Same six cells either way, which is why
- * there is one row here rather than two nearly-identical ones.
- */
 
 export const WORKCOLS = {
   who: '150px 170px 100px 90px 120px 1fr',
@@ -93,11 +82,6 @@ export function WorkRow({
   )
 }
 
-/**
- * The filter bar over a work list: three pills, a search box, and the count line
- * underneath. Searching by order number is the thing people actually do here —
- * somebody has an order in front of them and wants to know where it sat.
- */
 export function WorkFilter({
   filter,
   onFilter,
@@ -152,7 +136,6 @@ export function WorkFilter({
   )
 }
 
-/** The table shell both detail views use, with their own head and empty state. */
 export function WorkTable({
   cols,
   min,
@@ -184,7 +167,6 @@ export function WorkTable({
   )
 }
 
-/** Shared filter state, so both detail views behave the same way. */
 export function useWorkFilter() {
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')

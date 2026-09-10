@@ -67,7 +67,7 @@ const routeTree = rootRoute.addChildren([
   screen('/clients/$clientCode', () => import('./screens/ClientDetail')),
 
   /* HRMS */
-  screen('/attend', () => import('./screens/Attendance')),
+  screen('/attend', () => import('./screens/attendance')),
   screen('/leave', () => import('./screens/LeaveScreen')),
   screen('/payroll', () => import('./screens/Payroll')),
   /* The register's view state lives in the URL, so returning from a payslip

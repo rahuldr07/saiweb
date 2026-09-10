@@ -26,8 +26,6 @@ function Dashboard() {
   const navigate = useGo()
   const [pipe, setPipe] = useState<string | null>(null)
 
-  /* The tile's figure and the table's rows are the same list read twice, so the
-     count above cannot disagree with the rows under it. */
   const overdue = pastDue()
   const atRisk = atRiskCount()
   const open = openCount()
@@ -35,14 +33,9 @@ function Dashboard() {
   const counts = stageCounts(ORDERS)
   const shown = pipe ? ORDERS.filter((o) => o.stt === pipe) : overdue
 
-  /* The one figure on this screen derived from the delivery history. It is
-     fetched rather than bundled, so the tile shows a placeholder for the moment
-     it takes rather than holding the whole dashboard back for it. */
   const history = useDeliveries()
   const ot = useMemo(() => onTime30(history.data ?? []), [history.data])
   const otLoading = history.isPending
-  /* Whose day it is, across the whole company — the dashboard is the one screen
-     that sees everybody. Shown only when there is something in the week. */
   const wishes = celebrationsWithin(STAFF, now(), 7)
 
   const unassigned = ORDERS.filter((o) => !o.done && Object.values(o.a).every((x) => !x)).length

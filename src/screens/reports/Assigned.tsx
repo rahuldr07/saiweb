@@ -3,7 +3,7 @@ import { useGo } from '@/lib/nav'
 import { Banner, Btn, Card, Chip, SectionHead } from '@/components/ui'
 import { DayPicker } from './DayPicker'
 import { assignedCsv } from '@/lib/report-csv'
-import { useReportExport } from './useReportExport'
+import { useReportExport } from '@/state/reportExport'
 import { board } from '@/lib/engine'
 import { ASSIGN_STAGES } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
@@ -13,7 +13,6 @@ import { now } from '@/lib/clock'
 
 const val = (n: number) => (n ? <b className="mono">{n}</b> : <span className="gr">—</span>)
 
-/** Who got what, by department, broken down by product. */
 export function Assigned({ onOpenStaff }: { onOpenStaff: () => void }) {
   const { run } = board()
   const navigate = useGo()

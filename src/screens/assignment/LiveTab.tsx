@@ -5,21 +5,12 @@ import { useUi } from '@/state/ui'
 import { ASSIGN_STAGES } from '@/data/org'
 import { whoName } from '@/lib/permissions'
 import { initials } from '@/lib/format'
-import { RULE_KIND } from '@/lib/rules'
+import { RULE_KIND } from '@/lib/ruleText'
 import type { AssignmentBoard, Arrival } from '@/lib/engine'
 import type { Rule } from '@/data/types'
 
-/**
- * The board as it fills.
- *
- * Every order is placed across all five stages the moment it lands, so the thing
- * worth showing is not a queue but a record: what arrived, where each stage went,
- * and — one click in — the rule-by-rule reasoning that put each name there.
- */
-
 const COLS = '130px 80px 90px 80px repeat(5, minmax(96px, 1fr))'
 
-/** The arrivals chart, which three of the four tiles point at rather than repeat. */
 const ARRIVALS = 'as-arrivals'
 const focusArrivals = () => focusSection(ARRIVALS)
 
@@ -43,11 +34,8 @@ export function LiveTab({
   const total = orders.length * ASSIGN_STAGES.length
   const peak = Math.max(...run.hourly.map((x) => x.n), 1)
 
-  /* Filtered to an hour, or the most recent fourteen — newest first, because the
-     question this table answers is almost always "what just happened". */
   const shown = hour ? orders.filter((o) => o.hr === hour) : orders.slice(-14).reverse()
 
-  /** The rule-by-rule trace, per stage, for one order. */
   const showTrace = (o: Arrival) => {
     const per = new Map(run.assigns.filter((a) => a.o.id === o.id).map((a) => [a.stage, a]))
 

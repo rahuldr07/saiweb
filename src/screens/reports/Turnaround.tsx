@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useGo } from '@/lib/nav'
 import { BarRow, Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
 import { turnaroundCsv } from '@/lib/report-csv'
-import { useReportExport } from './useReportExport'
+import { useReportExport } from '@/state/reportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
@@ -15,17 +15,14 @@ import type { Delivery } from '@/data/deliveries'
 
 const DEL_COLS = '105px 150px 130px 110px 105px 110px 1fr'
 
-/** The budget a stage was given on one delivery. */
 const budgetFor = (x: Delivery, stage: string) =>
   checkpoints(x.slaH, x.pr).find((y) => y.stage === stage)?.hours ?? 0
 
-/** Measured against the promise, not against a feeling. */
 export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
   const navigate = useGo()
   const [range, setRange] = useState<RangeState>(DEFAULT_RANGE)
   const [focus, setFocus] = useState('all')
 
-  /* Both notes below point at the same setting, so they point the same way. */
   const toBudgets = () => navigate({ to: '/company', search: { tab: 'Turnaround & SLA' } })
 
   const r = resolveRange(range)
@@ -81,8 +78,6 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
   stages.forEach((x) => (x.share = Math.round((x.med / totMed) * 100)))
   const worst = [...stages].sort((a, b) => b.overPct - a.overPct)[0]
 
-  /* Week by week, so a bad fortnight is visible as a fortnight. A week nothing
-     was delivered in scores null rather than 0% — no orders is not a miss. */
   const weeks = weeklyBuckets(r).map((wk) => {
     const m = deliveries.filter((x) => inRange(x.d, wk))
     return {

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useGo } from '@/lib/nav'
 import { Banner, Btn, Card, Chip, Empty, Label } from '@/components/ui'
 import { qualityCsv } from '@/lib/report-csv'
-import { useReportExport } from './useReportExport'
+import { useReportExport } from '@/state/reportExport'
 import { FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
 import { DEFAULT_RANGE, inRange, resolveRange, weekTick, weeklyBuckets, type RangeState } from '@/lib/range'
@@ -16,7 +16,6 @@ import { fmtDate } from '@/lib/format'
 import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
 
-/** What the scores say, and what a score is allowed to mean. */
 export function Quality({ deliveries, log }: { deliveries: Delivery[]; log: QcEntry[] }) {
   const [sub, setSub] = useState<'The scores' | 'How scoring works'>('The scores')
 
@@ -52,8 +51,6 @@ function Scores({
   const [focus, setFocus] = useState('all')
   const [person, setPerson] = useState<string | null>(null)
 
-  /* The budgets a whole department is missing are set on Company, so the banner
-     that reports the miss points at them. */
   const toBudgets = () => navigate({ to: '/company', search: { tab: 'Turnaround & SLA' } })
 
   const r = resolveRange(range)
@@ -61,7 +58,6 @@ function Scores({
   const rows = useMemo(() => log.filter((x) => inRange(x.d, r)), [log, r])
   useReportExport(() => qualityCsv(rows))
 
-  /* Two QC stages per delivery — Search QC and Typing QC. */
   const opportunities = dels.length * 2
   const cover = opportunities ? Math.round((rows.length / opportunities) * 100) : 0
   const overall = rows.length ? rows.reduce((a, x) => a + x.avg, 0) / rows.length : 0
@@ -73,8 +69,6 @@ function Scores({
   const twp = Object.values(tw.people)
 
   const weeks = weeklyBuckets(r).map((w) => {
-    /* Two QC stages per delivery here too, so the bars and the coverage card
-       are measured against the same denominator. */
     const d2 = deliveries.filter((x) => inRange(x.d, w)).length * 2
     const g = log.filter((x) => inRange(x.d, w))
     return { ...w, pct: d2 ? Math.round((g.length / d2) * 100) : 0, n: g.length }
@@ -383,11 +377,7 @@ function Scores({
   )
 }
 
-/** How work is checked, and what a score is allowed to mean. */
 function ScoringConfig() {
-  /* Shared rather than local: "Scores are visible to the person rated" decides
-     what My work and How I'm doing will show, so a box ticked here has to reach
-     them. */
   const rules = useQcRules()
   const off = rules.filter((r) => !r.on)
 

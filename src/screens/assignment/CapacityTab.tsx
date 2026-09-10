@@ -4,14 +4,6 @@ import { AVAIL, STAFF } from '@/data/people'
 import { CAPACITY_AMBER, CAPACITY_RED, capacityTone } from '@/lib/metrics'
 import type { AssignmentBoard } from '@/lib/engine'
 
-/**
- * How much room is left, and when it ran out.
- *
- * The day chart is the one that matters: capacity is not a number, it is a curve,
- * and the hour it crosses 90% is the hour the next arrival starts becoming an
- * exception. The per-person bars then say who that will be.
- */
-
 export function CapacityTab({ board }: { board: AssignmentBoard }) {
   const navigate = useGo()
   const { run } = board
@@ -22,7 +14,6 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
   const available = rostered.filter((s) => s.avail === 'ok')
   const totalCap = available.reduce((a, s) => a + s.cap, 0)
 
-  /* People who have nothing left to give while orders are still arriving. */
   const atTarget = available.filter((s) => (load[s.id] ?? 0) >= s.cap)
   const stagesAffected = [...new Set(atTarget.flatMap((s) => s.dep))]
 

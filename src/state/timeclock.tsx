@@ -5,26 +5,10 @@ import { makeLateLog, makeRegularisations } from '@/lib/attendance'
 import { STAFF } from '@/data/people'
 import { now } from '@/lib/clock'
 import { fmtDate } from '@/lib/format'
-import { hhmm, lateBy, mins, placeOf, shiftOf, withLocation, worked, type Fix } from '@/lib/timeclock'
+import { hhmm, lateBy, mins, placeOf, shiftOf, withLocation, worked, type Fix } from '@/lib/workingDay'
 import type { DayMark, LateMark, Punch, Regularisation, Swap } from '@/data/types'
 
-/**
- * The clock, for this session.
- *
- * Punches are the one thing on the HR screens a person makes rather than reads,
- * so they live in state rather than in the seed: nothing here is pre-filled, and
- * the day starts unmarked the way a day does. Everything else — corrections,
- * late marks, swaps, overtime — is seeded but editable, because approving one is
- * the action those screens exist for.
- *
- * A decision is recorded rather than erased. Waiving a late mark leaves it in the
- * log and in the export and stops it counting; an approved correction sits on top
- * of the original punch instead of replacing it. Attendance figures whose
- * workings cannot be seen are the ones people stop trusting.
- */
-
 interface TimeclockValue {
-  /** Today's marks, by person. Empty until somebody punches. */
   marks: Record<string, DayMark>
   punches: Punch[]
   corrections: Regularisation[]
@@ -33,7 +17,6 @@ interface TimeclockValue {
   overtime: Overtime[]
 
   markOf: (id: string) => DayMark | null
-  /** Everything waiting on a decision, across all three kinds. */
   waiting: number
 
   checkIn: (personId: string, done?: (msg: string) => void) => void
@@ -43,7 +26,6 @@ interface TimeclockValue {
 
   decideCorrection: (id: string, st: 'approved' | 'rejected') => string
   decideSwap: (id: string, st: 'approved' | 'rejected') => string
-  /** Asks a colleague to take a day. Goes to a manager, because it moves cover. */
   requestSwap: (from: string, to: string, date: string, why: string) => void
   decideOvertime: (id: string, st: 'approved' | 'rejected') => string
   claimOvertime: (personId: string, d: string, minutes: number, why: string) => void
@@ -54,14 +36,6 @@ const TimeclockContext = createContext<TimeclockValue | null>(null)
 
 const nameOf = (id: string) => STAFF.find((s) => s.id === id)?.n ?? id
 
-/**
- * One ledger, at module scope.
- *
- * Several screens read this — Attendance, My work, a person's record — and a copy
- * per screen is how two of them come to disagree about whether somebody is in.
- * It sits outside the component rather than in a ref so that reading it during a
- * render is legitimate; `changed()` is what tells React it moved.
- */
 const ledger = {
   marks: {} as Record<string, DayMark>,
   punches: [] as Punch[],
@@ -227,10 +201,6 @@ export function TimeclockProvider({ children }: { children: ReactNode }) {
       claimOvertime,
       setWaived,
     }
-    /* `version` is the dependency. The refs are stable and their contents are
-       mutated in place, so the counter is the only thing that moves when a punch
-       is made or a decision taken — counting lengths would miss every approval,
-       which changes a status rather than the size of a list. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     version,

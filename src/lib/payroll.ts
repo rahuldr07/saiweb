@@ -1,9 +1,3 @@
-/**
- * Salary derives from one number — the CTC on a person's record — through a
- * structure that follows the 50% wage rule in the labour codes. Everything on a
- * payslip falls out of that, attendance, and the statutory settings. Nothing is
- * typed twice.
- */
 import {
   ARREARS,
   ATT,
@@ -20,9 +14,6 @@ import {
   LEAVETYPES,
 } from '@/data/hrms'
 import { STAFF } from '@/data/people'
-/* The salary structure is set on the Company screen, so it is read live — every
-   payslip is derived through it, which is what makes an edit there move the
-   whole register rather than just the settings page. */
 import { currentPayCfg } from '@/state/company'
 import { pad } from './format'
 import { now } from '@/lib/clock'
@@ -38,8 +29,6 @@ export const inr2 = (n: number) =>
     maximumFractionDigits: 2,
   })
 
-/* ── the structure ──────────────────────────────────────────────────────── */
-
 export interface Structure {
   ctc: number
   monthly: number
@@ -52,7 +41,6 @@ export interface Structure {
   pfWage: number
 }
 
-/** One CTC in, a full structure out. */
 export function structureOf(p: Pick<Person, 'ctc'>): Structure {
   const ctc = p.ctc ?? 0
   const m = ctc / 12
@@ -61,12 +49,9 @@ export function structureOf(p: Pick<Person, 'ctc'>): Structure {
   const pfWage = currentPayCfg().pfOnFullBasic ? basic : Math.min(basic, currentPayCfg().pfWageCeiling)
   const epfEr = Math.round((pfWage * currentPayCfg().pfPct) / 100)
   const grat = Math.round((basic * currentPayCfg().gratuityPct) / 100)
-  /* CTC = gross + employer PF + gratuity, so special allowance is the balance. */
   const special = Math.max(0, Math.round(m - epfEr - grat - basic - hra))
   return { ctc, monthly: Math.round(m), basic, hra, special, gross: basic + hra + special, epfEr, grat, pfWage }
 }
-
-/* ── tax ────────────────────────────────────────────────────────────────── */
 
 function slabTax(ti: number, slabs: [number, number][], rebateUnder: number): number {
   let tax = 0
@@ -76,28 +61,18 @@ function slabTax(ti: number, slabs: [number, number][], rebateUnder: number): nu
     prev = cap
     if (ti <= cap) break
   }
-  if (ti <= rebateUnder) tax = 0 // 87A rebate
-  return Math.round(tax * 1.04) // + 4% cess
+  if (ti <= rebateUnder) tax = 0
+  return Math.round(tax * 1.04)
 }
 
-/**
- * The old regime still exists, and for anyone with real deductions it can win.
- * Which one applies is the employee's choice, so it is theirs to make.
- */
 export function taxUnder(regime: 'new' | 'old', gross12: number, declared = 0): number {
   if (regime === 'new') return slabTax(Math.max(0, gross12 - STDDED), TAXSLABS, 1200000)
   return slabTax(Math.max(0, gross12 - OLDSTD - declared), OLDSLABS, 500000)
 }
 
-/* ── attendance and overtime ────────────────────────────────────────────── */
-
 export const monthOf = (mmddyyyy: string) => {
   const [m, , y] = mmddyyyy.split('/').map(Number)
   const mon = m === undefined ? undefined : MON[m - 1]
-  /* A date that is not MM/DD/YYYY belongs to no month. Every caller compares the
-     answer against a real month label, and '' matches none of them — where the
-     interpolated `undefined` this used to produce made "undefined 2026", a label
-     that looks like a month and silently is not. */
   if (mon === undefined || y === undefined) return ''
   return `${mon} ${y}`
 }
@@ -105,7 +80,6 @@ export const monthOf = (mmddyyyy: string) => {
 export const otMinsFor = (id: string, mn: string) =>
   OT.filter((o) => o.who === id && o.st === 'approved' && monthOf(o.d) === mn).reduce((a, o) => a + o.mins, 0)
 
-/** Overtime pays at the ordinary hourly rate, derived from the month's gross. */
 export function otPay(p: Person, mn: string): number {
   const mins = otMinsFor(p.id, mn)
   if (!mins) return 0
@@ -115,29 +89,19 @@ export function otPay(p: Person, mn: string): number {
   return Math.round(perHour * (mins / 60) * TIMECFG.otRate)
 }
 
-/** How many of the month's working days this person was actually employed for. */
 export function payableDays(p: Person, mn: string, working: number): number {
   if (!p.doj) return working
   const [m, d, y] = p.doj.split('/').map(Number)
   const [mon, yr] = mn.split(' ')
   const mi = mon === undefined ? 0 : MON.indexOf(mon) + 1
   const year = Number(yr)
-  /* Nothing to prorate against if the month is not a month, and a full month is
-     already what this function answers when it cannot prorate. A joining date
-     that is not MM/DD/YYYY is the same kind of nothing: it used to reach the
-     arithmetic below and put NaN days on the payslip. */
   if (!mi || !year) return working
   if (m === undefined || d === undefined || y === undefined) return working
-  if (y > year || (y === year && m > mi)) return 0 // had not joined yet
-  if (y < year || (y === year && m < mi)) return working // here for the whole month
-  /* Asked of the calendar rather than looked up in a table of the months the
-     seed data happens to carry: that table has five keys and the pay window
-     moves, so a sixth month divided by `undefined` and put NaN on a payslip. */
+  if (y > year || (y === year && m > mi)) return 0
+  if (y < year || (y === year && m < mi)) return working
   const days = new Date(year, mi, 0).getDate()
   return Math.max(0, Math.round((working * (days - d + 1)) / days))
 }
-
-/* ── claims, loans, arrears ─────────────────────────────────────────────── */
 
 export const claimsFor = (id: string, mn: string) =>
   CLAIMS.filter((c) => c.who === id && c.mn === mn && c.st !== 'rejected' && c.st !== 'pending')
@@ -146,9 +110,6 @@ export const arrearsFor = (id: string, mn: string) => ARREARS.filter((a) => a.wh
 
 export const loanFor = (id: string) => LOANS.find((l) => l.who === id && l.paid < l.amt)
 
-/* ── one payslip ────────────────────────────────────────────────────────── */
-
-/** The attendance a payslip was computed against, as the slip itself states it. */
 export interface PayslipAttendance {
   days: number
   working: number
@@ -160,18 +121,12 @@ export interface Payslip {
   p: Person
   mn: string
   st: Structure
-  /** The month's attendance, so the slip can show what it divided by. */
   a: PayslipAttendance
-  /** Gross for one working day, which is what an unpaid day costs. */
   perDay: number
-  /** Advance instalment recovered this month, and the loan behind it. */
   emi: number
   loan: Loan | null
-  /** Arrears paid this month, taxed in the month they are paid. */
   arr: number
-  /** Unpaid days from attendance alone, which is what the register shows. */
   lopDays: number
-  /** Those, plus any part of the month before they joined. */
   unpaid: number
   lopAmt: number
   earn: [string, number][]
@@ -200,11 +155,7 @@ export function payslipOf(p: Person, mn: string): Payslip {
     joined: false,
     present: 26,
   }
-  /* `Math.max(1, …)` for the same reason `otPay` and `settlement` do it: a month
-     with no working days would otherwise make every figure on the slip Infinity
-     or NaN, and a payslip is the last place to discover that. */
   const perDay = st.gross / Math.max(1, a.working)
-  /* Unpaid days, plus any part of the month before they joined. */
   const unpaid = a.lop + Math.max(0, a.working - (a.payable ?? a.working))
   const lopAmt = Math.round(perDay * unpaid)
   const f = a.working ? 1 - unpaid / a.working : 1
@@ -236,8 +187,6 @@ export function payslipOf(p: Person, mn: string): Payslip {
     ['Special allowance', special],
   ]
   if (ot) earn.push([`Overtime — ${Math.floor(otm / 60)}h ${pad(otm % 60)}m approved`, ot])
-  /* The line is named after the first arrear, so it needs the row and not just
-     the total — a total can only be non-zero if there is a row behind it. */
   const firstArr = arrRows[0]
   if (arr && firstArr) earn.push([`Arrears — ${firstArr.what}`, arr])
 
@@ -280,7 +229,6 @@ export function payslipOf(p: Person, mn: string): Payslip {
   }
 }
 
-/** Year to date, for the payslip footer — the figure people actually check. */
 export function ytd(p: Person, mn: string) {
   const upto = PAYMONTHS.slice(0, PAYMONTHS.indexOf(mn) + 1)
   return upto.reduce(
@@ -297,8 +245,6 @@ export function ytd(p: Person, mn: string) {
 }
 
 export const paidStaff = () => STAFF.filter((x) => x.active !== false && x.ctc)
-
-/* ── leave balances ─────────────────────────────────────────────────────── */
 
 export interface Balance {
   earned: number
@@ -319,7 +265,6 @@ export function leaveBalance(pid: string): Record<string, Balance> {
       (a, l) => a + l.days,
       0,
     )
-    /* Comp-off is earned by working a rest day, so it is counted, not accrued. */
     const earned =
       t.k === 'co'
         ? LEAVE.filter((l) => l.who === pid && l.type === 'co').length + 2
@@ -329,19 +274,13 @@ export function leaveBalance(pid: string): Record<string, Balance> {
   return out
 }
 
-/* ── exit ───────────────────────────────────────────────────────────────── */
-
 export function yearsServed(p: Person): number | null {
   if (!p.doj) return null
   const [m, d, y] = p.doj.split('/').map(Number)
-  /* A joining date that will not parse is no joining date, and the settlement
-     already has a reading for that: it says so on the gratuity line rather than
-     computing a length of service from NaN. */
   if (m === undefined || d === undefined || y === undefined) return null
   return (now().getTime() - new Date(y, m - 1, d).getTime()) / (365.25 * 24 * 3600 * 1000)
 }
 
-/** Fifteen days of last-drawn basic per completed year, after five. */
 export function settlement(p: Person, lastDay?: Date) {
   const st = structureOf(p)
   const lastMn = PAYMONTHS[PAYMONTHS.length - 1]
@@ -351,9 +290,6 @@ export function settlement(p: Person, lastDay?: Date) {
   const dayOfMonth = lastDay ? lastDay.getDate() : now().getDate()
   const salary = Math.round(perDay * Math.round(((a?.working ?? 26) * dayOfMonth) / 30))
   const bal = leaveBalance(p.id)
-  /* Encashment is of paid leave specifically, and `leaveBalance` is keyed by
-     whatever leave types the workspace has configured. A workspace with no paid
-     leave has none to encash — which is nought, not a payslip line of NaN. */
   const plLeft = bal.pl?.left ?? 0
   const encash = Math.round((plLeft * st.basic) / 26)
   const grat = yrs !== null && yrs >= 5 ? Math.round(((st.basic * 15) / 26) * Math.floor(yrs)) : 0
@@ -377,32 +313,20 @@ export function settlement(p: Person, lastDay?: Date) {
   return { lines, yrs, total: lines.reduce((a2, l) => a2 + l[1], 0), st, bal }
 }
 
-/* ── the month as a whole ───────────────────────────────────────────────── */
-
 export interface PayTotals {
   list: Payslip[]
   gross: number
   ded: number
   net: number
-  /** Employee provident fund. */
   pf: number
-  /** Employer's own contribution, which is a cost rather than a deduction. */
   erpf: number
   esi: number
   pt: number
   tds: number
   grat: number
-  /** Anyone with unpaid days — the thing to check before approving. */
   lop: Payslip[]
 }
 
-/**
- * Every payslip for a month, and what they add up to.
- *
- * Built by running the same `payslipOf` the individual payslip screen runs, so
- * the register and a person's own slip cannot disagree. There is no stored
- * total anywhere — change a salary or a day of attendance and this moves.
- */
 export function payTotals(mn: string): PayTotals {
   const list = paidStaff().map((p) => payslipOf(p, mn))
   const sum = (f: (x: Payslip) => number) => list.reduce((a, x) => a + f(x), 0)
@@ -421,17 +345,9 @@ export function payTotals(mn: string): PayTotals {
   }
 }
 
-/**
- * Which step the run is waiting on.
- *
- * The gaps are deliberate: locking attendance completes both Attendance and
- * Compute, because computing is what locking is for. A strip that advanced one
- * box per state would claim Compute had not happened when it had.
- */
 export const stepIndex = (state: string): number =>
   ({ draft: 0, locked: 2, approved: 4, paid: 5 })[state] ?? 0
 
-/** What the run can be moved to next, and what that button says. */
 export const nextRunAction = (state: string): [label: string, to: RunState] | null =>
   state === 'draft'
     ? ['Lock attendance', 'locked']
@@ -441,13 +357,6 @@ export const nextRunAction = (state: string): [label: string, to: RunState] | nu
         ? ['Publish payslips', 'paid']
         : null
 
-/**
- * An amount in words, the way an Indian payslip states it.
- *
- * Crore, lakh, thousand — not the western grouping — because that is what the
- * line under the net figure is for: somebody reading the slip aloud, or checking
- * the figure has not lost a digit.
- */
 export function words(n: number): string {
   const ones = [
     '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -455,9 +364,6 @@ export function words(n: number): string {
     'Eighteen', 'Nineteen',
   ]
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-  /* The groups below are always inside these tables, because `words` splits the
-     magnitude and says the sign separately. '' is what an index outside them
-     would be worth: no word at all, rather than the literal "undefined". */
   const word = (table: string[], i: number) => table[i] ?? ''
   const two = (x: number): string =>
     x < 20 ? word(ones, x) : word(tens, Math.floor(x / 10)) + (x % 10 ? ` ${word(ones, x % 10)}` : '')
@@ -466,10 +372,6 @@ export function words(n: number): string {
 
   const v = Math.round(n)
   if (!v) return 'Zero'
-  /* Tax is taken on the structure rather than on what was earned, so a month
-     with no pay still deducts a month of it and the net goes below zero. The
-     grouping is done on the magnitude and the sign is said in front of it —
-     negative crores and lakhs are not a thing anybody says. */
   const abs = Math.abs(v)
   const cr = Math.floor(abs / 10000000)
   const lk = Math.floor((abs % 10000000) / 100000)

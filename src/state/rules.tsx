@@ -2,43 +2,23 @@ import { createContext, use, useCallback, useMemo, useState, type ReactNode } fr
 import { ENGINE, ENGINEOPTS, RULES } from '@/data/org'
 import { board as sharedBoard, computeBoard, resetBoard, type AssignmentBoard } from '@/lib/engine'
 import type { EngineConfig, Rule } from '@/data/types'
-import type { RuleDraft } from '@/lib/rules'
-
-/**
- * The rules the engine is running, and the run they produce.
- *
- * Rules are editable from the Assignment screen — turned off, retyped, added,
- * removed — and each of those has to change the board, not just the list.
- *
- * The edits go into the seed array itself rather than into a copy held here.
- * That looks like the wrong instinct in React, and for anything else it would be:
- * the reason is that `board()` is one memoised run and six screens read it. A
- * private copy would give Assignment a board where a rule is off while the
- * dashboard, the reports and My performance still counted it — two answers to
- * one question, differing by which screen you happened to open. So the array is
- * the single source, `resetBoard()` drops the stale run, and `version` is what
- * tells React any of it happened.
- */
+import type { RuleDraft } from '@/lib/ruleText'
 
 interface RulesValue {
   rules: Rule[]
   engine: EngineConfig
-  /** The shared run, rebuilt whenever the rules move. */
   board: AssignmentBoard
   version: number
   toggle: (id: string) => void
   save: (draft: RuleDraft, id: string | null) => void
   remove: (id: string) => Rule | null
   setEngine: <K extends keyof EngineConfig>(k: K, v: EngineConfig[K]) => string
-  /** Re-run the engine against the rules as they stand. */
   rerun: () => void
-  /** What a draft would do. Runs on a copy, so no queue is touched. */
   dryRun: (draft?: RuleDraft) => { placed: number; unplaced: number }
 }
 
 const RulesContext = createContext<RulesValue | null>(null)
 
-/** New rules go in before the tie-break, which has to stay last. */
 const insertAt = (rules: Rule[]) => {
   const i = rules.findIndex((x) => x.k === 'prefer')
   return i < 0 ? rules.length : i
@@ -48,16 +28,11 @@ export function RulesProvider({ children }: { children: ReactNode }) {
   const [version, setVersion] = useState(0)
   const [engine, setEngineState] = useState<EngineConfig>(() => ({ ...ENGINE }))
 
-  /* Every change goes through here, so there is one place that both drops the
-     stale run and tells React. Forgetting either half is the whole bug class. */
   const changed = useCallback(() => {
     resetBoard()
     setVersion((v) => v + 1)
   }, [])
 
-  /* `version` is the dependency even though neither expression names it: the
-     rules array is edited in place and the run is memoised inside the engine, so
-     the counter is the only thing that can tell React either has moved. */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const rules = useMemo(() => [...RULES], [version])
 
@@ -75,7 +50,6 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     (draft: RuleDraft, id: string | null) => {
       const existing = id ? RULES.find((x) => x.id === id) : undefined
       if (existing) {
-        /* Locked: the name and the condition may move, what it does may not. */
         if (existing.lock) {
           Object.assign(existing, { n: draft.n.trim(), cond: draft.cond, pool: draft.pool })
         } else {
@@ -118,21 +92,12 @@ export function RulesProvider({ children }: { children: ReactNode }) {
   const setEngine = useCallback(
     <K extends keyof EngineConfig>(k: K, v: EngineConfig[K]) => {
       setEngineState((e) => ({ ...e, [k]: v }))
-      /* Only one of these has anything to re-run: telling the engine to apply a
-         change to work already placed is a request to actually do it. */
       if (k === 'onChange' && v === 'all') changed()
       return ENGINEOPTS[k].find((o) => o[0] === v)?.[1] ?? String(v)
     },
     [changed],
   )
 
-  /**
-   * What the rules would do, optionally with one unsaved rule spliced in.
-   *
-   * `computeBoard` takes its rules as an argument and returns a fresh run, so
-   * this never reaches the memoised one — which is the whole promise the button
-   * makes about not touching anybody's queue.
-   */
   const dryRun = useCallback(
     (draft?: RuleDraft) => {
       let against = RULES
@@ -161,11 +126,6 @@ export function RulesProvider({ children }: { children: ReactNode }) {
     () => ({
       rules,
       engine,
-      /* Read on access rather than on mount. The run is one memoised pass that
-         costs around 14ms, and this provider wraps the router — computing it
-         here charged every load for it, including the sign-in screen, which
-         reads no board at all. The property the six screens already destructure
-         is unchanged; only the moment it runs has moved. */
       get board() {
         return sharedBoard()
       },

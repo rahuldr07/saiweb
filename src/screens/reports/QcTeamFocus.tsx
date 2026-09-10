@@ -11,7 +11,6 @@ import type { QcEntry } from '@/data/quality'
 import type { Range } from '@/lib/range'
 
 
-/** What one headline quality figure actually contains. */
 export function QcTeamFocus({
   focus,
   dels,
@@ -246,7 +245,6 @@ export function QcTeamFocus({
     )
   }
 
-  /* defects */
   const list = defects.slice().sort((a, b) => +b.d - +a.d)
   const byReason: Record<string, number> = {}
   list.forEach((x) => {

@@ -8,26 +8,10 @@ import { inr, inr2, payslipOf, words, ytd } from '@/lib/payroll'
 import { roleName } from '@/lib/permissions'
 import { usePayslipDownloads } from './payslips/usePayslipDownloads'
 
-/**
- * One payslip.
- *
- * A document rather than a screen: it states the figures, then explains where
- * each came from, because the questions a payslip actually gets asked are "why
- * is basic that number" and "what is this deduction". Every line is derived from
- * one CTC and one month's attendance, so nothing here is typed in and nothing
- * can disagree with the payroll register.
- *
- * Two things are deliberately refused. Somebody else's slip needs the pricing
- * permission, and an unpublished month is not shown even to its owner — not
- * because it is secret, but because it is not final.
- */
-
-/** A labelled amount, the way both columns of the slip state one. */
 function Row({ label, value, tone }: { label: string; value: number; tone?: 'warn' | 'ok' }) {
   return <DetailRow label={label} value={<b className={`mono ${tone ?? ''}`}>{inr2(value)}</b>} />
 }
 
-/** A closing figure under a column, which is not a row and should not look like one. */
 function Total({ label, value, tone }: { label: string; value: number; tone?: 'warn' | 'ok' }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: '14.5px' }}>
@@ -37,7 +21,6 @@ function Total({ label, value, tone }: { label: string; value: number; tone?: 'w
   )
 }
 
-/** One reason a figure is what it is. */
 function Why({ head, detail }: { head: string; detail: string }) {
   return (
     <div className="rw">
@@ -75,7 +58,6 @@ export default function PayslipDetail() {
     )
   }
 
-  /* Somebody else's pay needs the permission, and saying so beats an empty page. */
   if (!mine && !can('pricing')) {
     return (
       <>
@@ -105,8 +87,6 @@ export default function PayslipDetail() {
 
   const run = PAYRUNS[month]
 
-  /* Not hidden — just not final. An unpublished figure that later moves is worse
-     than no figure, so the state is stated instead. */
   if (mine && !run.published) {
     return (
       <>

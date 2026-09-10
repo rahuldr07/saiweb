@@ -1,4 +1,3 @@
-/* AUTO-GENERATED from the Claude Design "Title CRM 897". Values are the design's own. */
 import type {
   Invoice,
   Lead,
@@ -547,6 +546,5 @@ export const LEADS: Lead[] = [
 
 export const STALE_WARN: number = 14
 
-/** Red, not amber. A month with nothing recorded is a lead nobody is chasing. */
 export const STALE_BAD: number = 30
 

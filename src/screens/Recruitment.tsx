@@ -7,24 +7,11 @@ import { useUi } from '@/state/ui'
 import { HIRESTAGES } from '@/data/hrms'
 import { fmtDate } from '@/lib/format'
 import { NewOpening } from './hiring/NewOpening'
-import { addOpening, moveCandidate, nextStage, useBoard } from './hiring/store'
+import { addOpening, moveCandidate, nextStage, useBoard } from '@/state/hiring'
 import type { Candidate, HireStage, Opening } from '@/data/types'
 
-/**
- * Recruitment.
- *
- * Two halves, and the order matters: the pipeline first, because that is what
- * moves day to day, and the openings under it, because that is what explains
- * why the pipeline exists at all.
- *
- * Every opening carries its reason. A req without one is how headcount grows
- * without anyone deciding to grow it.
- */
-
-/** The board is a row of stage columns that scrolls rather than wraps. */
 const COLUMN_MIN = 168
 
-/** Only the first few fit a column before it becomes a list nobody reads. */
 const SHOWN_PER_STAGE = 5
 
 function CandidateCard({ c, onMove }: { c: Candidate; onMove: (c: Candidate) => void }) {
@@ -105,21 +92,13 @@ function Recruitment() {
   const { candidates, openings } = useBoard()
   const [job, setJob] = useState('all')
 
-  /* A pill for an opening that has since been filtered away would strand the
-     view on an empty board, so an unknown filter falls back to everything. */
   const active = job === 'all' || openings.some((o) => o.id === job) ? job : 'all'
   const shown = candidates.filter((c) => active === 'all' || c.job === active)
   const seats = openings.reduce((a, o) => a + o.n, 0)
 
-  /* A pill names its department, which is short and is what people filter by.
-     Two openings in one department would then give two identical pills — which
-     the seeded three never do, but raising a second Search role immediately
-     does — so a department that appears twice falls back to the role title. */
   const pillLabel = (o: Opening) =>
     openings.filter((x) => x.dep === o.dep).length > 1 ? o.title : o.dep
 
-  /* One confirmation before anything moves. The step is small but it is the
-     record of somebody's application, so it is not a stray click. */
   const askMove = (c: Candidate) => {
     const next = nextStage(c.stage)
     if (!next) return toast(`${c.n} has already joined`)

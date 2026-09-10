@@ -9,23 +9,11 @@ import { useSession } from '@/state/session'
 import { BADSTATES } from '@/data/catalog'
 import { LSTATE, brokenLinks, days, linkStats } from '@/lib/derived'
 import { csvName, downloadCSV } from '@/lib/csv'
-import { useCoverage } from '@/state/coverage'
+import { useCoverage } from '@/state/counties'
 import { CountyEdit } from './counties/CountyEdit'
-import { FixLink } from './counties/FixLink'
+import { FixLink } from '@/components/FixLink'
 import { LinkTypes, type LtView } from './counties/LinkTypes'
 import type { County, LinkStatus } from '@/data/types'
-
-/**
- * County coverage.
- *
- * The workspace's own record of where it can search, and whether the sources it
- * searches with are still answering. Order intake validates against it, which is
- * why removing a county says so rather than just doing it.
- *
- * Every status on the grid is a button: the useful thing to do with a broken
- * link is fix it, and making somebody navigate to a different screen to do that
- * is how a red chip stays red for a month.
- */
 
 type Filter = 'all' | 'bad' | 'gap' | 'ok'
 
@@ -38,8 +26,6 @@ function Counties() {
   const search = useSearch({ from: '/counties' })
   const [query, setQuery] = useState('')
 
-  /* The filter is in the URL so the link monitor can hand one over, and so a
-     particular view of the register can be sent to somebody. */
   const FILTERS: Filter[] = ['all', 'bad', 'gap', 'ok']
   const filter: Filter = FILTERS.includes(search.f as Filter) ? (search.f as Filter) : 'all'
   const setFilter = (f: Filter) =>
@@ -48,8 +34,6 @@ function Counties() {
   const isAdmin = can('all')
   const linkOf = (c: County, k: string) => c.links[k] ?? { u: '', s: 'none' as const }
 
-  /* The four filters, each counted over the whole record so a pill says how much
-     it would show rather than how much is showing. */
   const counts = useMemo(() => {
     const has = (c: County, p: (s: LinkStatus) => boolean) =>
       linkTypes.some((t) => p(linkOf(c, t.k).s))
@@ -81,8 +65,6 @@ function Counties() {
   const stats = linkStats()
   const bad = brokenLinks()
 
-  /* One column per link type, so adding a fifth type widens the grid rather than
-     needing this string edited. */
   const cols = `150px 70px 120px repeat(${linkTypes.length}, minmax(120px, 1fr)) 100px`
 
   const exportCounties = () =>
@@ -130,8 +112,6 @@ function Counties() {
     })
   }
 
-  /* Re-opened per step so the modal's own title says which step it is on, the
-     way the design does — "Add a link type", not "Link types". */
   const manageTypes = (view: LtView = { at: 'list' }): void => {
     const named = view.at !== 'list' && view.k ? linkTypes.find((t) => t.k === view.k)?.n : null
     const title =

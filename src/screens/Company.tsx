@@ -15,17 +15,12 @@ import { WorkflowTab } from './company/WorkflowTab'
 import { SlaTab } from './company/SlaTab'
 import { PayrollTab } from './company/PayrollTab'
 
-/** Tenant settings: profile, people, clients, departments, roles and turnaround. */
 function Company() {
   const { tenant, can } = useSession()
-  /* The name shown is the one this screen's own form edits, or renaming it here
-     would leave the title arguing with the field directly under it. */
   const { profile } = useCompany()
 
   const search = useSearch({ from: '/company' })
 
-  /* The tab can be named in the URL so another screen can point at the setting
-     it is talking about, rather than saying "it is somewhere under Company". */
   const [tab, setTab] = useState<string>(() =>
     search.tab && COTABS.includes(search.tab) ? search.tab : COTABS[0],
   )

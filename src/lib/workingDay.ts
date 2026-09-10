@@ -1,40 +1,18 @@
-/**
- * The working day, as the clock records it.
- *
- * Pure functions over marks — no state, so the rules can be tested and the
- * screens can stay about presentation. The one rule with legal weight is the
- * rest break: most Indian states require one after five hours, and the record is
- * what proves it happened, so `restCheck` states the position rather than
- * nudging.
- */
 import { SHIFTS, SITES } from '@/data/people'
 import { TIMECFG } from '@/data/hrms'
 import { pad } from './format'
 import type { DayMark, Person, Shift } from '@/data/types'
 
-/**
- * Stands in for a shift the roster does not carry.
- *
- * A workspace with no shifts configured still has to render a timesheet, and a
- * nameless nine-to-five is a visibly unset shift — where the alternative was
- * reading `.from` off `undefined`.
- */
 const NO_SHIFT: Shift = { k: '', n: '—', from: '09:00', to: '18:00', c: 'n', d: '' }
 
-/** The shift with this key, whatever the roster carries. */
 export const shiftByKey = (k: string): Shift => SHIFTS.find((x) => x.k === k) ?? SHIFTS[0] ?? NO_SHIFT
 
 export const shiftOf = (p: Pick<Person, 'shift'>): Shift => shiftByKey(p.shift || 'day')
 
-/** A Date as the HH:MM a punch is stored in. */
 export const hhmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
 
-/* A component that is missing or unreadable is worth none of them — the two are
-   the same thing to a timesheet, which can no more carry NaN minutes than a
-   payslip can carry NaN rupees. */
 const part = (v: number | undefined) => (v !== undefined && Number.isFinite(v) ? v : 0)
 
-/** HH:MM to minutes past midnight. */
 export const mins = (t: string) => {
   const [h, m] = t.split(':').map(Number)
   return part(h) * 60 + part(m)
@@ -42,13 +20,9 @@ export const mins = (t: string) => {
 
 export const hm = (v: number) => `${Math.floor(v / 60)}h ${pad(v % 60)}m`
 
-/** Minutes between the in and out marks. Zero until the day is closed. */
 export const worked = (m: DayMark | null | undefined) =>
   m && m.in && m.out ? Math.max(0, mins(m.out) - mins(m.in)) : 0
 
-/* ── where the punch was made ───────────────────────────────────────────── */
-
-/** Great-circle distance in metres. */
 export const metres = (aLat: number, aLng: number, bLat: number, bLng: number) => {
   const R = 6371000
   const r = (x: number) => (x * Math.PI) / 180
@@ -70,12 +44,6 @@ export interface Fix {
   acc: number
 }
 
-/**
- * Where a punch happened, in words.
- *
- * Inside a site's radius it is the site's name; outside it says how far out, so
- * a mark made from home reads as a mark made from home rather than as an error.
- */
 export function placeOf(fix: Fix | null, error: string | null) {
   const near = fix ? nearestSite(fix.lat, fix.lng) : null
   if (!near) return { where: error ?? 'Location not recorded', inside: false }
@@ -84,13 +52,6 @@ export function placeOf(fix: Fix | null, error: string | null) {
     : { where: `${distance(near.d)} from ${near.s.n}`, inside: false }
 }
 
-/**
- * Ask the browser where it is.
- *
- * It can genuinely answer this. It cannot tell us whose face this is, which is
- * why one half of a biometric check-in is real here and the other is a note.
- * Every path resolves — a refused permission is an answer, not a hang.
- */
 export function withLocation(then: (fix: Fix | null, error: string | null) => void) {
   if (typeof navigator === 'undefined' || !navigator.geolocation) {
     return then(null, 'This device cannot report a location')
@@ -122,17 +83,11 @@ export function withLocation(then: (fix: Fix | null, error: string | null) => vo
   }
 }
 
-/* ── what the law would say about the day so far ────────────────────────── */
-
 export interface RestState {
   ok: boolean
   msg: string
 }
 
-/**
- * Null until the question arises — under five hours worked there is nothing to
- * report, and a green tick for a rule that has not yet applied is noise.
- */
 export function restCheck(m: DayMark | null | undefined, nowTime: string): RestState | null {
   if (!m || !m.in) return null
   const end = m.out ? mins(m.out) : mins(nowTime)
@@ -147,7 +102,6 @@ export function restCheck(m: DayMark | null | undefined, nowTime: string): RestS
       }
 }
 
-/** Minutes past the shift start, once the grace period is spent. */
 export const lateBy = (inAt: string, shift: Shift) => {
   const late = mins(inAt) - mins(shift.from)
   return late > TIMECFG.lateGraceMins ? late : 0

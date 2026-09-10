@@ -10,11 +10,6 @@ import {
 } from '@/lib/range'
 import { now } from '@/lib/clock'
 
-/**
- * The date range control, and the sentence underneath saying what it resolved
- * to. The sentence matters as much as the control: "last 30 days" is a label,
- * and the two actual dates are what somebody needs to quote a figure.
- */
 export function RangeBar({
   id,
   value,

@@ -12,7 +12,6 @@ const STEPS: [string, string][] = [
   ['Products', 'What it sells, at what fee, against what turnaround.'],
 ]
 
-/** Setting up a new workspace. Nothing is shared with the companies already here. */
 function Onboard() {
   const { toast } = useUi()
   const navigate = useGo()

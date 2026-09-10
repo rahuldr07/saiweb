@@ -8,20 +8,7 @@ import {
   saveLinkType,
   typeUsage,
   useCoverage,
-} from '@/state/coverage'
-
-/**
- * The link types every county holds a slot for.
- *
- * Adding one is a workspace-wide change — all counties get an empty slot, and it
- * reads "no link on file" until somebody fills it in. Nothing is invented, which
- * is the whole point: a fabricated address looks exactly like a real one until a
- * searcher has already lost twenty minutes to it.
- *
- * The view is controlled by the caller so the modal's own title can change with
- * it. A dialog headed "Link types" while asking whether to remove one is the
- * kind of small dishonesty that makes people click the wrong button.
- */
+} from '@/state/counties'
 
 export type LtView = { at: 'list' } | { at: 'edit'; k?: string } | { at: 'confirm'; k: string }
 

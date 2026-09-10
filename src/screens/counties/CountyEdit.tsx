@@ -3,19 +3,9 @@ import { Banner, Btn, FormActions, Label } from '@/components/ui'
 import { BADSTATES } from '@/data/catalog'
 import { LSTATE, days } from '@/lib/derived'
 import { isDuplicateName } from '@/lib/forms'
-import { removeCounty, saveCounty, useCoverage } from '@/state/coverage'
+import { removeCounty, saveCounty, useCoverage } from '@/state/counties'
 import type { County, CountyLink } from '@/data/types'
 
-/**
- * Adding a county, or correcting one.
- *
- * The link fields are the reason this is one form rather than four: a county
- * arrives with its addresses, and making somebody save the county and then open
- * four separate dialogs is how three of them never get filled in.
- *
- * An address that has been edited comes back as **unchecked**, not working. The
- * checker decides what works; this form only records what was typed.
- */
 export function CountyEdit({
   county,
   onDone,
@@ -41,15 +31,11 @@ export function CountyEdit({
     if (!name) return setError('A county name is required.')
     if (!/^[A-Z]{2}$/.test(state)) return setError('Use a two-letter state code.')
 
-    /* The state is half the identity — a Washington County in two states is two
-       counties, so only the ones in this state can clash. */
     const inState = counties.filter((c) => c.st === state)
     const isEdited = (c: County) => !!county && c.n === county.n && c.st === county.st
     if (isDuplicateName(inState, name, (c) => c.n, isEdited))
       return setError(`${name}, ${state} is already on file.`)
 
-    /* An unchanged address keeps its health and its history; a new or edited one
-       has to be checked again before anyone can call it working. */
     const links: Record<string, CountyLink> = {}
     for (const t of linkTypes) {
       const u = (urls[t.k] ?? '').trim()

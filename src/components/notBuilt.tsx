@@ -2,21 +2,6 @@ import { Btn } from './ui'
 import { useUi } from '@/state/ui'
 import type { CsvResult } from '@/lib/csv'
 
-/**
- * Saying plainly that something is not built.
- *
- * The design has one of these behind about ten buttons — connect a mailbox,
- * import a CSV, open a scan, render a PDF. They are all the same admission: the
- * screen knows what the action means, and the thing it would need to actually do
- * it is not here. A button that silently did nothing, or a toast claiming
- * success, would both be worse than saying so.
- *
- * It always offers the way out that does work. The design's line is that CSV
- * carries the same fields and is working now, so the refusal is never a dead
- * end — you leave with the data, just not in the format you asked for. The
- * caller supplies the export, because only the caller knows what "the same
- * fields" means on its own screen.
- */
 export function useNotBuilt() {
   const { openModal, closeModal, toast } = useUi()
 

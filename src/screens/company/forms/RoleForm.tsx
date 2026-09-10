@@ -3,14 +3,6 @@ import { Banner, Btn, FormActions, Label } from '@/components/ui'
 import { isDuplicateName } from '@/lib/forms'
 import { ADMIN_FLOOR, removeRole, saveRole, usePerms, useRoles, useStaff } from '@/state/company'
 
-/**
- * A role, and what it can do.
- *
- * Two guards are structural rather than stylistic. The permission nobody may
- * hold stays visible but unticakable, so its absence is deliberate; and the admin
- * role keeps the floor it needs to administer, because a workspace that can lock
- * itself out of its own settings has no way back in.
- */
 export function RoleForm({
   id,
   onCancel,
@@ -188,7 +180,6 @@ export function RoleForm({
   )
 }
 
-/** Removing a role. Its holders drop to Staff rather than to nothing. */
 export function RoleDelete({
   id,
   onCancel,

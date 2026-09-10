@@ -1,15 +1,3 @@
-/**
- * The order mailbox.
- *
- * Most orders arrive as email, so intake starts with what landed rather than
- * with an empty form. Each message is read for the fields it obviously carries
- * and nothing is created from it: a person confirms before any of it becomes
- * work, because an address misread from an email is the failure this step
- * exists to prevent.
- *
- * A function rather than a constant so the arrival times move with the clock —
- * a fixture pinned at import would drift the moment `setClock` is called.
- */
 import { hrs } from '@/lib/format'
 import type { MailItem } from './types'
 
@@ -56,7 +44,6 @@ export const MAILBOX = (): MailItem[] => [
   },
 ]
 
-/** What each status means on the card, and the chip that carries it. */
 export const MAIL_STATE: Record<MailItem['st'], [string, 'v' | 'd' | 'r']> = {
   ready: ['Ready', 'v'],
   dupe: ['Duplicate', 'd'],

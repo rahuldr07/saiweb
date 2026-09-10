@@ -1,28 +1,17 @@
 import { useState } from 'react'
 import { Banner, Btn, Field, Form, FormActions } from '@/components/ui'
 import { TIMECFG } from '@/data/hrms'
-import { hm } from '@/lib/timeclock'
+import { hm } from '@/lib/workingDay'
 import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 
 const MIN_MINUTES = 15
 
-/**
- * Claiming overtime.
- *
- * The minutes are pre-filled from what the punches actually show, so the common
- * case is one click — and a claim that disagrees with the clock is visible to
- * the person making it before it reaches an approver.
- *
- * The reason is required for a stated purpose: overtime with none is impossible
- * to argue for at budget time, and impossible to refuse fairly.
- */
 export function OvertimeForm({
   workedMins,
   onCancel,
   onSubmit,
 }: {
-  /** Minutes worked today after breaks, or 0 if the day is not closed. */
   workedMins: number
   onCancel: () => void
   onSubmit: (date: string, minutes: number, why: string) => void

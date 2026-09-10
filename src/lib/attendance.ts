@@ -1,20 +1,10 @@
-/**
- * The things people raise about their own attendance.
- *
- * Corrections and late marks are generated rather than typed out, because what
- * matters is the shape — a handful of corrections waiting, a scatter of late
- * punches with a couple of repeat offenders — not any particular row. The
- * generator is seeded, so the figures are the same on every load and a screenshot
- * still matches the screen.
- */
 import { HOLIDAYS, STAFF } from '@/data/people'
 import { ATT, LEAVE, PAYMONTHS, TIMECFG } from '@/data/hrms'
 import { now } from './clock'
 import { fmtDate, pad } from './format'
-import { mins, shiftByKey } from './timeclock'
+import { mins, shiftByKey } from './workingDay'
 import type { LateMark, Regularisation } from '@/data/types'
 
-/** A linear congruential generator — small, and identical run to run. */
 const seeded = (seed: number) => {
   let s = seed
   return () => {
@@ -30,8 +20,6 @@ const dAgo = (n: number) => {
 
 const rostered = () => STAFF.filter((p) => p.dep.length && p.active !== false)
 
-/* ── corrections ────────────────────────────────────────────────────────── */
-
 const WAS = [
   'No check-out recorded',
   'Checked in at 10:40',
@@ -45,10 +33,6 @@ const ASK = [
   'Power cut, worked on mobile',
 ] as const
 
-/**
- * A correction is a claim about a day the clock got wrong. Approving one moves
- * the payslip for that month, which is exactly why it needs a person.
- */
 export function makeRegularisations(): Regularisation[] {
   const r = seeded(20260307)
   const out: Regularisation[] = []
@@ -69,9 +53,6 @@ export function makeRegularisations(): Regularisation[] {
   return out
 }
 
-/* ── late logins ────────────────────────────────────────────────────────── */
-
-/** Four of the ten are null: most late marks come with no reason at all. */
 const LATEREASONS: (string | null)[] = [
   'Power cut at home',
   'Traffic — Outer Ring Road',
@@ -85,13 +66,6 @@ const LATEREASONS: (string | null)[] = [
   null,
 ]
 
-/**
- * Thirty days of late marks.
- *
- * Sundays and non-optional holidays are skipped — nobody is late for a day they
- * were not due — and anything inside the grace period never becomes a mark at
- * all, which is the difference between a grace period and a warning.
- */
 export function makeLateLog(): LateMark[] {
   const r = seeded(20260311)
   const out: LateMark[] = []
@@ -118,8 +92,6 @@ export function makeLateLog(): LateMark[] {
         due: sh.from,
         at: `${pad(Math.floor(at / 60) % 24)}:${pad(at % 60)}`,
         mins: late,
-        /* Four of the ten entries are already null, so "no reason given" is the
-           reading an absent one has too. */
         why: LATEREASONS[Math.floor(r() * LATEREASONS.length)] ?? null,
         waived: false,
       })
@@ -128,26 +100,15 @@ export function makeLateLog(): LateMark[] {
   return out.sort((a, b) => b.d.getTime() - a.d.getTime())
 }
 
-/* ── absence patterns ───────────────────────────────────────────────────── */
-
 export interface AbsencePattern {
   lop: number
   mondays: number
   fridays: number
   single: number
-  /** [what was noticed, how to read it] */
   flags: [string, string][]
   total: number
 }
 
-/**
- * Absence is only worth acting on as a pattern.
- *
- * One day off is a day off; the same Monday three times is a conversation. Every
- * flag here is phrased as something to ask about rather than something to
- * enforce, because the usual cause is a shift that does not fit somebody's
- * commute or household — which a warning does not fix.
- */
 export function absencePattern(id: string): AbsencePattern {
   const taken = LEAVE.filter((l) => l.who === id && l.st === 'approved')
   const lop = PAYMONTHS.reduce((a, m) => a + (ATT[m]?.[id]?.lop ?? 0), 0)

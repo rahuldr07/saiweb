@@ -1,15 +1,3 @@
-/**
- * What each report tab exports.
- *
- * Two rules, both from the design:
- *
- *  - **The export is the shape of the report, not a dump of its source.**
- *    Received is a client × stage matrix on screen, so it is a client × stage
- *    matrix in the file. Handing somebody a flat list of orders and letting them
- *    rebuild the pivot is not the same report.
- *  - **It exports what is on screen.** Every builder takes the rows the tab has
- *    already filtered, so a file can never disagree with the figures above it.
- */
 import { ASSIGN_STAGES, STAGES } from '@/data/org'
 import { PRODUCTS } from '@/data/catalog'
 import { STAFF } from '@/data/people'
@@ -21,12 +9,10 @@ import { r2 } from '@/lib/format'
 
 
 export interface ReportCsv {
-  /** Stem only — `csvName` adds the date stamp and extension. */
   name: string
   rows: CsvRow[]
 }
 
-/** Client × stage: what came in, and where each client's work has reached. */
 export function receivedCsv(orders: Arrival[]): ReportCsv {
   const clients = [...new Set(orders.map((o) => o.cl))].sort()
   return {
@@ -48,9 +34,7 @@ export function receivedCsv(orders: Arrival[]): ReportCsv {
   }
 }
 
-/** Department and person × product: who is carrying which kind of work. */
 export function assignedCsv(assigns: Assignment[]): ReportCsv {
-  /* Only the products that actually appear, so the file has no empty columns. */
   const products = PRODUCTS.map((p) => p.id).filter((id) => assigns.some((a) => a.o.pr === id))
   return {
     name: 'assigned',
@@ -66,7 +50,6 @@ export function assignedCsv(assigns: Assignment[]): ReportCsv {
   }
 }
 
-/** One row per delivery, with the hours each stage took. */
 export function turnaroundCsv(deliveries: Delivery[]): ReportCsv {
   return {
     name: 'on-time',
@@ -95,7 +78,6 @@ export function turnaroundCsv(deliveries: Delivery[]): ReportCsv {
   }
 }
 
-/** One row per check, including who rated it — the independence is the record. */
 export function qualityCsv(log: QcEntry[]): ReportCsv {
   return {
     name: 'quality',
@@ -132,7 +114,6 @@ export function qualityCsv(log: QcEntry[]): ReportCsv {
   }
 }
 
-/** Workload, per person or per department — the same five columns either way. */
 export function workloadCsv(rows: WorkRow[] | DeptRow[], byDept: boolean): ReportCsv {
   return {
     name: byDept ? 'department-workload' : 'staff-workload',

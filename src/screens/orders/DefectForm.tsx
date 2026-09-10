@@ -2,14 +2,6 @@ import { useState } from 'react'
 import { Banner, Btn, Field, FormActions } from '@/components/ui'
 import { QC_CRITERIA } from '@/lib/quality'
 
-/**
- * Logging a defect against an order.
- *
- * The criterion is a choice and the sentence is not optional: a defect with no
- * reason attached teaches nobody anything, and that sentence is what appears on
- * the Quality report and on the person's own page as the thing to do
- * differently.
- */
 export function DefectForm({
   onCancel,
   onSubmit,

@@ -5,7 +5,7 @@ import { useRules } from '@/state/rules'
 import { ASSIGN_STAGES, ENGINEOPTS } from '@/data/org'
 import { PRODUCTS } from '@/data/catalog'
 import { STAFF } from '@/data/people'
-import { EVERYSTATE, stateName } from '@/lib/coverage'
+import { EVERYSTATE, stateName } from '@/lib/qualification'
 import { ruleMatches, type AssignmentBoard } from '@/lib/engine'
 import {
   RULE_KIND,
@@ -15,14 +15,8 @@ import {
   ruleThen,
   ruleWhen,
   type RuleDraft,
-} from '@/lib/rules'
+} from '@/lib/ruleText'
 import type { EngineConfig, Rule } from '@/data/types'
-
-/**
- * The rules, in the order they run, and the two things you can do with them
- * before they touch anybody's queue: see what each one actually did today, and
- * try a change against today's orders without saving it.
- */
 
 const blankDraft = (): RuleDraft => ({ n: '', k: 'route', on: true, cond: {}, pool: [] })
 
@@ -39,8 +33,6 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
   const { rules, engine, setEngine, toggle, save, remove, dryRun } = useRules()
   const { run } = board
 
-  /* The editor's draft lives here rather than inside the modal, because the
-     modal takes a body and a footer and both have to see the same draft. */
   const [editing, setEditing] = useState<{ id: string | null } | null>(null)
   const [draft, setDraft] = useState<RuleDraft>(blankDraft)
   const [problem, setProblem] = useState<string | null>(null)
@@ -139,23 +131,11 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
     stopEdit()
   }, [draft, rules, editing, save, toast, stopEdit])
 
-  /**
-   * The editor's buttons, reached through a ref rather than through the effect's
-   * dependencies.
-   *
-   * `useUi` rebuilds `closeModal` every time the modal changes, so anything
-   * derived from it changes identity too. An effect that both depends on those
-   * and opens the modal is a loop: open → modal state → new closeModal → deps
-   * moved → open again. The handlers are read at click time instead, which is
-   * the only moment they are needed.
-   */
   const actions = useRef({ commit, stopEdit, showDryRun })
   useEffect(() => {
     actions.current = { commit, stopEdit, showDryRun }
   })
 
-  /* Re-opened on every draft change so the preview below the form is live. The
-     modal is one slot in the shell, so replacing the spec re-renders it. */
   useEffect(() => {
     if (!editing) return
     const locked = editing.id ? rules.find((r) => r.id === editing.id)?.lock : false
@@ -306,7 +286,6 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
             </div>
           ) : null}
 
-          {/* Says what the rule will do before it does it, counted against today. */}
           <div className={`bnr ${noPool ? 'd' : noCond ? 'r' : 'n'}`} style={{ marginTop: 18 }}>
             <span className="bi">·</span>
             <div>

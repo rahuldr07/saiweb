@@ -1,10 +1,3 @@
-/**
- * Shift swaps on the board.
- *
- * Static because a swap is an agreement between two named people about one named
- * day — there is nothing to generate, and inventing more of them would not make
- * the screen truer.
- */
 import type { Swap } from './types'
 
 export const SWAPS: Swap[] = [

@@ -23,14 +23,6 @@ import {
   useSla,
 } from '@/state/company'
 
-/**
- * Where due dates come from.
- *
- * Three questions, kept apart because they are answered by different people: what
- * we promised the client, how that promise is divided between departments, and
- * how the clock behaves while it runs.
- */
-
 const SUBS = ['Client promise', 'Stage budgets', 'How the clock runs'] as const
 type Sub = (typeof SUBS)[number]
 
@@ -62,15 +54,11 @@ export function SlaTab({ initialSub }: { initialSub?: string }) {
   )
 }
 
-/* ── what we promised ───────────────────────────────────────────────────── */
-
 function ClientPromise() {
   const sla = useSla()
   const { openModal, closeModal, toast } = useUi()
 
   const fb = sla.find(isDefaultRule) ?? { cl: '—', pr: 'Any', h: 24 }
-  /* A product with no rule inherits the fallback. If the fallback is shorter than
-     the work takes, the due date is wrong from the moment the order arrives. */
   const under = PRODUCTS.filter((p) => !sla.some((x) => x.pr === p.id) && p.h > fb.h)
 
   const addRule = () =>
@@ -299,8 +287,6 @@ function AddSla({ onCancel, onDone }: { onCancel: () => void; onDone: (m: string
   )
 }
 
-/* ── how it is divided ──────────────────────────────────────────────────── */
-
 function StageBudgets() {
   const budget = useBudget()
   const { toast } = useUi()
@@ -314,7 +300,6 @@ function StageBudgets() {
   const diff = r2(100 - tot)
   const win = 24 * (1 - budget.buffer / 100)
 
-  /* Cumulative, built with a reduce so nothing is reassigned across a render. */
   const cps = ASSIGN_STAGES.reduce<{ st: string; h: number; c: number }[]>((acc, st) => {
     const h = (win * (sh[st] ?? 0)) / 100
     acc.push({ st, h, c: (acc[acc.length - 1]?.c ?? 0) + h })
@@ -666,8 +651,6 @@ function StageBudgets() {
     </>
   )
 }
-
-/* ── how the clock behaves ──────────────────────────────────────────────── */
 
 function ClockRuns() {
   const clock = useClock()

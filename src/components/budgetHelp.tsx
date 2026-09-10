@@ -1,15 +1,6 @@
 import { Row, Rows } from './ui'
 import { useUi } from '@/state/ui'
 
-/**
- * What "inside your budget" means.
- *
- * Asked from two places — a person's own report and their profile — and it has to
- * say the same thing in both, because the figure it explains is the one people
- * argue with. The point it exists to make is in the last paragraph: the
- * comparison is against others doing the *same stages*, since RTS finishes
- * inside budget almost every time and Search barely 60% of the time.
- */
 export function useBudgetHelp() {
   const { openModal } = useUi()
 

@@ -6,15 +6,6 @@ import { now } from '@/lib/clock'
 import { useState } from 'react'
 import { exportEverything } from './exportAll'
 
-/**
- * The workspace's own settings, and the two things you can do to the workspace
- * itself.
- *
- * The date format is the one setting here that changes every other screen, so
- * the hint shows today's date in the chosen format rather than describing it —
- * you pick the format by reading the result.
- */
-
 const TIMEZONES = ['India Standard Time', 'Eastern', 'Central']
 
 export function CompanyTab({ plan }: { plan: string }) {
@@ -24,8 +15,6 @@ export function CompanyTab({ plan }: { plan: string }) {
 
   const changeFormat = (v: DateFormat) => {
     setDateFormat(v)
-    /* `setDateFormat` writes a module value that nothing subscribes to, so the
-       local state is what re-renders this card — and with it the live example. */
     setFmt(v)
   }
 
@@ -35,8 +24,6 @@ export function CompanyTab({ plan }: { plan: string }) {
     return files
   }
 
-  /* Deliberately awkward: the name has to be typed. A workspace closing is the
-     one action here that nobody can undo for you. */
   const confirmClose = () =>
     openModal({
       title: `Close ${profile.name}?`,
@@ -141,7 +128,6 @@ export function CompanyTab({ plan }: { plan: string }) {
   )
 }
 
-/** The confirmation. Typing the name is the point, not a formality. */
 function CloseWorkspace({
   name,
   onCancel,

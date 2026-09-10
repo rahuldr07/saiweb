@@ -5,17 +5,6 @@ import type { PettyConfig, PettyEntry } from '@/data/types'
 import { inr } from '@/lib/payroll'
 import { now } from '@/lib/clock'
 
-/**
- * Recording money in or out of the box.
- *
- * The arithmetic is worked out on screen as it is typed, so the balance after
- * an entry is never carried in anyone's head — and so an entry that would take
- * the box below zero is visible before it is saved rather than after.
- *
- * A voucher number is required on the way out. Cash paid out with nothing to
- * show for it is the entry nobody can explain three months later; writing
- * "none" is allowed, and flags the row rather than hiding it.
- */
 export function EntryForm({
   balance,
   cfg,
@@ -129,7 +118,6 @@ export function EntryForm({
         </div>
       </Form>
 
-      {/* The sum, worked out here so it is never carried in anyone's head. */}
       <div
         className="rw"
         style={{ background: 'var(--tint)', borderRadius: 9, padding: '12px 14px', marginTop: 6 }}

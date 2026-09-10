@@ -1,10 +1,3 @@
-/**
- * The sidebar: six groups, twenty-one screens. Labels, routes and glyphs are the
- * design's own — including the typographic icons, which are Unicode rather than
- * an icon font so the shell carries no image weight at all.
- */
-
-/** [label, route, glyph] */
 export type NavItem = [label: string, route: string, glyph: string]
 
 export interface NavGroup {
@@ -61,7 +54,6 @@ export const NAV: NavGroup[] = [
   },
 ]
 
-/** Route → the crumb shown in the top bar. */
 export const ROUTE_LABEL: Record<string, string> = Object.fromEntries(
   NAV.flatMap((g) => g.t.map((t) => [t[1], t[0]])),
 )

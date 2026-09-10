@@ -25,7 +25,7 @@ import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { RatingsTable } from '@/components/RatingsTable'
 import { SkeletonRows, SkeletonValue } from '@/components/async'
 import { useBudgetHelp } from '@/components/budgetHelp'
-import { useStaffEditor } from './company/forms/useStaffEditor'
+import { useStaffEditor } from '@/components/editors/useStaffEditor'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { useStaff, usePerms, useRoles } from '@/state/company'
@@ -33,20 +33,20 @@ import { useLevels } from '@/state/levels'
 import { AVAIL } from '@/data/people'
 import { ASSIGN_STAGES, COVSTAGES, STAGES } from '@/data/org'
 import { board } from '@/lib/engine'
-import { covWord } from '@/lib/coverage'
+import { covWord } from '@/lib/qualification'
 import { median } from '@/lib/metrics'
-import { stageWorkOf, standing, type StageWork } from '@/lib/quality'
+import { standing, type StageWork } from '@/lib/quality'
 import { DEFAULT_RANGE, inRange, resolveRange } from '@/lib/range'
 import { fmtDate, initials } from '@/lib/format'
 import { roleName } from '@/lib/permissions'
 import { useDeliveries } from '@/lib/useDeliveries'
 import { useQcLog } from '@/lib/useQcLog'
+import { useStageWork } from '@/lib/useStageWork'
 import type { QcEntry } from '@/data/quality'
 
 const TABS = ['Overview', 'Work', 'Quality', 'Access'] as const
 type Tab = (typeof TABS)[number]
 
-/** Last four only. Anything more should be a deliberate act. */
 const maskAadhaar = (a: string) => (a ? `XXXX XXXX ${a.replace(/\s/g, '').slice(-4)}` : '')
 
 const TINT: Record<string, string> = {
@@ -57,23 +57,6 @@ const TINT: Record<string, string> = {
   n: 'var(--tint)',
 }
 
-/**
- * One person, everything about them.
- *
- * The figures already existed — they were just spread across four screens, so
- * nobody could answer "how is she doing?" without opening three of them and
- * holding the numbers in their head. Four tabs, in the order the question is
- * usually asked: who they are, what they are carrying, how the work reads, and
- * what they are allowed to do.
- *
- * Two rules the design is firm about, and this screen keeps:
- *
- *  - Performance is measured against a target and against people doing the same
- *    stages — never against the company average, which would say more about
- *    which stage someone works on than about them.
- *  - Aadhaar and bank details show masked. Revealing them is a deliberate act,
- *    and in a real deployment a logged one.
- */
 export default function PersonDetail() {
   const { personId } = useParams({ from: '/staff/$personId' })
   const navigate = useGo()
@@ -92,25 +75,19 @@ export default function PersonDetail() {
 
   const history = useDeliveries()
   const qcLog = useQcLog()
+  const range = resolveRange(DEFAULT_RANGE)
+  const stageWork = useStageWork(range)
 
   if (!person) {
     return <NotFoundRecord what="person" backTo="/company" backLabel="Staff" />
   }
 
-  /* Nothing below is memoised by hand. The compiler does it, and doing it here
-     as well is what stops it from doing it at all — the roster these figures are
-     keyed on is an edited store, so a manual dependency list on it cannot be
-     preserved. */
-  const range = resolveRange(DEFAULT_RANGE)
   const { run, work: allWork, dwork } = board()
   const log = qcLog.data ?? []
 
-  /* Ratings on their work, and the ratings they handed out — both inside the
-     same window, so the two halves of a QC record can be read together. */
   const rated = log.filter((x) => x.onName === person.n && inRange(x.d, range))
   const given = log.filter((x) => x.byName === person.n && inRange(x.d, range))
   const teamRows = log.filter((x) => inRange(x.d, range))
-  const stageWork = stageWorkOf((history.data ?? []).filter((x) => inRange(x.d, range)))
 
   const work = allWork[person.id] ?? { done: 0, pend: 0, tot: 0, pct: 0, items: [], stages: {} }
   const t: StageWork | null = stageWork.people[person.n] ?? null
@@ -125,14 +102,7 @@ export default function PersonDetail() {
   const levelId = levelsApi.personLevel(person.id)
   const loading = qcLog.isPending || history.isPending
 
-  /* Somebody's own record is always theirs to read; anyone else's statutory
-     identifiers and bank account need the capability that manages staff. The
-     design has no gate here because it has no roles behind it — this screen
-     does, and a page reachable by any signed-in person is the wrong place to
-     print an Aadhaar number. */
   const maySeePersonal = isMe || can('people')
-
-  /* ── the modals the figures open ───────────────────────────────────────── */
 
   const modalNote = (children: React.ReactNode) => (
     <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -262,8 +232,6 @@ export default function PersonDetail() {
     })
   }
 
-  /* ── the header ────────────────────────────────────────────────────────── */
-
   const head = (
     <Card padded>
       <div className="ch" style={{ border: 'none', padding: 0 }}>
@@ -335,8 +303,6 @@ export default function PersonDetail() {
       ) : null}
     </Card>
   )
-
-  /* ── overview ──────────────────────────────────────────────────────────── */
 
   const overview = (
     <>
@@ -641,8 +607,6 @@ export default function PersonDetail() {
     </>
   )
 
-  /* ── work ──────────────────────────────────────────────────────────────── */
-
   const dayItems = [...work.items].sort((a, b) => a.hr - b.hr)
 
   const workTab = (
@@ -706,8 +670,6 @@ export default function PersonDetail() {
                 cols="120px 1fr 200px"
                 padding="7px 0"
                 label={st}
-                /* Track runs to twice the budget, so the pale bar marks 1× and
-                   the solid one is their median against it. */
                 value={md}
                 max={2}
                 budget={{ value: 1, max: 2 }}
@@ -765,8 +727,6 @@ export default function PersonDetail() {
       )}
     </>
   )
-
-  /* ── quality ───────────────────────────────────────────────────────────── */
 
   const defects = rated.filter((x) => x.defect)
   const clean = rated.filter((x) => !x.crit)
@@ -914,8 +874,6 @@ export default function PersonDetail() {
       ) : null}
     </>
   )
-
-  /* ── access ────────────────────────────────────────────────────────────── */
 
   const held = role ? role.p : []
 

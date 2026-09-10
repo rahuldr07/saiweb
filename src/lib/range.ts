@@ -2,14 +2,6 @@ import { now } from './clock'
 import { QC_DAYS } from '@/data/quality'
 import { fmtDate, iso, parseIso } from '@/lib/format'
 
-/**
- * Date ranges for the report tabs.
- *
- * One engine keyed by a prefix, so each tab scopes independently — you often
- * want quality over 90 days and turnaround over 7, and a single shared range
- * would make one of those answer the wrong question.
- */
-
 export const QC_PRESETS: [key: string, label: string, days: number | null][] = [
   ['7', 'Last 7 days', 7],
   ['30', 'Last 30 days', 30],
@@ -17,7 +9,6 @@ export const QC_PRESETS: [key: string, label: string, days: number | null][] = [
   ['mtd', 'This month', null],
 ]
 
-/** The two ends of a span of days — all a date filter needs to answer. */
 export interface Span {
   from: Date
   to: Date
@@ -44,8 +35,6 @@ export function resolveRange(state: RangeState): Range {
   if (state.preset === 'mtd') {
     return { from: new Date(t.getFullYear(), t.getMonth(), 1), to: t, label: 'this month', preset: 'mtd' }
   }
-  /* 30 twice over: the preset an unknown key falls back to, and the span to use
-     if the preset list itself has been emptied. */
   const preset = QC_PRESETS.find((x) => x[0] === state.preset) ?? QC_PRESETS[1]
   const days = preset?.[2] ?? 30
   return {
@@ -56,18 +45,15 @@ export function resolveRange(state: RangeState): Range {
   }
 }
 
-/** Whole days at both ends, so a range never clips the day it names. */
 export const inRange = (d: Date, r: Span) =>
   d >= new Date(r.from.getFullYear(), r.from.getMonth(), r.from.getDate()) &&
   d <= new Date(r.to.getFullYear(), r.to.getMonth(), r.to.getDate(), 23, 59, 59)
 
-/** The furthest back any range may reach — the log does not go beyond it. */
 export const rangeFloor = () => {
   const t = now()
   return new Date(t.getFullYear(), t.getMonth(), t.getDate() - (QC_DAYS - 1))
 }
 
-/** Moving one end past the other drags the other with it rather than refusing. */
 export function setRangeEnd(state: RangeState, which: 'from' | 'to', v: string): RangeState {
   if (!v) return state
   const next: RangeState = { ...state, [which]: v, preset: 'custom' }
@@ -78,16 +64,8 @@ export function setRangeEnd(state: RangeState, which: 'from' | 'to', v: string):
   return next
 }
 
-/** As many weekly bars as a chart will carry before they stop being readable. */
 const MAX_WEEKS = 15
 
-/**
- * The range cut into weeks, oldest first.
- *
- * Counted back from the last day rather than forward from the first, so the
- * newest bar is always a whole week and any part-week lands at the far left,
- * clamped to the range so it never reports days the range excludes.
- */
 export function weeklyBuckets(r: Range): Span[] {
   const out: Span[] = []
   for (
@@ -102,18 +80,10 @@ export function weeklyBuckets(r: Range): Span[] {
   return out
 }
 
-/**
- * A week's end as a bar label: the chosen date order, minus the year.
- *
- * The bars are too narrow for a full date and every one of them is in the same
- * year as its neighbours; the tooltip carries the whole span.
- */
 export const weekTick = (d: Date) => fmtDate(d).split('/').slice(0, 2).join('/')
 
 export function setPreset(state: RangeState, preset: string): RangeState {
   if (preset !== 'custom') return { ...state, preset }
-  /* Switching to custom keeps whatever the preset was showing, so the dates do
-     not jump the moment you take manual control of them. */
   const r = resolveRange(state)
   return { preset: 'custom', from: state.from ?? iso(r.from), to: state.to ?? iso(r.to) }
 }

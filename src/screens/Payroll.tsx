@@ -35,19 +35,6 @@ import { csvName, downloadCSV, type CsvRow } from '@/lib/csv'
 import { registerRows } from '@/lib/payroll-csv'
 import type { Person, RunState } from '@/data/types'
 
-/**
- * Payroll.
- *
- * Four different jobs happen here — running the month, reading the register,
- * remitting what is owed, and settling anyone leaving. Stacked, the checks that
- * stop a run sat above a 28-row table and were scrolled past, so each gets a tab
- * and the count of things to check sits on the first one.
- *
- * Nothing on any of them is stored. Every figure is built from one number per
- * person — their CTC — and this month's attendance, so there is no second set of
- * numbers to fall out of step with the payslips.
- */
-
 type Tab = 'The run' | 'Register' | 'Cost and statutory' | 'Leavers'
 
 const REGISTER_COLS = '180px 100px 90px 120px 100px 90px 90px 110px 120px'
@@ -64,9 +51,6 @@ function Payroll() {
   const run = PAYRUNS[month]
   const totals = payTotals(month)
 
-  /* Three ways a person cannot be paid properly, and they are not the same. No
-     salary leaves them out of the run; no bank account produces a payslip with
-     nowhere to send the money; no joining date pays a full month regardless. */
   const noCtc = STAFF.filter((x) => x.active !== false && !x.ctc)
   const noBank = paidStaff().filter((x) => !x.bank || !x.bank.acct)
   const noDoj = paidStaff().filter((x) => !x.doj)
@@ -95,7 +79,6 @@ function Payroll() {
 
   const openPerson = (id: string) => navigate({ to: '/staff/$personId', params: { personId: id } })
 
-  /* The month travels with it, so a slip opened from June's run is June's slip. */
   const openPayslip = (id: string) =>
     navigate({ to: '/payslips/$personId', params: { personId: id }, search: { m: month } })
 
@@ -106,8 +89,6 @@ function Payroll() {
     changed()
     toast(`${month} — ${RUNSTATE[to][0]}`)
   }
-
-  /* ── the three gates ───────────────────────────────────────────────────── */
 
   const lockRun = () =>
     openModal({
@@ -145,13 +126,6 @@ function Payroll() {
       ),
     })
 
-  /**
-   * Approving closes the month to edits, so it asks for a typed name.
-   *
-   * Not friction for its own sake: reopening an approved month should need a
-   * reason and leave a trace, and a single button does not distinguish a
-   * deliberate act from a misclick.
-   */
   const approveRun = () =>
     openModal({
       title: `Approve ${month} payroll?`,
@@ -199,8 +173,6 @@ function Payroll() {
     if (run.state === 'approved') return publishRun()
   }
 
-  /* ── exports ───────────────────────────────────────────────────────────── */
-
   const exportCsv = (name: string, rows: CsvRow[], noun: string) => {
     const out = downloadCSV(csvName(`${name}-${month.replace(' ', '-')}`), rows)
     toast(`${out.name} — ${out.rows.length - 1} ${noun}`)
@@ -220,7 +192,6 @@ function Payroll() {
       'credits',
     )
 
-  /** The four statutory returns, each with the columns its portal asks for. */
   const STATUTORY: [label: string, name: string, header: string[], row: (x: PayTotals['list'][0]) => (string | number)[]][] =
     [
       [
@@ -641,12 +612,10 @@ function Payroll() {
   )
 }
 
-/** One line of a cost or statutory breakdown. */
 function Line({ label, value }: { label: string; value: string }) {
   return <DetailRow label={label} value={<b className="mono">{value}</b>} />
 }
 
-/** Something that has to be fixed, or knowingly accepted, before approving. */
 function Check({
   bad,
   title,
@@ -678,7 +647,6 @@ function Check({
   )
 }
 
-/** Full and final settlement for one person. */
 function Leaver({ p, onOpen }: { p: Person; onOpen: () => void }) {
   const f = settlement(p, p.leaving)
   return (
@@ -744,7 +712,6 @@ function Leaver({ p, onOpen }: { p: Person; onOpen: () => void }) {
   )
 }
 
-/** Approving asks for a typed name, so it cannot be a misclick. */
 function ApproveForm({
   expected,
   totals,

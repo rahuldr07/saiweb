@@ -11,16 +11,6 @@ import {
   registerRows,
 } from '@/lib/payroll-csv'
 
-/**
- * The payslip downloads, named the way the design names them.
- *
- * A payslip is offered from three screens — the register, a person's own
- * history, and the payslip document itself — and all three have to produce the
- * same file, under the same name, with the same toast. `lib/payroll-csv` holds
- * the rows and the file stems; this holds the step past them that needs the
- * tenant and the toast, so a screen offering a download has nothing left to get
- * wrong.
- */
 export interface PayslipDownloads {
   payslip: (person: Person, month: string) => void
   register: (month: string, list: Payslip[]) => void

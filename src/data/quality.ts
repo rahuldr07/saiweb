@@ -1,55 +1,27 @@
-/**
- * The QC log: 90 days of ratings, one row per stage that was reviewed.
- *
- * Kept apart from the deliveries and loaded the same lazy way, because only the
- * Reports screen reads it and it is 262 KB. `by` is the person who rated, `on`
- * is the person who did the work — a distinction the whole quality report turns
- * on, since a score means nothing without knowing it came from somebody else.
- *
- * About a third of delivered work is never rated, which is deliberate rather
- * than missing: the report has to be honest that its sample is partial.
- */
-
 export interface QcEntry {
   d: Date
   dk: string
-  /** The order the rated stage belonged to. */
   order: string
   cl: string
   pr: string
-  /** The stage that was reviewed — never the QC stage itself. */
   stage: string
-  /** Who did the work. */
   on: string
   onName: string
-  /** Who rated it. Never the same person: QC independence is structural. */
   by: string
   byName: string
   acc: number
   comp: number
   fmt: number
   avg: number
-  /** Any axis at 3 or below. */
   defect: boolean
-  /** The weakest axis, named — a score below 5 with no reason teaches nobody. */
   crit: string | null
   note: string | null
 }
 
 type RawQcEntry = Omit<QcEntry, 'd'> & { d: string }
 
-/** How far back the log goes. The range presets are bounded by it. */
 export const QC_DAYS = 90
 
-/**
- * The practice that prevents each defect.
- *
- * This is the half of a quality score that is actually usable. "Accuracy 4" tells
- * somebody they were marked down; "read the reference off the recorded instrument,
- * not the index entry" tells them what to do on Monday. Every reason a rater can
- * pick has one, so a rating can never leave a person holding a number with no next
- * step — which is why the personal report leads with these rather than the score.
- */
 export const QC_FIX: Record<string, string> = {
   'Book/Page transposed from the index':
     'Read the reference off the recorded instrument itself, not the index entry. The index is a finding aid, keyed by hand, and transposition is the most common error in it.',
@@ -89,7 +61,6 @@ export const QC_FIX: Record<string, string> = {
     'Write "Not Available" in full. N/A is read as "not applicable", which is a different claim.',
 }
 
-/** What a mark below 5 was actually for, by axis. */
 export const QC_REASONS: Record<string, string[]> = {
   Accuracy: [
     'Book/Page transposed from the index',
@@ -126,7 +97,6 @@ export function loadQcLog(): Promise<QcEntry[]> {
   return pending
 }
 
-/** Drops the memo, so a test can load a different log. */
 export function resetQcLog(): void {
   pending = null
 }

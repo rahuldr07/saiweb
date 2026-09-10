@@ -22,29 +22,16 @@ import type { Person } from '@/data/types'
 import { inr, paidStaff, payTotals, payslipOf } from '@/lib/payroll'
 import { usePayslipDownloads } from './payslips/usePayslipDownloads'
 
-/**
- * The payslips register.
- *
- * Tabs would be padding on a screen this short. What actually costs time here is
- * the question people ask — "send me my last three payslips" — which meant
- * clicking through three months. That gets its own view; the rest gets a search.
- */
-
 const TABS = ['This month', 'One person'] as const
 type Tab = (typeof TABS)[number]
 
-/* The design's two grids, kept as constants so the header row and the body rows
-   cannot drift apart. */
 const MONTH_COLS = '200px 140px 130px 130px 130px 1fr'
 const PERSON_COLS = '170px 130px 130px 130px 110px 1fr'
 
-/** The most recent month that actually has payslips, not the most recent draft. */
 function latestPublished(): string {
   const published = PAYMONTHS.filter((m) => PAYRUNS[m]?.published)
   return published.length ? published[published.length - 1] : PAYMONTHS[PAYMONTHS.length - 1]
 }
-
-/* ── this month ─────────────────────────────────────────────────────────── */
 
 function ThisMonth({
   month,
@@ -67,8 +54,6 @@ function ThisMonth({
   const openPayslip = (personId: string) =>
     navigate({ to: '/payslips/$personId', params: { personId }, search: { m: month } })
 
-  /* One filtered list, so the count on the pill and the rows under it are the
-     same computation rather than two that agree by hand. */
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
     return totals.list.filter((x) => {
@@ -78,11 +63,8 @@ function ThisMonth({
     })
   }, [totals.list, only, query])
 
-  /* Take someone to the list already on the page rather than duplicating it, and
-     flash it so the eye lands where the tile just sent them. */
   const focusList = () => focusElement(list.current)
 
-  /* Each tile answers a different question, so each opens a different thing. */
   const showCredited = () =>
     openModal({
       title: `What was credited — ${month}`,
@@ -336,8 +318,6 @@ function ThisMonth({
   )
 }
 
-/* ── one person ─────────────────────────────────────────────────────────── */
-
 function OnePerson({
   who,
   people,
@@ -375,8 +355,6 @@ function OnePerson({
   const openPayslip = (mn: string) =>
     who && navigate({ to: '/payslips/$personId', params: { personId: who.id }, search: { m: mn } })
 
-  /* An unpaid day is the commonest reason someone queries a payslip, so the
-     months are named rather than left to be found. */
   const showUnpaid = () => {
     if (!who) return
     const withUnpaid = rows.filter((r) => r.s.unpaid > 0)
@@ -582,8 +560,6 @@ function OnePerson({
   )
 }
 
-/* ── the screen ─────────────────────────────────────────────────────────── */
-
 function Payslips() {
   const navigate = useGo()
   const download = usePayslipDownloads()
@@ -591,14 +567,10 @@ function Payslips() {
 
   const people = useMemo(() => paidStaff(), [])
 
-  /* The URL is the state. Anything it does not name falls back to the sensible
-     opening view — the latest month that actually has payslips. */
   const tab: Tab = TABS.includes(search.tab as Tab) ? (search.tab as Tab) : 'This month'
   const month = search.m && PAYMONTHS.includes(search.m) ? search.m : latestPublished()
   const who = people.find((p) => p.id === search.p) ?? people[0]
 
-  /* `replace` so changing month or tab does not put a step in the back stack —
-     leaving the screen and coming back is one step either way. */
   const setView = (next: { tab?: Tab; m?: string; p?: string }) =>
     navigate({
       to: '/payslips',
@@ -613,9 +585,6 @@ function Payslips() {
     [],
   )
 
-  /* Nobody on the payroll at all is a different fact from a run not yet
-     published, and it would otherwise render as an empty table with four zeroes
-     over it. */
   if (!people.length) {
     return (
       <>

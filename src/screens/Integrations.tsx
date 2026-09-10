@@ -5,28 +5,12 @@ import { useNotBuilt } from '@/components/notBuilt'
 import { CONNECTORS } from '@/data/integrations'
 import { csvName, downloadCSV } from '@/lib/csv'
 
-/**
- * Connect what you already run.
- *
- * Nothing here is required, and nothing on the board depends on any of it — an
- * integration that is off means that step is done by hand. None of them are
- * wired: each button says what connecting it would actually take rather than
- * toggling a switch that reaches nothing.
- */
-
-/**
- * The button's verb, carried into the modal title.
- *
- * The design titled all six "Connecting X", which reads wrong under the one
- * button that says Set up — county recorders are not something you connect to.
- */
 const VERB: Record<string, string> = {
   Connect: 'Connecting',
   Configure: 'Configuring',
   'Set up': 'Setting up',
 }
 
-/** The rounded glyph tile each connector leads with. */
 function ConnectorIcon({ children }: { children: string }) {
   return (
     <span
@@ -50,8 +34,6 @@ function ConnectorIcon({ children }: { children: string }) {
 function Integrations() {
   const notBuilt = useNotBuilt()
 
-  /* What the screen knows, in the format that does work: which connectors exist,
-     what each is for, whether it is on, and what turning it on would take. */
   const exportConnectors = () =>
     downloadCSV(csvName('integrations'), [
       ['Connector', 'What it does', 'Status', 'What connecting it needs'],
@@ -85,7 +67,6 @@ function Integrations() {
         ))}
       </div>
 
-      {/* The one a reader is most likely to assume is required, said plainly. */}
       <Banner
         kind="b"
         icon="◧"

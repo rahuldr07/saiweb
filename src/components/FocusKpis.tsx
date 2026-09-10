@@ -1,21 +1,11 @@
 import type { ReactNode } from 'react'
 import { Btn, Kpi, Kpis } from './ui'
 
-/**
- * A row of KPI tiles where each one opens the detail behind it.
- *
- * The tile is the control: pressing it focuses the report on that figure, and
- * pressing it again goes back. A tile whose count is zero is not made pressable,
- * because opening an empty list teaches nothing — but it still renders, so the
- * zero itself is visible rather than the row silently changing shape.
- */
-
 export interface FocusCard {
   key: string
   title: string
   value: ReactNode
   detail: ReactNode
-  /** Governs whether the tile is pressable — a zero is shown, not hidden. */
   count?: number
   tone?: 'alert' | 'warn' | undefined
 }
@@ -60,7 +50,6 @@ export function FocusKpis({
   )
 }
 
-/** The banner that names what you drilled into, with the way back. */
 export function FocusHead({
   title,
   children,

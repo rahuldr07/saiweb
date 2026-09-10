@@ -18,15 +18,6 @@ import {
   staleness,
 } from '@/lib/derived'
 
-/**
- * Firms we are trying to win.
- *
- * There is no pipeline to keep up to date and nothing to schedule: a lead turns
- * amber on its own once it has been left long enough, and red after longer. That
- * is the whole point of the screen — the ones that have gone quiet surface
- * themselves rather than waiting for somebody to remember them.
- */
-
 const COLS = [
   { l: 'Company', w: 210 },
   { l: 'Main contact', w: 210 },
@@ -71,8 +62,6 @@ function Leads() {
     const tone = staleness(l)
     return {
       id: l.id,
-      /* A lead belongs to its status, and also to the derived buckets — one row
-         answers to several pills without the screen filtering by hand. */
       k: [
         l.st,
         ...(needsFollowUp(l) ? ['follow'] : []),

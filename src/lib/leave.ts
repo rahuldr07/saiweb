@@ -1,14 +1,3 @@
-/**
- * What a leave request means.
- *
- * One place decides it, and the form, the send and the record the approver reads
- * all ask the same question — otherwise a request can pass a form that warned
- * about nothing and arrive with a warning attached, or the reverse.
- *
- * Nothing here refuses a person outright except by explicit policy. Blocking is
- * the strictest setting and the most likely to be worked around: somebody simply
- * does not record the day, and then the register is wrong as well as the roster.
- */
 import { LEAVE, LEAVEPOLICY, LEAVETYPES } from '@/data/hrms'
 import { STAFF } from '@/data/people'
 import { leaveBalance } from './payroll'
@@ -16,7 +5,6 @@ import { now } from './clock'
 import type { Leave, Person } from '@/data/types'
 import { fmtDate, midnight, r2 } from '@/lib/format'
 
-/** What to do when a request would leave a department below cover. */
 export const CLASHRULES: Record<string, [label: string, detail: string]> = {
   warn: ['Warn only', 'Tell them, let them send it anyway. The approver decides.'],
   reason: [
@@ -29,12 +17,6 @@ export const CLASHRULES: Record<string, [label: string, detail: string]> = {
   ],
 }
 
-/**
- * Who decides this person's leave.
- *
- * A named owner rather than a queue anybody might pick up: their own lead if the
- * department has one, otherwise any lead, otherwise the company admin.
- */
 export function managerOf(p: Person | undefined): Person | null {
   if (!p) return null
   const lead = STAFF.find(
@@ -45,14 +27,12 @@ export function managerOf(p: Person | undefined): Person | null {
   return anyLead ?? STAFF.find((x) => x.r === 'admin' && x.active !== false) ?? null
 }
 
-/** The people whose requests land with this person. */
 export const approvesFor = (id: string) =>
   STAFF.filter((p) => p.dep.length && managerOf(p)?.id === id)
 
 const overlaps = (aFrom: Date, aTo: Date, bFrom: Date, bTo: Date) => aFrom <= bTo && bFrom <= aTo
 
 
-/** Others in the same department already off across these dates. */
 export function clashesWith(pid: string, from: Date, to: Date): Leave[] {
   const p = STAFF.find((x) => x.id === pid)
   if (!p) return []
@@ -72,11 +52,8 @@ export interface Cover {
   left: number
 }
 
-/** How many of a department would still be working across these dates. */
 export function deptCover(pid: string, from: Date, to: Date): Cover | null {
   const p = STAFF.find((x) => x.id === pid)
-  /* Cover is a department's question, so somebody who is in none has no answer
-     to give — which is what an absent first department means. */
   const dep = p?.dep[0]
   if (!p || !dep) return null
   const team = STAFF.filter((x) => x.dep.includes(dep) && x.active !== false)
@@ -90,7 +67,6 @@ export function deptCover(pid: string, from: Date, to: Date): Cover | null {
   return { dep, team: team.length, off: off.length, left: team.length - off.length }
 }
 
-/** One thing the form has to say about a request, and how loudly. */
 export interface Note {
   kind: 'v' | 'r' | 'd' | 'plain'
   title?: string
@@ -99,29 +75,18 @@ export interface Note {
 
 export interface LeaveCheck {
   notes: Note[]
-  /** Policy forbids sending it as it stands. */
   blocked: boolean
-  /** Sendable, but they must say how the department will manage. */
   needReason: boolean
   cover: Cover | null
   clash: Leave[]
-  /** How far below the required cover this would take the department. */
   short: number
-  /** Whole days between today and the start date. */
   notice: number
-  /** Days taken beyond the balance — these become unpaid. */
   overBalance: number
 }
 
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
-/**
- * Everything a request is judged on, in one pass.
- *
- * The notice figure is whole days between midnights — comparing a date against a
- * timestamp made a request starting today read as minus one day's notice.
- */
 export function leaveCheck(pid: string, typeKey: string, days: number, from: Date, to: Date): LeaveCheck {
   const balance = leaveBalance(pid)[typeKey] ?? { left: 0, earned: 0, taken: 0, pending: 0, annual: 0 }
   const cover = deptCover(pid, from, to)

@@ -13,13 +13,6 @@ import { hh } from '@/lib/sla'
 import type { QcEntry } from '@/data/quality'
 import type { Range } from '@/lib/range'
 
-/**
- * Everything about one person's quality, with the clock beside it.
- *
- * The two are shown together because either alone misleads: a clean score held
- * by taking twice the budgeted time is not quality, and a fast worker leaving
- * defects is not speed.
- */
 export function QcStaffDetail({
   name,
   rows,
@@ -37,7 +30,6 @@ export function QcStaffDetail({
   tw: StageWorkResult
   onBack: () => void
 }) {
-  /* Which of the four figures is being looked into. */
   const [focus, setFocus] = useState('all')
   const navigate = useGo()
   const mine = rows.filter((x) => x.onName === name).sort((a, b) => +b.d - +a.d)
@@ -181,8 +173,6 @@ export function QcStaffDetail({
         </div>
       </Card>
 
-      {/* Each tile opens the list it counts — a number you cannot get behind is
-          a number you have to take on trust. */}
       <FocusKpis
         focus={focus}
         onFocus={setFocus}
@@ -352,7 +342,6 @@ export function QcStaffDetail({
                   cols="118px 1fr 190px"
                   padding="7px 0"
                   label={st}
-                  /* The track runs to twice the budget, so the pale mark is 1×. */
                   value={m}
                   max={2}
                   budget={{ value: 1, max: 2 }}
@@ -417,9 +406,6 @@ export function QcStaffDetail({
       ) : null}
 
       <SectionHead>Every rating in range</SectionHead>
-      {/* The register closes a screen that has already broken the notes down —
-          which criterion, how often, in whose words — so here it is the defects
-          that are worth picking out of it. */}
       <RatingsTable
         rows={mine}
         cols="110px 140px 130px 120px 1fr 150px"

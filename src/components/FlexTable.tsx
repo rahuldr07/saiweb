@@ -1,15 +1,5 @@
 import type { ReactNode } from 'react'
 
-/**
- * The design's grid-based register: a header row and body rows sharing one
- * `grid-template-columns`, inside a card that scrolls sideways on its own so a
- * wide table never takes the page with it.
- *
- * Separate from `DataTable`, which owns filtering, pills and search. This is the
- * plain version for report sections, where the tab above already did the
- * filtering and the table's only job is to lay the answer out.
- */
-
 export function FlexTable({
   cols,
   min,
@@ -17,9 +7,7 @@ export function FlexTable({
   children,
   id,
 }: {
-  /** A grid-template-columns value, e.g. '110px 150px 1fr'. */
   cols: string
-  /** Below this width the card scrolls rather than the columns collapsing. */
   min: number
   head: string[]
   children: ReactNode
@@ -73,7 +61,6 @@ export function FlexRow({
   )
 }
 
-/** One cell: a value, and optionally the smaller line under it. */
 export function Cell({
   v,
   s,

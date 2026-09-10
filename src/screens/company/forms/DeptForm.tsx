@@ -4,13 +4,6 @@ import { board } from '@/lib/engine'
 import { isDuplicateName } from '@/lib/forms'
 import { removeDept, saveDept, useDepartments, useStaff } from '@/state/company'
 
-/**
- * A department.
- *
- * Two settings do real work. Whether it is in the pipeline decides if every order
- * needs it, and what it QCs decides who may not be given it — a QC stage never
- * goes to whoever did the stage it checks.
- */
 export function DeptForm({
   id,
   onCancel,
@@ -33,8 +26,6 @@ export function DeptForm({
   const [pair, setPair] = useState(d?.pair ?? '')
   const [error, setError] = useState<string | null>(null)
 
-  /* Only stages that are not themselves a QC can be checked — QC of a QC is not
-     a thing the pipeline expresses. */
   const others = depts.filter((x) => x.id !== id && !x.pair)
 
   const submit = () => {
@@ -150,7 +141,6 @@ export function DeptForm({
   )
 }
 
-/** Removing a department, with what it takes with it stated first. */
 export function DeptDelete({
   id,
   onCancel,

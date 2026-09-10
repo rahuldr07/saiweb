@@ -1,19 +1,9 @@
-/**
- * Reading a rule back in words.
- *
- * A rule is stored as a condition and a pool, which is what the engine needs and
- * not what a person needs. Everything here turns that back into the sentence the
- * Rules tab shows — "When stage is Typing and product is LIEN → Only Ashok S" —
- * so the screen never carries a hand-written description that can drift from the
- * condition actually being run.
- */
 import { whoName } from '@/lib/permissions'
-import { COVSTAGES, coversPlace, coversProduct } from '@/lib/coverage'
+import { COVSTAGES, coversPlace, coversProduct } from '@/lib/qualification'
 import { isDuplicateName } from '@/lib/forms'
 import type { Exception } from '@/lib/engine'
 import type { Rule, RuleCondition } from '@/data/types'
 
-/** What each kind of rule does to the pool, and the chip that carries it. */
 export const RULE_KIND: Record<Rule['k'], [label: string, chip: 'd' | 'b' | 'r' | 'n', note: string]> = {
   block: ['Blocks', 'd', 'removes people, and makes an exception if nobody is left'],
   route: ['Routes', 'b', 'narrows the pool for orders that match it'],
@@ -21,7 +11,6 @@ export const RULE_KIND: Record<Rule['k'], [label: string, chip: 'd' | 'b' | 'r' 
   prefer: ['Prefers', 'n', 'only decides who gets picked first'],
 }
 
-/** The condition, as a phrase. `always` when nothing narrows it. */
 export function ruleWhen(r: Pick<Rule, 'when' | 'cond'>): string {
   if (r.when) return r.when
   const c: RuleCondition = r.cond ?? {}
@@ -32,7 +21,6 @@ export function ruleWhen(r: Pick<Rule, 'when' | 'cond'>): string {
   return bits.length ? bits.join(' and ') : 'always'
 }
 
-/** What it then does. A routing rule with an empty pool says so — it is a trap. */
 export function ruleThen(r: Pick<Rule, 'then' | 'k' | 'pool'>): string {
   if (r.then) return r.then
   if (r.k === 'route') {
@@ -44,18 +32,6 @@ export function ruleThen(r: Pick<Rule, 'then' | 'k' | 'pool'>): string {
   return 'Prefer whoever this matches'
 }
 
-/**
- * What the rule actually did today, as `[before, emphasis, after]`.
- *
- * "Fired 2,160 times" was the same number for every always-rule and told you
- * nothing; what matters is how often it *changed the answer*. Two rules narrow
- * nothing by nature and need their own sentence: department membership builds
- * the pool, and the tie-break picks out of it.
- *
- * Split into three because the figure carrying the meaning is emphasised in the
- * middle of the sentence, and the sentence is built here rather than in the tab.
- * `ruleEffect` joins them, so the two can never disagree.
- */
 type EffectParts = [before: string, emphasis: string, after: string]
 
 export function ruleEffectParts(
@@ -83,22 +59,14 @@ export function ruleEffect(r: Rule, fired: number, narrowed: number | undefined)
   return ruleEffectParts(r, fired, narrowed).join('')
 }
 
-/** Rules that exist to stop the system doing something it must never do. */
 export const UNREMOVABLE = ['r2', 'r3', 'r5', 'r6', 'r7']
 
 export const canRemove = (r: Rule) => !r.lock && !UNREMOVABLE.includes(r.id)
 
-/**
- * Whether this person is qualified for the order behind an exception.
- *
- * Only asked on the stages coverage governs — on Typing or RTS everybody in the
- * department is equally eligible, so annotating the picker there would be noise.
- */
 export const covOK = (id: string, e: Exception): boolean =>
   !COVSTAGES.includes(e.stage) ||
   (coversPlace(id, e.o.st, e.o.co ?? null) && coversProduct(id, e.o.pr))
 
-/** A draft from the rule editor, before it is given an id. */
 export interface RuleDraft {
   n: string
   k: Rule['k']
@@ -107,13 +75,6 @@ export interface RuleDraft {
   pool: string[]
 }
 
-/**
- * Why a draft cannot be saved, or null when it can.
- *
- * Each of these is a way to write a rule that looks reasonable and quietly sends
- * every matching order to the exception queue, so they are refused at the point
- * of writing rather than explained afterwards.
- */
 export function ruleProblem(d: RuleDraft, rules: Rule[], id: string | null): string | null {
   if (!d.n.trim()) {
     return 'A name — it is what appears in the trace when this rule decides something.'

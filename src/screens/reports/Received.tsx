@@ -11,11 +11,10 @@ import { money } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { fmtDate } from '@/lib/format'
 import { receivedCsv } from '@/lib/report-csv'
-import { useReportExport } from './useReportExport'
+import { useReportExport } from '@/state/reportExport'
 
 const val = (n: number) => (n ? <b className="mono">{n}</b> : <span className="gr">—</span>)
 
-/** What came in, from whom, and what kind. */
 export function Received() {
   const navigate = useGo()
   const { run } = board()

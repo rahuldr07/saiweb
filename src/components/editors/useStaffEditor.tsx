@@ -1,19 +1,9 @@
 import { useUi } from '@/state/ui'
 import { useStaff } from '@/state/company'
-import { StaffForm, StaffDelete } from './StaffForm'
-import { RoleForm } from './RoleForm'
+import { StaffForm, StaffDelete } from '@/screens/company/forms/StaffForm'
+import { RoleForm } from '@/screens/company/forms/RoleForm'
 import type { Person } from '@/data/types'
 
-/**
- * Editing a person, from wherever their name appears.
- *
- * The design has one `editStaff(id)` reached from two places — the roster and
- * the staff profile — and the two-step flow inside it is the reason this is a
- * hook rather than a component: creating a role without leaving the form has to
- * put back everything already typed, so the draft has to survive a second modal
- * opening on top of the first. Duplicating that per screen is how the two
- * quietly stop behaving the same.
- */
 export function useStaffEditor() {
   const { openModal, closeModal, toast } = useUi()
   const staff = useStaff()
@@ -64,8 +54,6 @@ export function useStaffEditor() {
           onRemove={() => editStaff(id, typed)}
           onDone={(m, roleId) => {
             toast(m)
-            /* Straight back to the staff form, with the new role already chosen
-               and nothing that was typed lost. */
             editStaff(id, { ...typed, r: roleId })
           }}
         />

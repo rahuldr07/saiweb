@@ -1,13 +1,5 @@
-/**
- * What this workspace can be connected to.
- *
- * All of it is optional, and the screen says so twice — once in the subtitle and
- * once about Titleflow specifically, because that is the one a reader is most
- * likely to assume is required. Nothing on the board depends on any of these.
- */
 import type { Connector } from './types'
 
-/** What every OAuth-style connector would need before it could do anything. */
 const OAUTH = 'credentials and an OAuth round trip'
 
 export const CONNECTORS: Connector[] = [
@@ -58,8 +50,6 @@ export const CONNECTORS: Connector[] = [
     n: 'County portal credentials',
     d: 'Store per-county logins so searchers do not keep their own list.',
     cta: 'Set up',
-    /* Not OAuth — county recorder sites issue plain logins, so what this needs
-       is somewhere to keep a secret, not a consent screen. */
     needs: 'a secret store, and somewhere to audit who read from it',
   },
 ]

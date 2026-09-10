@@ -23,18 +23,8 @@ import {
 } from '@/lib/invoices'
 import type { Invoice } from '@/data/types'
 
-/**
- * Invoicing.
- *
- * One scope runs the whole screen — client, date range, status — and every
- * figure on it follows that scope, including the matrix totals and the strip at
- * the bottom. A card that quoted a number the table below it did not agree with
- * would be worse than no card, so nothing here computes from anything else.
- */
-
 const COLS = '160px 150px 120px 90px 130px 130px 130px 110px'
 
-/** Money in the matrix drops the symbol — the caption carries the currency. */
 const bare = (n: number) => money(n).slice(1)
 
 function Invoicing() {
@@ -46,8 +36,6 @@ function Invoicing() {
   const month = rangeMonth(range)
   const filtered = client !== 'all' || !!range.from || !!range.to || status !== 'all'
 
-  /* Scope without the status pill: the pill counts have to be counted against
-     everything else, or filtering to Overdue would report "0 open". */
   const inScope = useMemo(
     () => INVOICES.filter((i) => (client === 'all' || i.cl === client) && inRange(i, range)),
     [client, range],
@@ -102,7 +90,6 @@ function Invoicing() {
     toast(`${out.name} — ${n} invoice${n === 1 ? '' : 's'}`)
   }
 
-  /** Every invoice with a balance, under whatever scope is set above. */
   const showOutstanding = () => {
     const owing = inScope.filter((i) => balance(i) > 0)
     openModal({
@@ -158,7 +145,6 @@ function Invoicing() {
     })
   }
 
-  /** One cell of the matrix: what a client was invoiced in a month, under scope. */
   const cellFor = (name: string, m: string) => {
     const list = INVOICES.filter(
       (i) => i.cl === name && i.m === m && (status === 'all' || i.st === status) && inRange(i, range),

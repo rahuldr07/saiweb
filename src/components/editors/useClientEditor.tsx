@@ -1,14 +1,6 @@
 import { useUi } from '@/state/ui'
-import { ClientForm, ClientDelete } from './ClientForm'
+import { ClientForm, ClientDelete } from '@/screens/company/forms/ClientForm'
 
-/**
- * Editing a client, from wherever their name appears.
- *
- * The design reaches one `editClient(name)` from both the list and the client
- * page, and the remove step returns to the form rather than closing on a
- * decision not taken. Holding that in one place is what keeps the two entry
- * points behaving the same. `useStaffEditor` is the same arrangement on the roster.
- */
 export function useClientEditor() {
   const { openModal, closeModal, toast } = useUi()
 

@@ -8,16 +8,6 @@ import { MAILBOX, MAIL_STATE } from '@/data/intake'
 import { TZ, fmtDT } from '@/lib/format'
 import type { MailItem } from '@/data/types'
 
-/**
- * Order intake — the mailbox, not a form.
- *
- * Orders arrive as email, so this starts with what landed. Each message is read
- * for the fields it obviously carries; nothing here creates anything. The two
- * ways out are the two ways an order really begins: settle what the mailbox
- * watches, or type one in by hand.
- */
-
-/** The address the client actually writes to. */
 const mailboxAddress = (tenantName: string) =>
   `orders@${tenantName.toLowerCase().replace(/[^a-z]/g, '')}.titlecrm.com`
 
@@ -26,8 +16,6 @@ function MailCard({ m }: { m: MailItem }) {
   const { toast } = useUi()
   const [label, kind] = MAIL_STATE[m.st]
 
-  /* Neither action creates an order, and both say what they did instead — the
-     mailbox is the record, so "dismissed" has to mean it stayed there. */
   const keep = () => toast('Kept as a duplicate — no order created')
   const dismiss = () => toast('Dismissed — it stays in the mailbox, not in the queue')
 
@@ -122,9 +110,6 @@ function Intake() {
         }
       />
 
-      {/* Written out rather than passed through `Banner`, which puts its body in
-          the small grey sub-line. This one has a body *and* a sub, the way the
-          design states the rule and then the reason for it. */}
       <div className="bnr b">
         <span className="bi">✉</span>
         <div>

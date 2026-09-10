@@ -15,15 +15,6 @@ import { leadAge } from '@/lib/derived'
 import type { Lead } from '@/data/types'
 import { EMAIL_ERROR, isEmail } from '@/lib/forms'
 
-/**
- * Adding a lead.
- *
- * A company, someone to call, and what you already know. The note is not
- * optional politeness — the follow-up clock runs from it, so a lead with nothing
- * recorded is a lead nobody will ever be reminded about.
- */
-
-/** Openings that cover most of how a lead actually arrives. */
 const NOTE_STARTERS = [
   'Cold email sent — no reply yet.',
   'Inbound enquiry through the website.',
@@ -58,14 +49,12 @@ const blank = (): Draft => ({
   flag: false,
 })
 
-/** The next free `l…` id, so removing one does not strand the counter. */
 const nextLeadId = () => {
   let n = 1
   while (LEADS.some((l) => l.id === `l${n}`)) n++
   return `l${n}`
 }
 
-/** One line of the live check panel. */
 function Check({ ok, warn, children }: { ok: boolean; warn?: boolean; children: string }) {
   return (
     <div style={{ display: 'flex', gap: 8 }}>
@@ -86,9 +75,6 @@ function NewLead() {
     setErr(null)
   }
 
-  /* Three ways this may already exist, and they are not the same problem: an
-     existing client must not be cold-called, an existing lead is somebody else's
-     to chase, and a shared email is either a duplicate or one person at two firms. */
   const q = f.co.trim().toLowerCase()
   const dupeClient = q
     ? CLIENTS.find((c) => c.n.toLowerCase().includes(q) || q.includes(c.n.toLowerCase()))
@@ -241,7 +227,6 @@ function NewLead() {
                   value={f.st}
                   onChange={(e) => set('st', e.target.value as Lead['st'])}
                 >
-                  {/* Won and lost are outcomes, not starting points. */}
                   {Object.entries(LSTATUS)
                     .filter(([k]) => !['won', 'lost'].includes(k))
                     .map(([k, v]) => (

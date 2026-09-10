@@ -3,7 +3,7 @@ import { useGo } from '@/lib/nav'
 import { Avatar, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
 import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
 import { workloadCsv } from '@/lib/report-csv'
-import { useReportExport } from './useReportExport'
+import { useReportExport } from '@/state/reportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusKpis } from '@/components/FocusKpis'
 import { WorkFocus } from './WorkFocus'
@@ -13,7 +13,6 @@ import { AVAIL, STAFF } from '@/data/people'
 
 const COLS = '180px 150px 1fr 90px 90px 90px'
 
-/** Staff workload: the whole roster, then one person at a time. */
 export function ByStaff({ initial, onOpenDept }: { initial?: string | undefined; onOpenDept: (d: string) => void }) {
   const { run, work, worked, totDone, totPend } = board()
   useReportExport(() => workloadCsv(worked, false))
@@ -196,9 +195,6 @@ export function ByStaff({ initial, onOpenDept }: { initial?: string | undefined;
           tone={r.pend ? 'warn' : undefined}
           detail={<span className={r.pend ? 'warn' : 'ok'}>{r.pend ? 'still on their desk' : 'nothing outstanding'}</span>}
         />
-        {/* Against the load the engine is actually tracking for this person, not
-            against today's stage-task count — they are different quantities, and
-            the department table opposite uses the load. */}
         <Kpi
           title="Room left"
           value={Math.max(0, r.s.cap - (run.load[r.s.id] ?? 0))}

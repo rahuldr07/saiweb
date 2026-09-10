@@ -6,13 +6,6 @@ import type { Client } from '@/data/types'
 import { EMAIL_ERROR, isDuplicateName, isEmail } from '@/lib/forms'
 
 const TERMS = ['Net 15', 'Net 30', 'Net 45', 'Per order', 'Prepaid']
-/**
- * A client.
- *
- * The short code is the load-bearing field: it is what appears on order numbers,
- * so it has to be unique and it cannot be quietly changed for past orders. Both
- * of those are said on the form rather than discovered later.
- */
 export function ClientForm({
   name,
   onCancel,
@@ -185,7 +178,6 @@ export function ClientForm({
   )
 }
 
-/** Removing a client, with the history it takes with it stated first. */
 export function ClientDelete({
   name,
   onCancel,

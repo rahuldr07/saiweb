@@ -12,12 +12,6 @@ import { DEMO_IDENTITY } from '@/lib/demo'
 import { ADMIN_EMAIL, checkCredentials } from '@/lib/credentials'
 import { ApiError, startSession } from '@/lib/api'
 
-/**
- * An async handler still has to hand the DOM a function that returns nothing.
- * Both handlers below report the failures they expect — a refused password, an
- * unreachable service — so anything that gets past them is a bug, and this is
- * where it becomes visible rather than an unhandled rejection.
- */
 const handled =
   <A extends unknown[]>(fn: (...args: A) => Promise<void>) =>
   (...args: A): void => {
@@ -26,20 +20,6 @@ const handled =
     })
   }
 
-/**
- * The one public screen: a mark, an email, a password.
- *
- * Which of the two is actually verified depends on what is behind the
- * application. With a database, Better Auth checks both and a wrong password is
- * a wrong password. Without one there is nothing to check a password against, so
- * the email only decides which account you land in — `hari@gmail.com` is the
- * administrator, a seeded person's own address is that person, and anything else
- * is a member of production staff.
- *
- * The roster of seeded people that used to sit under this form is gone. It made
- * the screen a picker with a form attached; a sign-in screen should ask for
- * credentials and nothing else.
- */
 export default function SignIn() {
   const { me, authState, signInAs, signOut, can } = useSession()
   const { toast } = useUi()
@@ -55,11 +35,6 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false)
   const [logoBroken, setLogoBroken] = useState(false)
 
-  /* Where somebody lands depends on what they can see. Two ways to get this
-     wrong, and the seeded roles hit both: sending production staff to the
-     dashboard drops them on a refusal page one second after a successful sign
-     in, and so does honouring a `next` they were only redirected off because
-     they were not allowed there in the first place. */
   const landing = (personId: string) => {
     const person = STAFF.find((s) => s.id === personId)
     const wanted = next?.split('/').filter(Boolean)[0]
@@ -67,11 +42,6 @@ export default function SignIn() {
     return capabilityOf(person, 'all') ? '/dash' : '/mywork'
   }
 
-  /**
-   * A real server refusing a real password is not the same as there being no
-   * server. Only the second falls through to the local check — otherwise a
-   * deployment with a database could be entered by failing authentication.
-   */
   const noServiceBehind = (e: unknown) =>
     !(e instanceof ApiError) || e.status === 404 || e.status === 0 || e.status >= 500
 
@@ -81,8 +51,6 @@ export default function SignIn() {
     setBusy(true)
     try {
       await startSession(email, password)
-      /* The session cookie is set; every cached "not signed in" answer has to go
-         before the redirect, or the gate reads the stale one and bounces back. */
       await queryClient.resetQueries()
       navigate({ to: next ?? '/dash', replace: true })
     } catch (err) {
@@ -92,10 +60,6 @@ export default function SignIn() {
         return
       }
 
-      /* Statically false in a build with the flag off, which is what lets the
-         bundler drop everything below it — the seeded roster check, the admin
-         address, the whole local sign-in — rather than shipping an unreachable
-         way in and trusting a runtime argument to keep it unreachable. */
       if (!DEMO_IDENTITY) {
         setError('This build signs in against the database. The sign-in service is not reachable.')
         setBusy(false)
@@ -124,9 +88,6 @@ export default function SignIn() {
           alt={COMPANY_NAME}
           height={LOGO_HEIGHT}
           style={{ height: LOGO_HEIGHT, width: 'auto', maxWidth: '100%' }}
-          /* Hot-linked from somebody else's host, so a failure is a real
-             possibility rather than a theoretical one. The wordmark takes over
-             instead of leaving a broken-image glyph on the front door. */
           onError={() => setLogoBroken(true)}
         />
       ) : (
@@ -185,8 +146,6 @@ export default function SignIn() {
     </Card>
   )
 
-  /* Already signed in: this becomes the account screen rather than offering the
-     form again to somebody who has just used it. */
   if (authState !== 'anonymous') {
     return (
       <div className="authcol">

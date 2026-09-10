@@ -1,13 +1,3 @@
-/**
- * Who is qualified for which place and which product.
- *
- * Somebody with no level is not restricted — defaulting the other way would mean
- * a new joiner can be given nothing until an admin remembers to grade them.
- * Naming no counties for a state means the whole state, not none of it.
- *
- * The rules are built by `makeCoverage` so they can be asked of the live, edited
- * levels on the Levels tab as well as of the seed the engine ran against.
- */
 import { LEVELS, COVSTAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { COUNTIES, PRODUCTS, US_STATES } from '@/data/catalog'
@@ -17,10 +7,8 @@ const NOLIMIT: Level = { id: '', n: '', note: '', states: 'all', counties: {}, p
 
 export const stateName = (st: string) => US_STATES[st] ?? st
 
-/** Every state — a level must be able to say "Ohio" before a single Ohio county is on file. */
 export const EVERYSTATE = () => Object.keys(US_STATES)
 
-/** A level read back as a phrase — what the pills add up to. */
 export function covWord(c: Coverage): string {
   const st = c.states === 'all' ? 'every state' : `${c.states.length} state${c.states.length === 1 ? '' : 's'}`
   const narrowed = Object.entries(c.counties ?? {}).filter(([, v]) => v?.length)
@@ -32,14 +20,6 @@ export function covWord(c: Coverage): string {
   return `${st}${co} · ${pr}`
 }
 
-/**
- * Who ended up covering something different when levels were introduced.
- *
- * Everyone already had their own coverage; rather than wipe it, each person was
- * put on the level nearest to it — which is rarely an exact fit. This is the
- * list of people for whom "nearest" was not "the same", which is the only way
- * anyone would notice they can now be given more, or less, than before.
- */
 export interface LevelMove {
   id: string
   n: string
@@ -69,12 +49,6 @@ export type Gap =
   | { kind: 'place'; stage: string; st: string; co: string; near: string[] }
   | { kind: 'product'; stage: string; pr: string; near: string[] }
 
-/**
- * Coverage answered against a given set of levels.
- *
- * `personLevel` is passed separately from STAFF because the Levels tab moves
- * people between levels without editing the seed.
- */
 export function makeCoverage(levels: Level[], personLevel: (id: string) => string | null, counties: County[]) {
   const levelOf = (id: string): Level | null => {
     const lid = personLevel(id)
@@ -82,7 +56,6 @@ export function makeCoverage(levels: Level[], personLevel: (id: string) => strin
   }
   const covOf = (id: string): Level => levelOf(id) ?? NOLIMIT
 
-  /** Only the states we actually hold counties for; gap analysis uses this one. */
   const allStates = () => [...new Set(counties.map((c) => c.st))].sort()
 
   const countiesIn = (st: string) =>
@@ -107,10 +80,6 @@ export function makeCoverage(levels: Level[], personLevel: (id: string) => strin
   const onLevel = (lid: string) =>
     STAFF.filter((s) => personLevel(s.id) === lid && s.active !== false)
 
-  /**
-   * A level read back as a sentence. The pills say what is ticked; this says what
-   * that means, which is the thing somebody actually wants to check before saving.
-   */
   function levelSentence(l: Level): string {
     const prods = l.products === 'all' ? 'Every product' : l.products.length ? l.products.join(', ') : 'No products'
     if (l.products !== 'all' && !l.products.length)
@@ -129,7 +98,6 @@ export function makeCoverage(levels: Level[], personLevel: (id: string) => strin
     return `${prods} — ${anywhere ? 'anywhere we work' : wl}.`
   }
 
-  /** Where the company has nobody at all — the number that becomes exceptions tomorrow. */
   function coverageGaps(): Gap[] {
     const out: Gap[] = []
     for (const stage of COVSTAGES) {
@@ -165,7 +133,6 @@ export function makeCoverage(levels: Level[], personLevel: (id: string) => strin
   }
 }
 
-/* The seed view — what the engine ran against, and what read-only screens show. */
 const seed = makeCoverage(LEVELS, (id) => STAFF.find((x) => x.id === id)?.lvl ?? null, COUNTIES)
 
 export const levelOf = seed.levelOf

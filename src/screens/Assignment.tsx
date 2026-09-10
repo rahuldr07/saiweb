@@ -12,15 +12,6 @@ import { LevelsTab } from './assignment/LevelsTab'
 
 export type AssignTab = 'Live' | 'Exceptions' | 'Capacity' | 'Rules' | 'Levels'
 
-/**
- * The routing engine, shown from five sides.
- *
- * The engine never silently skips a person, so every unplaced stage carries one
- * of five reasons — and the fix for each is different, which is why Exceptions
- * groups by cause rather than by order. The tabs are one screen rather than five
- * because they are five questions about a single run: what it did, what it could
- * not do, how much room is left, which rules produced that, and who is qualified.
- */
 function Assignment() {
   const [tab, setTab] = useState<AssignTab>('Live')
   const { toast } = useUi()

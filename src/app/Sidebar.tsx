@@ -7,10 +7,6 @@ import { pastDueCount, brokenLinks, followUpCount } from '@/lib/derived'
 import { TENANTS } from '@/data/org'
 import { Chip, Row, Rows } from '@/components/ui'
 
-/**
- * Counts appear only for things waiting on the current user — nothing carries a
- * permanent badge, which is what keeps a badge meaning "act on this".
- */
 function badgeFor(route: string) {
   const overdue = pastDueCount()
   if (route === 'dash' && overdue) return { n: overdue, warn: false }
@@ -33,15 +29,6 @@ export function Sidebar({ current }: { current: string }) {
     navigate({ to: `/${route}` })
   }
 
-  /*
-   * The workspaces this person actually belongs to, once the server has said so.
-   *
-   * `/api/memberships` was being fetched and then ignored, so a real deployment
-   * listed the three seeded workspaces instead. Picking one set an id the server
-   * does not recognise, the header went unsent, and the sidebar then showed
-   * another company's name over the current company's data. The seed list stays
-   * as the fallback for the build that has no server to ask.
-   */
   const workspaces = memberships.length
     ? memberships.map((m) => ({ id: m.id, name: m.name, plan: m.plan }))
     : TENANTS.map((t) => ({ id: t.id, name: t.name, plan: t.plan }))

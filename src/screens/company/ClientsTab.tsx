@@ -4,17 +4,11 @@ import { Btn, SecHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
 import { useClients } from '@/state/company'
-import { useClientEditor } from './forms/useClientEditor'
+import { useClientEditor } from '@/components/editors/useClientEditor'
 import { money, r2 } from '@/lib/format'
 import { csvName, downloadCSV } from '@/lib/csv'
 
 
-/**
- * The client list.
- *
- * Outstanding is invoiced minus paid, computed on the row — storing it is how a
- * list and a client page come to disagree about the same number.
- */
 export function ClientsTab() {
   const navigate = useGo()
   const { toast } = useUi()

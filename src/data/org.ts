@@ -1,4 +1,3 @@
-/* AUTO-GENERATED from the Claude Design "Title CRM 897". Values are the design's own. */
 import type {
   Tenant,
   Dept,
@@ -258,18 +257,8 @@ export const LEVELS: Level[] = [
   },
 ]
 
-/**
- * The coverage each of these people had before levels existed.
- *
- * Kept because it is the only record of what changed when everybody was fitted
- * onto the nearest level — anyone who ended up covering less may start seeing
- * work hold, and anyone covering more may be given something new. Both are worth
- * a look, and neither is recoverable once this is gone.
- */
 export const PRIOR_COVERAGE: Record<string, Coverage> = {
-  /* two juniors — Prasad is on leave today, which is why Level 1 still needs Asha */
   ap: { states: ["PA", "GA"], counties: { PA: ["Cambria", "Luzerne"] }, products: ["COS"] },
-  /* the junior — current owner searches in the two counties he has been shown */
   pd: { states: ["PA"], counties: { PA: ["Cambria", "Luzerne"] }, products: ["COS"] },
   rm: { states: "all", counties: { PA: ["Allegheny"] }, products: "all" },
   sr: { states: "all", counties: { PA: ["Cambria", "Luzerne"] }, products: "all" },

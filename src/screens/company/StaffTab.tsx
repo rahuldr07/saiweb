@@ -3,20 +3,13 @@ import { useGo } from '@/lib/nav'
 import { Banner, Btn, SecHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useNotBuilt } from '@/components/notBuilt'
-import { useStaffEditor } from './forms/useStaffEditor'
+import { useStaffEditor } from '@/components/editors/useStaffEditor'
 import { useStaff } from '@/state/company'
 import { AVAIL } from '@/data/people'
 import { board } from '@/lib/engine'
 import { roleName } from '@/lib/permissions'
 import { csvName, downloadCSV } from '@/lib/csv'
 
-/**
- * The roster.
- *
- * Target is today's load against the daily maximum, not the maximum alone —
- * a capacity figure with nothing measured against it says nothing about whether
- * anyone is close to it.
- */
 export function StaffTab({ tenantName, onOpenRoles }: { tenantName: string; onOpenRoles: () => void }) {
   const navigate = useGo()
   const notBuilt = useNotBuilt()
@@ -27,8 +20,6 @@ export function StaffTab({ tenantName, onOpenRoles }: { tenantName: string; onOp
 
   const list = STAFF.filter((s) => showOff || s.active !== false)
   const off = STAFF.filter((s) => s.active === false).length
-  /* Someone in a stage and its own QC. Assignment refuses it per order, but the
-     pairing existing at all is a decision somebody should make deliberately. */
   const clash = STAFF.filter((s) => s.conflict && s.active !== false)
 
   const exportStaff = () =>

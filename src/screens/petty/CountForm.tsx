@@ -4,15 +4,6 @@ import type { PettyCount } from '@/data/types'
 import { inr } from '@/lib/payroll'
 import { now } from '@/lib/clock'
 
-/**
- * Counting the box.
- *
- * The expected figure is deliberately not shown until something has been typed:
- * a count that starts from the number it is meant to prove is not a count. Once
- * a figure is in, the difference is stated plainly — and it is recorded as
- * counted, because correcting a count to match the book is how a discrepancy
- * becomes permanent.
- */
 export function CountForm({
   expected,
   countedBy,

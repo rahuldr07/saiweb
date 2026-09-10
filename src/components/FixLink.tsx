@@ -3,17 +3,9 @@ import { Banner, Btn, FormActions } from '@/components/ui'
 import { BADSTATES } from '@/data/catalog'
 import { LSTATE, days, nextLinkCheck } from '@/lib/derived'
 import { fmtDate } from '@/lib/format'
-import { saveLink, useCoverage } from '@/state/coverage'
+import { saveLink, useCoverage } from '@/state/counties'
 import type { County, LinkType } from '@/data/types'
 
-/**
- * One link on one county.
- *
- * Two different things can be true and they get two different buttons. "Save
- * link" records a new address, which then has to be checked. "Mark working" is a
- * person saying they have just used the one on file — that clears the error and
- * the date it was first seen, because the failure is over.
- */
 export function FixLink({
   county,
   type,

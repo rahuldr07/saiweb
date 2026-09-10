@@ -9,10 +9,6 @@ import {
   type ReactNode,
 } from 'react'
 
-/**
- * Two pieces of chrome that any screen may reach for: the single modal the shell
- * owns, and the quiet toast the design uses instead of confirmation dialogs.
- */
 export interface ModalSpec {
   title: string
   body: ReactNode
@@ -40,13 +36,8 @@ export function UiProvider({ children }: { children: ReactNode }) {
     timer.current = setTimeout(() => setToastText(null), 2600)
   }, [])
 
-  /* The last toast leaves a timer behind that would set state on a provider
-     that no longer exists. It only bites on teardown, which is exactly when
-     nobody is watching for it. */
   useEffect(() => () => clearTimeout(timer.current), [])
 
-  /* The mask sits over the page, not in place of it, so without this the page
-     underneath still scrolls — two independently scrolling regions at once. */
   useEffect(() => {
     document.body.classList.toggle('modalopen', modal !== null)
     return () => document.body.classList.remove('modalopen')

@@ -6,15 +6,6 @@ import { board } from '@/lib/engine'
 import { csvName, downloadCSV } from '@/lib/csv'
 import { moveDept, useDepartments } from '@/state/company'
 
-/**
- * The stages an order moves through, and who staffs them.
- *
- * The pipeline strip at the top is the part worth reading first: an order runs
- * the numbered stages in order, and an exception branch is entered on demand
- * from any of them and returns the order to where it left. That is a different
- * shape from a list, so it is drawn as one.
- */
-
 const COLS = '170px 1fr 130px 110px 110px 120px 140px'
 
 export function DepartmentsTab({ onOpenStaff }: { onOpenStaff: () => void }) {

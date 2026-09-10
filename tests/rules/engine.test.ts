@@ -10,7 +10,7 @@ import {
 import { ASSIGN_STAGES, PAIRS, STAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import type { Person, Rule } from '@/data/types'
-import { coversPlace, coversProduct } from '@/lib/coverage'
+import { coversPlace, coversProduct } from '@/lib/qualification'
 
 const { run: RUN, day: DAY } = board()
 

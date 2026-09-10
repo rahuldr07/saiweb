@@ -14,16 +14,6 @@ import { fmtDate, fmtDT, initials, LOCAL_OFFSET_H, money, TZ, TZ2 } from '@/lib/
 import { now } from '@/lib/clock'
 import type { Assignments, CountyLink, Order } from '@/data/types'
 
-/**
- * Taking an order by hand.
- *
- * Everything in the right-hand column is derived from the left as it is typed —
- * the due date from the client's SLA and the tier, the coverage from the county,
- * and the assignment from today's rules and today's load. None of it is a
- * separate decision to be made later, and none of it commits until the order is
- * created, which is what makes the panel worth reading rather than confirming.
- */
-
 const statusLabel = (k: string) => STATUS[k]?.[0] ?? k
 
 const NO_LINK: CountyLink = { u: '', s: 'none' }
@@ -60,7 +50,6 @@ const blankDraft = (): Draft => ({
   tier: 'standard',
 })
 
-/** The sidebar's section headings, which the design spaces out from the panel above. */
 function AsideLabel({ children }: { children: string }) {
   return (
     <div className="lb" style={{ marginTop: 20 }}>
@@ -87,8 +76,6 @@ function NewOrder() {
   const county = f.county ? findCounty(f.county, f.st) : undefined
   const fee = Math.round((product.fee + tier.up) * 100) / 100
 
-  /* Same client, same address: not refused, but said out loud. A second order on
-     one property is ordinary; placing it by accident is not. */
   const dupe = f.addr.trim()
     ? ORDERS.find(
         (o) => o.cl === f.client && o.prop.toLowerCase().trim() === f.addr.toLowerCase().trim(),
@@ -112,9 +99,6 @@ function NewOrder() {
       )
     if (!f.client) return setErr('Choose a client.')
 
-    /* The preview becomes the assignment, and the load it was computed against
-       moves with it — otherwise the next order placed in this session would be
-       shown a desk that is emptier than it now is. */
     const load = board().run.load
     const a: Assignments = {}
     STAGES.forEach((s) => {
@@ -161,8 +145,6 @@ function NewOrder() {
         sub="Everything on the right updates as you type — the due date, the coverage, and who would pick it up."
       />
 
-      {/* Written out rather than passed through `Banner`, which puts its body in
-          the small grey sub-line. The design states these at full size. */}
       {err ? (
         <div className="bnr d">
           <span className="bi">⚑</span>

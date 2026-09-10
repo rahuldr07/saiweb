@@ -9,7 +9,7 @@ import {
   ruleThen,
   ruleWhen,
   type RuleDraft,
-} from '@/lib/rules'
+} from '@/lib/ruleText'
 import type { Rule } from '@/data/types'
 
 /**

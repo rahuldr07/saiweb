@@ -2,34 +2,18 @@ import { useMemo, useState, type ReactNode } from 'react'
 import type { ChipKind } from '@/data/types'
 import { Chip, Empty, Select } from './ui'
 
-/**
- * The register: filter pills with counts, secondary selects, a search box, a
- * count line, and a compact grid table. Nearly every list screen in the design
- * is this component with different columns, so it carries the pattern's rules
- * rather than each screen re-implementing them.
- *
- * A row may belong to more than one filter — an invoice is both owing and
- * overdue — so `k` is a key or a list of them.
- */
-
 export interface Col {
   l: string
-  /** Minimum width in px. */
   w?: number
-  /** Flex share. */
   f?: number
 }
 
 export interface Cell {
   v?: ReactNode
   mono?: boolean
-  /** Sub-line under the value. */
   s?: ReactNode
-  /** Render the sub-line in the bad colour. */
   bad?: boolean
-  /** Render the value as a status chip of this variant. */
   chip?: ChipKind
-  /** Arbitrary content, laid out by the caller. */
   raw?: ReactNode
 }
 
@@ -38,7 +22,6 @@ export interface DataRow {
   k?: string | string[]
   c: Cell[]
   onClick?: () => void
-  /** Extra text the search box should match on, beyond the visible cells. */
   search?: string
 }
 
@@ -65,7 +48,6 @@ export interface DataTableProps {
   filters?: SelectFilter[]
   search?: string
   noun?: string
-  /** Denominator for the count line when it is not simply `rows.length`. */
   total?: number
   min?: number
   emptyText?: string

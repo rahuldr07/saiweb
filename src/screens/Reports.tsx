@@ -13,33 +13,17 @@ import { Turnaround } from './reports/Turnaround'
 import { ByStaff } from './reports/ByStaff'
 import { ByDepartment } from './reports/ByDepartment'
 import { Quality } from './reports/Quality'
-import { useReportExporter } from './reports/useReportExport'
+import { useReportExporter } from '@/state/reportExport'
 
-/** The design's own tab order — what came in, then where it went, then how it went. */
 const TABS = ['Received', 'Assigned', 'Turnaround', 'By staff', 'By department', 'Quality'] as const
 type Tab = (typeof TABS)[number]
 
-/**
- * Everything about the day in one place — what came in, who it went to, how fast,
- * and how good.
- *
- * The six tabs answer different questions off different data: Received and
- * Assigned read the assignment engine's run of today, Turnaround and Quality read
- * 90 days of delivery history, and the two workload tabs roll up the run per
- * person and per department. They are one screen because the questions are asked
- * together, not because the data is.
- */
 function Reports() {
-  /* Orders' "Workload report" arrives here with the filter it was showing. */
   const { tab: tabParam, sw, dw } = useSearch({ from: '/reports' })
   const isTab = (t?: string): t is Tab => !!t && (TABS as readonly string[]).includes(t)
 
   const [tab, setTab] = useState<Tab>(isTab(tabParam) ? tabParam : 'Received')
-  /* Set when arriving from a By-staff department tile, so the department tab
-     opens on that department rather than on the whole floor. */
   const [dept, setDept] = useState<string | undefined>(dw === 'all' ? undefined : dw)
-  /* Set when arriving from a department's people table, so By staff opens on
-     that person rather than on the whole floor. */
   const [person, setPerson] = useState<string | undefined>(sw === 'all' ? undefined : sw)
   const { toast } = useUi()
 
@@ -60,13 +44,10 @@ function Reports() {
     setTab(t)
   }
 
-  /* Only the history-backed tabs pay for the fetch. */
   const needsHistory = tab === 'Turnaround' || tab === 'Quality'
   const history = useDeliveries()
   const qc = useQcLog()
 
-  /* The tab registers what it is showing; the button just downloads it. That
-     way a filtered report and its file cannot disagree. */
   const exporter = useReportExporter()
   const exportTab = () => {
     if (!exporter) return

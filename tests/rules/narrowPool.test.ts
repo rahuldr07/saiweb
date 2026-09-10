@@ -3,7 +3,7 @@ import { board, defaultContext, narrowPool, type RunContext } from '@/lib/engine
 import { ORDERS } from '@/data/production'
 import { STAFF } from '@/data/people'
 import { ASSIGN_STAGES, COVSTAGES, RULES } from '@/data/org'
-import { coversPlace, coversProduct } from '@/lib/coverage'
+import { coversPlace, coversProduct } from '@/lib/qualification'
 import { newPerson, type Person, type Rule } from '@/data/types'
 
 /**

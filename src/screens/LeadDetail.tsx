@@ -24,25 +24,8 @@ import { now } from '@/lib/clock'
 import { days, isStale, lastTouch, leadAge } from '@/lib/derived'
 import type { Lead, LeadContact } from '@/data/types'
 
-/**
- * One lead: who they are, who has spoken to them, and what was said.
- *
- * The notes are the record and everything else is derived from them — the age,
- * the amber, whether it needs chasing. That is why the composer sits at the top
- * of the card rather than the bottom: adding a note is the action this screen
- * exists for, and it is also the thing that resets the quiet clock.
- */
-
 const blankContact = (): LeadContact => ({ n: '', role: '', e: '', p: '' })
 
-/**
- * The fields inside the edit dialogs.
- *
- * They hold their own state and report upward on every keystroke, rather than
- * the dialog mutating a plain object from its JSX — which is both what the
- * compiler refuses and, in a modal that can be reopened, the thing that would
- * quietly keep last time's edits.
- */
 const CONTACT_FIELDS: [id: string, label: string, key: 'n' | 'role' | 'e' | 'p', type: string, placeholder: string][] = [
   ['ct-n', 'Name', 'n', 'text', ''],
   ['ct-r', 'Role', 'role', 'text', 'e.g. places the orders'],
@@ -159,17 +142,9 @@ function LeadDetail() {
   const { me } = useSession()
   const { toast, openModal, closeModal } = useUi()
 
-  /* The lead is edited in place so the register and this screen cannot disagree
-     about where it stands; `version` is what tells React the record moved. */
   const [, changed] = useReducer((n: number) => n + 1, 0)
   const [draft, setDraft] = useState('')
 
-  /**
-   * Every write goes through here, and it looks up the record again rather than
-   * closing over the one this render is drawing. The record outlives the render;
-   * the binding does not, and mutating the binding is how a handler ends up
-   * editing a lead the screen has already navigated away from.
-   */
   const edit = (fn: (l: Lead) => void) => {
     const target = LEADS.find((l) => l.id === leadId)
     if (!target) return
@@ -188,7 +163,6 @@ function LeadDetail() {
   const setStatus = (v: Lead['st']) => {
     edit((l) => {
       l.st = v
-      /* Won and lost are not waiting on anybody, so the flag comes off with them. */
       if (v === 'won' || v === 'lost') l.flag = false
     })
     toast(`${lead.co} — ${LSTATUS[v][0]}`)
@@ -213,8 +187,6 @@ function LeadDetail() {
     setDraft('')
     toast('Note added — the quiet clock resets')
   }
-
-  /* ── the three dialogs ─────────────────────────────────────────────────── */
 
   const copyDetails = () =>
     openModal({
@@ -256,9 +228,6 @@ function LeadDetail() {
 
   const editContact = (index: number) => {
     const initial = index >= 0 ? { ...lead.contacts[index] } : blankContact()
-    /* The dialog's live values, read when Save is pressed. A ref rather than
-       state: the footer needs them, and re-rendering this screen per keystroke
-       would rebuild the modal underneath the cursor. */
     const held = { ...initial }
     const save = () => {
       if (!held.n.trim() && !held.e.trim()) {

@@ -10,7 +10,7 @@ import {
   taxUnder,
   ytd,
 } from '@/lib/payroll'
-import { mins } from '@/lib/timeclock'
+import { mins } from '@/lib/workingDay'
 import { resetClock, setClock } from '@/lib/clock'
 import { PAYCFG, PAYMONTHS } from '@/data/hrms'
 

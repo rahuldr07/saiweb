@@ -9,7 +9,6 @@ import { whoName } from '@/lib/permissions'
 const TABS = ['Capture', 'Preview', 'Documents'] as const
 type Tab = (typeof TABS)[number]
 
-/** Produce the client deliverable from a completed order. */
 export default function CommitmentReport() {
   const [tab, setTab] = useState<Tab>('Capture')
   const [orderId, setOrderId] = useState(ORDERS[ORDERS.length - 1].id)

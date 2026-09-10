@@ -7,8 +7,8 @@ import {
   setAssignee,
   setOrderField,
   workingOn,
-} from '@/screens/orders/store'
-import { addPrefix, clashOf, removePrefix, resetPrefixes } from '@/screens/clients/prefixes'
+} from '@/state/orders'
+import { addPrefix, clashOf, removePrefix, resetPrefixes } from '@/state/prefixes'
 import { ORDERS } from '@/data/production'
 import { PRODUCTS } from '@/data/catalog'
 import { slaHours } from '@/lib/sla'

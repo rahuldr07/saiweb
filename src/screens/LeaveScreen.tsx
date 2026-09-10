@@ -10,26 +10,12 @@ import { CLASHRULES, approvesFor, leaveCheck, managerOf } from '@/lib/leave'
 import { whoName } from '@/lib/permissions'
 import { fmtDate, r2 } from '@/lib/format'
 import { now } from '@/lib/clock'
-import { ApplyLeave } from './leave/RequestLeave'
+import { ApplyLeave } from './leave/ApplyLeave'
 import { LeavePolicy } from './leave/LeavePolicy'
 import type { Leave } from '@/data/types'
 
-/**
- * Leave.
- *
- * Balances are earned minus taken, computed from the requests below rather than
- * stored — so a request and a balance cannot drift apart, and changing a quota
- * moves everyone's balance at once.
- *
- * Which screen you get depends on what you can see. Somebody without "all" sees
- * their own requests and their own balances; an approver sees the company's, with
- * the ones that are actually theirs to decide called out — the rest belong to
- * another approver and are shown for context, not for action.
- */
-
 const COLS = '170px 140px 190px 70px 1fr 170px'
 
-/** How many rows before the table stops and says how many there were. */
 const PAGE = 40
 
 
@@ -42,8 +28,6 @@ function LeaveScreen() {
   const [filter, setFilter] = useState('pending')
   const [sub, setSub] = useState<'Requests' | 'Policy'>('Requests')
 
-  /* "Mine" is not a preference — it is what someone who cannot see every order
-     is entitled to see, so the whole screen reshapes around it. */
   const mine = !can('all')
   const scope = mine ? LEAVE.filter((l) => l.who === me.id) : LEAVE
   const rows = filter === 'all' ? scope : scope.filter((l) => l.st === filter)
@@ -64,13 +48,6 @@ function LeaveScreen() {
     toast(`${whoName(l.who)} — ${st === 'approved' ? 'approved' : 'declined'}`)
   }
 
-  /**
-   * Cancelling.
-   *
-   * Leave that has already started is refused here on purpose: cancelling it
-   * would rewrite attendance already counted, and possibly a payslip already
-   * issued. That belongs in an attendance correction, where it is recorded.
-   */
   const cancel = (l: Leave) => {
     const started = l.from < now()
     const type = LEAVETYPES.find((t) => t.k === l.type)
@@ -172,8 +149,6 @@ function LeaveScreen() {
     )
   }
 
-  /* Requests that would take a department below cover — before a decision, and
-     after one. The second group is the one worth arranging cover for now. */
   const risky = LEAVE.filter((l) => l.st === 'pending' && l.clash)
   const approvedSoon = LEAVE.filter((l) => l.st === 'approved' && l.from > now())
     .map((l) => ({ l, c: leaveCheck(l.who, l.type, l.days, l.from, l.to).cover }))
@@ -450,6 +425,4 @@ function LeaveScreen() {
   )
 }
 
-/* No capability gate: `NAVPERM.leave` is null, so everybody reaches this — the
-   screen itself narrows to your own requests when you cannot see the company's. */
 export default LeaveScreen

@@ -4,7 +4,6 @@ import { now } from '@/lib/clock'
 
 const DAY_LABEL = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-/** Today reads as "Today"; the rest read as the weekday they were. */
 export function DayPicker({ value, onChange }: { value: string; onChange: (dk: string) => void }) {
   const { run } = board()
   const today = fmtDate(now())

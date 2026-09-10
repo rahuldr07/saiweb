@@ -7,7 +7,6 @@ import { useSession } from '@/state/session'
 import { RequireAuth } from '@/components/RequireAuth'
 import { TenantScope } from '@/components/TenantScope'
 
-/** `/orders/4192254-2` and `/orders` are both the Orders screen as far as the nav is concerned. */
 const routeIdOf = (pathname: string) => pathname.split('/').filter(Boolean)[0] ?? 'dash'
 
 function Modal() {
@@ -69,8 +68,6 @@ export function AppShell() {
   const { authState, setNavOpen } = useSession()
   const main = useRef<HTMLElement>(null)
 
-  /* Each screen change scrolls to the top, re-runs the stagger, and closes the
-     mobile drawer — the same three things the design does on every navigation. */
   useEffect(() => {
     window.scrollTo(0, 0)
     setNavOpen(false)
@@ -81,9 +78,6 @@ export function AppShell() {
     el.classList.add('anim')
   }, [pathname, setNavOpen])
 
-  /* Somebody who is not signed in gets the page and nothing else — no sidebar,
-     no workspace name, no notification bell. The chrome names real people and
-     real companies, so it is not something to render around a login form. */
   const signedIn = authState === 'authenticated' || authState === 'demo'
 
   return (

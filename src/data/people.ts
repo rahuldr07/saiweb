@@ -1,4 +1,3 @@
-/* AUTO-GENERATED from the Claude Design "Title CRM 897". Values are the design's own. */
 import type {
   Person,
   Shift,

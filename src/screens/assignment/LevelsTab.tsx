@@ -1,21 +1,15 @@
-/**
- * Assignment → Levels. A level is one coverage — the products, states and counties
- * everyone on it can be given — and it governs Search and Search QC only, the
- * stages where local knowledge is what is being bought.
- */
 import { useState } from 'react'
 import { Avatar, Banner, Btn, Card, Chip, Empty, FormActions, Rows } from '@/components/ui'
 import { useLevels } from '@/state/levels'
 import { useUi } from '@/state/ui'
-import { COVSTAGES, EVERYSTATE, levelMoves, stateName } from '@/lib/coverage'
+import { COVSTAGES, EVERYSTATE, levelMoves, stateName } from '@/lib/qualification'
 import { PRODUCTS } from '@/data/catalog'
 import { PRIOR_COVERAGE } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { board } from '@/lib/engine'
-import type { Gap } from '@/lib/coverage'
+import type { Gap } from '@/lib/qualification'
 import { useGo } from '@/lib/nav'
 
-/** A ticked/unticked run of pills with All and None beside the count. */
 function PillRow({
   label,
   count,
@@ -132,7 +126,6 @@ export function LevelsTab() {
   const ungraded = eligible.filter((x) => !personLevel(x.id))
   const covExc = board().run.exc.filter((e) => e.today && e.why === 'coverage')
 
-  /* Recomputed against the levels as they stand, so editing one shows up here. */
   const moves = levelMoves(
     PRIOR_COVERAGE,
     (id) => levels.find((l) => l.id === personLevel(id)) ?? null,
@@ -529,8 +522,6 @@ export function LevelsTab() {
           </p>
         )}
 
-        {/* The sentence leads and the consequence follows it as the design's
-            trailing sub-line, rather than as a second body line at full size. */}
         <Banner
           kind={prodsOn && shownStates.length ? 'n' : 'd'}
           icon={prodsOn && shownStates.length ? '·' : '⚑'}

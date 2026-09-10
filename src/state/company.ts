@@ -6,22 +6,6 @@ import { BUDGET, SLA, type SlaRule } from '@/data/budget'
 import { createStore, useStore, useStoreSlice } from '@/lib/store'
 import type { Client, Dept, PayConfig, Perm, Person, Role, Tenant } from '@/data/types'
 
-/**
- * What the Company screen sets.
- *
- * These are the numbers everything else is computed from — the salary structure
- * every payslip is derived through, and the workspace's own name and home state.
- * The design's promise on the payroll tab is explicit: *change a number here and
- * the whole register moves; nothing is stored per person except the CTC*. That
- * only holds if the figures are read live rather than captured at import, which
- * is what this exists for.
- *
- * The seed objects are the starting value and are never written to. Every change
- * produces a new one, so the store's subscribers can see it and no other importer
- * of `PAYCFG` is silently altered underneath.
- */
-
-/** One row of the naming table — one concept, one name, used everywhere. */
 export interface NamingRow {
   concept: string
   name: string
@@ -39,7 +23,6 @@ const NAMING: NamingRow[] = [
 
 export type Budget = typeof BUDGET
 
-/** How the promise clock behaves, and which stages stop it. */
 export interface ClockCfg {
   start: string
   run: string
@@ -66,7 +49,6 @@ interface CompanyState {
   pay: PayConfig
   profile: Pick<Tenant, 'name' | 'state'> & { tz: string }
   depts: Dept[]
-  /** Ordered, because the order is the pipeline. */
   statuses: [string, [string, string]][]
   naming: NamingRow[]
   sla: SlaRule[]
@@ -82,8 +64,6 @@ const FIRST = TENANTS[0]
 
 const SEED: CompanyState = {
   pay: PAYCFG,
-  /* An unnamed workspace when there is no tenant to name it after — the profile
-     form is where that gets filled in either way. */
   profile: { name: FIRST?.name ?? '', state: FIRST?.state ?? '', tz: 'India Standard Time' },
   depts: DEPTLIST,
   statuses: Object.entries(STATUS),
@@ -101,20 +81,8 @@ const store = createStore<CompanyState>(SEED)
 
 export const useCompany = (): CompanyState => useStore(store)
 
-/**
- * The live salary structure, for the plain functions in `lib/payroll.ts` that
- * cannot use a hook. Reading through here is what makes the register move.
- */
 export const currentPayCfg = (): PayConfig => store.get().pay
 
-/**
- * Sets one payroll setting.
- *
- * A blank or negative number is a mis-key, not an instruction, so it is refused
- * rather than written — the design does the same, returning without touching the
- * config. Booleans and text take whatever they are given, minus surrounding
- * space.
- */
 export function setPayCfg<K extends keyof PayConfig>(key: K, value: string | boolean): void {
   const current = store.get().pay[key]
   let next: PayConfig[K]
@@ -134,34 +102,27 @@ export function setPayCfg<K extends keyof PayConfig>(key: K, value: string | boo
   store.update((prev) => ({ ...prev, pay: { ...prev.pay, [key]: next } }))
 }
 
-/** Sets one field of the workspace's own profile. Blank is refused. */
 export function setProfile(key: keyof CompanyState['profile'], value: string): void {
   const v = value.trim()
   if (!v) return
   store.update((prev) => ({ ...prev, profile: { ...prev.profile, [key]: v } }))
 }
 
-/* ── the pipeline ───────────────────────────────────────────────────────── */
-
 export const useDepartments = (): Dept[] => useStoreSlice(store, (c) => c.depts)
 export const useStatuses = () => useStoreSlice(store, (c) => c.statuses)
 export const useNaming = (): NamingRow[] => useStoreSlice(store, (c) => c.naming)
 
-/** Swaps a department with its neighbour. The order of this list is the pipeline. */
 export function moveDept(id: string, dir: -1 | 1): void {
   const depts = [...store.get().depts]
   const i = depts.findIndex((d) => d.id === id)
   const a = depts[i]
   const b = depts[i + dir]
-  /* Both ends have to exist. An unknown id, or either end of the list, is a move
-     with nowhere to go. */
   if (!a || !b) return
   depts[i] = b
   depts[i + dir] = a
   store.update((prev) => ({ ...prev, depts }))
 }
 
-/** Same, for the status list — position in it is what "main line" means. */
 export function moveStatus(key: string, dir: -1 | 1): void {
   const statuses = [...store.get().statuses]
   const i = statuses.findIndex(([k]) => k === key)
@@ -173,7 +134,6 @@ export function moveStatus(key: string, dir: -1 | 1): void {
   store.update((prev) => ({ ...prev, statuses }))
 }
 
-/** Renames one concept. Blank is refused — a nameless concept helps nobody. */
 export function setNaming(concept: string, name: string): void {
   const v = name.trim()
   if (!v) return
@@ -183,24 +143,19 @@ export function setNaming(concept: string, name: string): void {
   }))
 }
 
-/* ── where due dates come from ──────────────────────────────────────────── */
-
 export const useSla = (): SlaRule[] => useStoreSlice(store, (c) => c.sla)
 export const useBudget = (): Budget => useStoreSlice(store, (c) => c.budget)
 export const useClock = (): ClockCfg => useStoreSlice(store, (c) => c.clock)
 
-/** The live rules and split, for the plain functions in `lib/sla.ts`. */
 export const currentSla = (): SlaRule[] => store.get().sla
 export const currentBudget = (): Budget => store.get().budget
 
-/** A promise is at least an hour and at most a fortnight. */
 export function setSlaHours(i: number, v: string): void {
   const h = parseInt(v, 10)
   if (!(h > 0)) return
   store.update((prev) => ({ ...prev, sla: prev.sla.map((r, j) => (j === i ? { ...r, h: Math.min(336, h) } : r)) }))
 }
 
-/** New rules go in before the fallback, which always stays last. */
 export function addSla(rule: SlaRule): void {
   const at = store.get().sla.findIndex((r) => r.cl.startsWith('—'))
   const sla = [...store.get().sla]
@@ -214,15 +169,6 @@ export function removeSla(i: number): void {
   store.update((prev) => ({ ...prev, sla: prev.sla.filter((_, j) => j !== i) }))
 }
 
-/**
- * One stage's share, on the base split or on one product's override.
- *
- * The share is clamped to what the slider offers; the total is deliberately not.
- * A split that divides the clock exactly leaves one acceptable value per stage —
- * the one it already holds — so a store that refused an unbalanced result would
- * refuse every edit, and both controls read their value straight off here.
- * `budgetOK` is the check, and the SLA tab is where it is answered.
- */
 export function setShare(pr: string, stage: string, v: string): void {
   const n = Math.max(0, Math.min(100, parseFloat(v)))
   if (!Number.isFinite(n)) return
@@ -245,7 +191,6 @@ export function setBuffer(v: string): void {
   store.update((prev) => ({ ...prev, budget: { ...prev.budget, buffer: n } }))
 }
 
-/** A new override starts from the base split rather than from nothing. */
 export function addOverride(pr: string): void {
   if (store.get().budget.over.some((o) => o.pr === pr)) return
   store.update((prev) => ({
@@ -266,8 +211,6 @@ export function setPause(stage: string, on: boolean): void {
   store.update((prev) => ({ ...prev, clock: { ...prev.clock, pause: { ...prev.clock.pause, [stage]: on } } }))
 }
 
-/* ── the records the forms write ────────────────────────────────────────── */
-
 export const useStaff = (): Person[] => useStoreSlice(store, (c) => c.staff)
 export const useClients = (): Client[] => useStoreSlice(store, (c) => c.clients)
 export const useRoles = (): Role[] => useStoreSlice(store, (c) => c.roles)
@@ -279,10 +222,7 @@ const nextId = (prefix: string, taken: string[]) => {
   return `${prefix}${n}`
 }
 
-/** A key from wording: lowercase, letters and digits only. */
 const keyOf = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 20) || 'perm'
-
-/* staff */
 
 export function saveStaff(person: Person, id?: string): void {
   store.update((prev) => ({
@@ -297,8 +237,6 @@ export function removeStaff(id: string): void {
   store.update((prev) => ({ ...prev, staff: prev.staff.filter((s) => s.id !== id) }))
 }
 
-/* clients */
-
 export function saveClient(next: Client, was?: string): void {
   store.update((prev) => ({
     ...prev,
@@ -312,16 +250,12 @@ export function removeClient(name: string): void {
   store.update((prev) => ({ ...prev, clients: prev.clients.filter((c) => c.n !== name) }))
 }
 
-/* departments */
-
 export function saveDept(next: Omit<Dept, 'id'>, id?: string): void {
   const old = id ? store.get().depts.find((d) => d.id === id)?.n : null
   const depts = id
     ? store.get().depts.map((d) => (d.id === id ? { ...d, ...next } : d))
     : [...store.get().depts, { ...next, id: nextId('d', store.get().depts.map((d) => d.id)) }]
 
-  /* A rename has to carry through everything that named the old one, or a
-     department quietly loses its people and its QC pairing. */
   const renamed = old && old !== next.n
   store.update((prev) => ({
     ...prev,
@@ -342,14 +276,9 @@ export function removeDept(id: string): void {
   }))
 }
 
-/* roles */
-
-/** The permissions the admin role always keeps — a workspace cannot lock itself out. */
 export const ADMIN_FLOOR = ['all', 'people', 'config']
 
 export function saveRole(next: Omit<Role, 'id'>, id?: string): string {
-  /* A copy: `next` belongs to the form that is still holding it, and pushing the
-     floor onto its array edited the caller's state from underneath it. */
   const permissions =
     id === 'admin' ? [...new Set([...next.p, ...ADMIN_FLOOR])] : [...next.p]
   const role = { ...next, p: permissions }
@@ -363,7 +292,6 @@ export function saveRole(next: Omit<Role, 'id'>, id?: string): string {
   return made
 }
 
-/** Everyone holding a removed role drops back to Staff, never to nothing. */
 export function removeRole(id: string): void {
   const r = store.get().roles.find((x) => x.id === id)
   if (!r || r.lock) return
@@ -373,8 +301,6 @@ export function removeRole(id: string): void {
     staff: prev.staff.map((s) => (s.r === id ? { ...s, r: 'staff' } : s)),
   }))
 }
-
-/* permissions */
 
 export function savePerm(wording: string, k?: string): void {
   if (k) {
@@ -387,7 +313,6 @@ export function savePerm(wording: string, k?: string): void {
   }
 }
 
-/** Removing a permission takes it off every role that had it ticked. */
 export function removePerm(k: string): void {
   const p = store.get().perms.find((x) => x.k === k)
   if (!p || p.sys) return
@@ -397,8 +322,6 @@ export function removePerm(k: string): void {
     roles: prev.roles.map((r) => ({ ...r, p: r.p.filter((x) => x !== k) })),
   }))
 }
-
-/* statuses */
 
 export function saveStatus(name: string, colour: string, k?: string): void {
   if (k) {
@@ -415,5 +338,4 @@ export function removeStatus(k: string): void {
   store.update((prev) => ({ ...prev, statuses: prev.statuses.filter(([x]) => x !== k) }))
 }
 
-/** @see Store.reset in @/lib/store */
 export const resetCompany = store.reset

@@ -3,19 +3,9 @@ import { useGo } from '@/lib/nav'
 import { dueMeta, initials } from '@/lib/format'
 import type { ChipKind } from '@/data/types'
 
-/**
- * The shared vocabulary of the design: chips, buttons, cards, KPI tiles, due
- * countdowns, avatars, banners, tabs. Each renders the design's own class names,
- * so the stylesheet — not this file — decides how they look.
- */
-
-/* ── chips ──────────────────────────────────────────────────────────────── */
-
 export function Chip({ children, kind = 'n', plain }: { children: ReactNode; kind?: ChipKind; plain?: boolean }) {
   return <span className={`chip ${kind}${plain ? ' pl' : ''}`}>{children}</span>
 }
-
-/* ── buttons ────────────────────────────────────────────────────────────── */
 
 type BtnVariant = 'primary' | 'ghost' | 'danger'
 
@@ -42,22 +32,12 @@ export function Btn({
   )
 }
 
-/**
- * The parent of a detail screen, shown as an eyebrow above its title.
- *
- * This used to be a ghost button floating above the header, which put a second
- * back control directly under the one the top bar already provides — two
- * arrows, one above the other, pointing at different places. As an eyebrow it
- * does the same job and also says where you are, which is what the space above
- * a title is for.
- */
 export function Parent({
   to,
   search,
   children,
 }: {
   to: string
-  /** For a parent that is one tab of a screen rather than the screen itself. */
   search?: Record<string, string> | undefined
   children: ReactNode
 }) {
@@ -70,11 +50,6 @@ export function Parent({
   )
 }
 
-/**
- * A detail screen for a record that is not there. Same shape every time: say so
- * plainly, say why it might be, and offer the way back rather than leaving the
- * reader on a dead end.
- */
 export function NotFoundRecord({
   what,
   backTo,
@@ -104,8 +79,6 @@ export function NotFoundRecord({
   )
 }
 
-/* ── page header ────────────────────────────────────────────────────────── */
-
 export function PageHead({
   title,
   sub,
@@ -115,7 +88,6 @@ export function PageHead({
   title: string
   sub?: ReactNode
   actions?: ReactNode
-  /** Where this screen sits, for a detail view reached from a register. */
   parent?: { to: string; label: string; search?: Record<string, string> }
 }) {
   return (
@@ -142,11 +114,6 @@ export function SectionHead({ children, id }: { children: ReactNode; id?: string
   )
 }
 
-/**
- * Take someone to a section already on the page rather than duplicating it
- * elsewhere. The brief highlight is what says "this, here" — without it the page
- * simply jumps and the reader has to work out what moved.
- */
 export function focusElement(el: HTMLElement | null) {
   if (!el) return
   el.scrollIntoView({ block: 'start', behavior: 'smooth' })
@@ -154,17 +121,8 @@ export function focusElement(el: HTMLElement | null) {
   setTimeout(() => el.classList.remove('lit'), 1500)
 }
 
-/** The same, for a section that has an id rather than a ref. */
 export const focusSection = (id: string) => focusElement(document.getElementById(id))
 
-/**
- * The header a tab body opens with: a sentence saying what you are looking at,
- * and the controls that act on it, on one borderless line.
- *
- * This is the design's `secHead`. It is not a heading — the page already has
- * one — which is why the text is a grey sub-line rather than an `<h2>`, and why
- * the actions have somewhere to sit without a card wrapping them.
- */
 export function SecHead({ sub, actions }: { sub: ReactNode; actions?: ReactNode }) {
   return (
     <div className="ch" style={{ border: 'none', padding: '2px 0 15px', alignItems: 'flex-start' }}>
@@ -176,13 +134,6 @@ export function SecHead({ sub, actions }: { sub: ReactNode; actions?: ReactNode 
   )
 }
 
-/**
- * A page head that is not the page's head.
- *
- * The workload views are whole screens in their own right and also live inside
- * a Reports tab. Rendered there, their title has to step down to a section
- * heading — one page, one `<h1>` — which is what the design's `wHead` does.
- */
 export function EmbedHead({
   title,
   sub,
@@ -206,8 +157,6 @@ export function EmbedHead({
     </div>
   )
 }
-
-/* ── cards ──────────────────────────────────────────────────────────────── */
 
 export function Card({
   children,
@@ -250,8 +199,6 @@ export function Label({ children }: { children: ReactNode }) {
   return <div className="lb">{children}</div>
 }
 
-/* ── KPI tiles ──────────────────────────────────────────────────────────── */
-
 export function Kpis({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div className="kpis" style={style}>
@@ -276,32 +223,17 @@ export function Kpi({
 }: {
   title: string
   value: ReactNode
-  /** Colours the figure itself — the design's `vc`. */
   valueTone?: 'ok' | 'warn' | 'bad' | undefined
-  /**
-   * Overrides the figure's size — the design's `vs`, used wherever the value is
-   * money. `₹1,23,456` at the default 26px overruns a 168px tile; every money
-   * tile in the export drops it to 23.
-   */
   valueSize?: number
   detail?: ReactNode
-  /** Colours the detail line, replacing its default grey — the design's `dc`. */
   detailTone?: 'ok' | 'warn' | 'bad'
   tone?: 'alert' | 'warn' | undefined
   icon?: string
-  /** Tooltip for a clickable tile, saying what opening it will do. */
   hint?: string
-  /** Absent leaves the tile inert: a tile with nothing behind it is not pressable. */
   onClick?: (() => void) | undefined
   selected?: boolean
-  /** Drop the card treatment — the design's `stat` variant, for a bare run of figures. */
   flat?: boolean
 }) {
-  /*
-   * Every tile is a card unless it asks not to be. The design flattened any tile
-   * that was not clickable, which left whole screens of figures floating with no
-   * edges — so the box is the default here and `flat` is opt-in.
-   */
   const cls = [
     'kpi',
     tone === 'alert' ? 'alert' : tone === 'warn' ? 'warnk' : '',
@@ -316,8 +248,6 @@ export function Kpi({
         role: 'button',
         tabIndex: 0,
         title: hint,
-        /* A tile that focuses the report is a toggle, and says so. Tiles that
-           merely navigate leave it unset rather than claiming a state. */
         ...(selected === undefined ? {} : { 'aria-pressed': selected }),
         onClick,
         onKeyDown: (e: React.KeyboardEvent) => {
@@ -341,13 +271,10 @@ export function Kpi({
       >
         {value}
       </div>
-      {/* The detail line is grey unless the tile colours it. */}
       {detail ? <div className={`d ${detailTone ?? 'gr'}`}>{detail}</div> : null}
     </div>
   )
 }
-
-/* ── due countdown ──────────────────────────────────────────────────────── */
 
 export function Due({ at }: { at: Date }) {
   const { kind, abs, rel } = dueMeta(at)
@@ -359,8 +286,6 @@ export function Due({ at }: { at: Date }) {
   )
 }
 
-/* ── avatars ────────────────────────────────────────────────────────────── */
-
 export function Avatar({
   name,
   self,
@@ -371,7 +296,6 @@ export function Avatar({
   name?: string | null
   self?: boolean
   title?: string | undefined
-  /** Takes the event so a strip inside a clickable row can stop the bubble. */
   onClick?: ((e: React.MouseEvent) => void) | undefined
   style?: CSSProperties
 }) {
@@ -391,8 +315,6 @@ export function Avatar({
   )
 }
 
-/* ── banners ────────────────────────────────────────────────────────────── */
-
 export function Banner({
   kind = 'b',
   icon,
@@ -411,9 +333,6 @@ export function Banner({
   return (
     <div className={`bnr ${kind}`} style={style}>
       {icon ? <span className="bi">{icon}</span> : null}
-      {/* The body sits bare, at the banner's own 13.5px. `.bs` is the design's
-          trailing sub-line — dimmer and smaller — so a caller that wants one
-          writes it, rather than every banner body being demoted to it. */}
       <div>
         {title ? <div className="bt">{title}</div> : null}
         {children}
@@ -423,7 +342,6 @@ export function Banner({
   )
 }
 
-/** The hatched "this is an assumption" flag the design uses to mark invented rules. */
 export function Assumption({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="asm">
@@ -435,8 +353,6 @@ export function Assumption({ title, children }: { title: string; children: React
     </div>
   )
 }
-
-/* ── empty state ────────────────────────────────────────────────────────── */
 
 export function Empty({
   icon = '☰',
@@ -456,13 +372,6 @@ export function Empty({
   )
 }
 
-/* ── select ─────────────────────────────────────────────────────────────── */
-
-/**
- * The design's `.inp` select. Every register filter is one of these, so the
- * accessible name, the controlled value and the `[value, label]` option shape
- * live here rather than being spelled out at each call site.
- */
 export function Select({
   label,
   value,
@@ -493,8 +402,6 @@ export function Select({
   )
 }
 
-/* ── segmented control ──────────────────────────────────────────────────── */
-
 export function Seg<T extends string>({
   options,
   value,
@@ -520,8 +427,6 @@ export function Seg<T extends string>({
     </div>
   )
 }
-
-/* ── tabs ───────────────────────────────────────────────────────────────── */
 
 export function Tabs<T extends string>({
   tabs,
@@ -554,8 +459,6 @@ export function Tabs<T extends string>({
   )
 }
 
-/* ── forms ──────────────────────────────────────────────────────────────── */
-
 export function Form({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <div className="frm" style={style}>
@@ -582,15 +485,10 @@ export function Field({
   )
 }
 
-/** A value that cannot be edited here, shown in the same slot a field would be. */
 export function ReadOnly({ children }: { children: ReactNode }) {
   return <div className="ro">{children}</div>
 }
 
-/**
- * The buttons a form or a confirmation ends on, ranged right so the one that
- * commits sits closest to where the thumb and the eye finish the form.
- */
 export function FormActions({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
@@ -599,9 +497,6 @@ export function FormActions({ children }: { children: ReactNode }) {
   )
 }
 
-/* ── capacity bar ───────────────────────────────────────────────────────── */
-
-/** Share of the track a value fills. A total of nothing reads as empty, not as NaN. */
 function fill(value: number, max: number) {
   return max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
 }
@@ -618,12 +513,6 @@ export function Bar({ value, max, color }: { value: number; max: number; color?:
   )
 }
 
-/**
- * A labelled bar with its figure beside it — the shape a distribution takes
- * wherever one is shown. The columns stay the caller's: a name needs a
- * different width from a score chip, and fixing them per screen is what keeps
- * the bars from stepping in and out down the page.
- */
 export function BarRow({
   cols,
   gap = 12,
@@ -639,22 +528,15 @@ export function BarRow({
   rightClass = 'mono',
   rightStyle,
 }: {
-  /** grid-template-columns for the three cells: label, bar, figure. */
   cols: string
   gap?: number
   padding?: string
   label: ReactNode
-  /** Empty for a label that carries its own emphasis — a name, a chip. */
   labelClass?: string
   value: number
   max: number
   color?: string
-  /** Names the parts of a fill that is built from more than one thing. */
   title?: string
-  /**
-   * A pale bar behind the solid one, for a figure read against an allowance
-   * rather than against a total. The solid bar then rides inside it.
-   */
   budget?: { value: number; max: number }
   right: ReactNode
   rightClass?: string
@@ -696,8 +578,6 @@ export function BarRow({
   )
 }
 
-/* ── key/value list ─────────────────────────────────────────────────────── */
-
 export function KeyValues({ rows }: { rows: [ReactNode, ReactNode][] }) {
   return (
     <dl className="kv">
@@ -711,24 +591,14 @@ export function KeyValues({ rows }: { rows: [ReactNode, ReactNode][] }) {
   )
 }
 
-/* ── timeline ───────────────────────────────────────────────────────────── */
-
 export interface TimelineEntry {
   id: string
   when: ReactNode
   who: ReactNode
   what: ReactNode
-  /** Marks the entry as the current one — the dot takes the accent. */
   current?: boolean
 }
 
-/**
- * Entries against a rail, newest first.
- *
- * The timestamp gets a column of its own because it is the thing being scanned:
- * a reader looking for "when did we last speak to them" should not have to read
- * the note to find the date.
- */
 export function Timeline({ entries }: { entries: TimelineEntry[] }) {
   return (
     <div className="tl">
@@ -745,12 +615,6 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
   )
 }
 
-/* ── detail rows ────────────────────────────────────────────────────────── */
-
-/**
- * A label and its figure on one line, ruled off from the next. The rule sits
- * between rows rather than under the run, so the last row asks for `last`.
- */
 export function DetailRow({
   label,
   value,
@@ -763,12 +627,9 @@ export function DetailRow({
   label: ReactNode
   value: ReactNode
   last?: boolean
-  /** Only where a long label and a long figure would otherwise meet. */
   gap?: number
   padding?: string
-  /** For a figure tall enough that a top-aligned label would ride above it. */
   center?: boolean
-  /** Empty for a label that carries its own emphasis. */
   labelClass?: string
 }) {
   return (
@@ -789,7 +650,6 @@ export function DetailRow({
   )
 }
 
-/** A run of detail rows built from label/figure pairs. */
 export function DetailList({ rows, gap }: { rows: [string, ReactNode][]; gap?: number }) {
   return (
     <>
@@ -800,8 +660,6 @@ export function DetailList({ rows, gap }: { rows: [string, ReactNode][]; gap?: n
   )
 }
 
-/* ── row list ───────────────────────────────────────────────────────────── */
-
 const BARE: CSSProperties = { border: 'none', borderRadius: 0 }
 
 export function Rows({
@@ -810,10 +668,6 @@ export function Rows({
   style,
 }: {
   children: ReactNode
-  /**
-   * Drop the hairline box `.rows` draws for itself. Inside a card that already
-   * has edges, the second box reads as a frame around a frame.
-   */
   bare?: boolean
   style?: CSSProperties
 }) {

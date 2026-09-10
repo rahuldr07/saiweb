@@ -21,23 +21,12 @@ import { STAFF } from '@/data/people'
 import { LSTATE, brokenLinks, days, linkStats, nextLinkCheck, type FlatLink } from '@/lib/derived'
 import { fmtDT, fmtDate, TZ } from '@/lib/format'
 import { now } from '@/lib/clock'
-import { runLinkCheck, setCheckEvery, setCheckNotify, useCoverage } from '@/state/coverage'
-import { FixLink } from './counties/FixLink'
+import { runLinkCheck, setCheckEvery, setCheckNotify, useCoverage } from '@/state/counties'
+import { FixLink } from '@/components/FixLink'
 import type { LinkStatus } from '@/data/types'
-
-/**
- * Link monitor.
- *
- * The county portals searchers depend on, and whether they still answer. A link
- * that quietly moved costs an order its SLA, so the states are explicit rather
- * than a boolean — "moved" and "asks for a login" are different problems with
- * different fixes, which is why the failures are grouped by cause rather than
- * listed in one undifferentiated table.
- */
 
 const BROKEN_COLS = '160px 120px 1fr 130px 120px'
 
-/** The intervals the checker can be set to. */
 const EVERY = [1, 2, 3, 7, 14]
 
 const NOTIFY: [string, string][] = [
@@ -46,7 +35,6 @@ const NOTIFY: [string, string][] = [
   ['everyone', 'Everyone'],
 ]
 
-/** What each failing state actually means, in the order the design lists them. */
 const CAUSES: [LinkStatus, string][] = [
   ['broken', 'The page does not load at all — 404, timeout, or the host has gone'],
   ['moved', 'It redirects somewhere else. Still works, but the address on file is stale'],
@@ -68,11 +56,6 @@ function LinkMonitor() {
   const sinceLast = days(check.last)
   const lastRun = sinceLast === 0 ? 'today' : `${sinceLast} days ago`
 
-  /* Grouped by what went wrong, because each cause has a different remedy — a
-     moved portal needs a new address, a login wall needs an account.
-     Ordered by the severity the legend below states, rather than by whichever
-     county happened to fail first: groups that reshuffle as you fix things move
-     the next row out from under the cursor. */
   const byCause = CAUSES.map(([s]) => [s, bad.filter((x) => x.l.s === s)] as const).filter(
     ([, list]) => list.length,
   )
@@ -80,7 +63,6 @@ function LinkMonitor() {
   const admins = STAFF.filter((s) => s.r === 'admin' && s.active !== false).map((s) => s.n)
   const countiesHit = new Set(bad.map((x) => x.c.n)).size
 
-  /** Sends the reader to the coverage register with a filter already applied. */
   const toCoverage = (f?: 'ok' | 'gap') =>
     navigate({ to: '/counties', search: f ? { f } : {} })
 

@@ -7,19 +7,9 @@ import { CLASHRULES } from '@/lib/leave'
 import type { LeaveType } from '@/data/types'
 import { r2 } from '@/lib/format'
 
-/**
- * The rules every request is judged against.
- *
- * Editable, and each setting states its consequence rather than only its value —
- * because the interesting question about a policy is never what it is set to, it
- * is what that produces. The panels on the right answer that against the data as
- * it stands, so a change can be read before it is lived with.
- */
-
 const COLS = '190px 110px 110px 120px 1fr 110px'
 
 
-/** A number with its unit and the reason it matters. */
 function NumberField({
   id,
   label,
@@ -65,7 +55,6 @@ function NumberField({
   )
 }
 
-/** A figure the current rules produce, so the setting above can be read in effect. */
 function Outcome({ label, value, warn }: { label: string; value: number | string; warn?: boolean }) {
   return <DetailRow label={label} value={<b className={`mono ${warn ? 'warn' : ''}`}>{value}</b>} />
 }
@@ -90,7 +79,6 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
     bump()
   }
 
-  /** Add or retype a leave type. A type in use keeps its key so history holds. */
   const editType = (existing?: LeaveType) => {
     const held: LeaveType = existing
       ? { ...existing }
@@ -417,7 +405,6 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
   )
 }
 
-/** The type editor's fields, holding their own state so nothing is mutated in JSX. */
 function TypeFields({
   initial,
   onChange,

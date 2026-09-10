@@ -4,21 +4,11 @@ import { Btn, Card, Chip, Empty } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { AVAIL, STAFF } from '@/data/people'
 import { ASSIGN_STAGES, PAIRS } from '@/data/org'
-import { COVSTAGES } from '@/lib/coverage'
+import { COVSTAGES } from '@/lib/qualification'
 import { whoName } from '@/lib/permissions'
-import { covOK } from '@/lib/rules'
+import { covOK } from '@/lib/ruleText'
 import { EXCLUSION, type AssignmentBoard, type Exception, type ExclusionReason } from '@/lib/engine'
 
-/**
- * What could not be placed, grouped by why.
- *
- * Grouped by cause rather than by order because the fix is per cause: raising a
- * target clears every capacity exception at once, and widening one person's
- * coverage clears every coverage exception behind it. A list ordered by order
- * number would hide that entirely.
- */
-
-/** How to clear each kind, in the design's words. */
 const REMEDY: Record<ExclusionReason, string> = {
   capacity: 'Raising a target or adding someone to the department clears all of these.',
   self: 'The person free for the QC is the one who did the work. Assign someone else or accept the pairing knowingly.',
@@ -28,7 +18,6 @@ const REMEDY: Record<ExclusionReason, string> = {
   'no-dept': 'Nobody is a member of that department at all.',
 }
 
-/** Only the first few of a kind are listed — the rest go the same way. */
 const SHOWN_PER_CAUSE = 5
 
 const COLS = '150px 120px 130px 1fr'
@@ -44,8 +33,6 @@ export function ExceptionsTab({
 }) {
   const navigate = useGo()
   const { toast, openModal, closeModal } = useUi()
-  /* Placed by hand, this session. Held here rather than written into the run:
-     the board is what the rules produced, and overriding it is a different fact. */
   const [placed, setPlaced] = useState<Record<string, string>>({})
 
   const { run } = board
@@ -58,8 +45,6 @@ export function ExceptionsTab({
     return acc
   }, {})
 
-  /* A department where every member is unavailable: any order needing that stage
-     today has nowhere to go, which is a roster problem rather than a rule one. */
   const deptOut = run.deptOut
 
   const assign = (e: Exception, id: string) => {
@@ -88,8 +73,6 @@ export function ExceptionsTab({
     toast(`${e.stage} → ${whoName(id)}`)
   }
 
-  /* Nothing to place is a result of the run, not an absence of the screen — so the
-     banner and the heading stay and only the groups become the all-clear. */
   return (
     <>
       <div className={`bnr ${exc.length ? 'r' : 'v'}`}>
@@ -145,8 +128,6 @@ export function ExceptionsTab({
 
       <h2 className="sec">Grouped by why — fixing the cause clears the whole group</h2>
 
-      {/* In the order the run produced them. Re-sorting by size would make the
-          list jump between runs without telling the reader anything more. */}
       {Object.entries(byWhy)
         .map(([why, list]) => {
           const [label, tone] = EXCLUSION[why as ExclusionReason]
@@ -176,8 +157,6 @@ export function ExceptionsTab({
                   <div className="tb">
                     {list.slice(0, SHOWN_PER_CAUSE).map((e) => {
                       const chosen = placed[key(e)]
-                      /* Whoever is qualified first, so the picker leads with the
-                         people who would not need an exception made for them. */
                       const options = STAFF.filter(
                         (s) => s.dep.includes(e.stage) && s.active !== false,
                       ).sort((a, b) => Number(covOK(b.id, e)) - Number(covOK(a.id, e)))

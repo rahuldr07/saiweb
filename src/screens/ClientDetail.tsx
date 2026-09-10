@@ -23,9 +23,9 @@ import { RequireCap } from '@/components/RequireCap'
 import { useNotBuilt } from '@/components/notBuilt'
 import { useUi } from '@/state/ui'
 import { useClients, useClock, useSla } from '@/state/company'
-import { useClientEditor } from './company/forms/useClientEditor'
+import { useClientEditor } from '@/components/editors/useClientEditor'
 import { PrefixForm } from './clients/PrefixForm'
-import { removePrefix, usePrefixes } from './clients/prefixes'
+import { removePrefix, usePrefixes } from '@/state/prefixes'
 import { INVOICES, ISTATUS } from '@/data/business'
 import { balance, outstandingOf } from '@/lib/invoices'
 import { money, r2 } from '@/lib/format'
@@ -38,18 +38,6 @@ const CLOCK_RUN: Record<string, string> = {
   biz: 'Business hours only',
 }
 
-/**
- * One client, everything about them.
- *
- * Four tabs, in the order the questions get asked: what the relationship is
- * worth, what has been promised, what has been billed, and which order numbers
- * belong to them.
- *
- * Every figure is derived from the invoice list rather than stored beside it.
- * The design's own note on this tab is the reason: it used to show three
- * invented rows under a pill reading 1,113, and a count on a filter that
- * disagrees with what selecting it shows is worse than no count at all.
- */
 function ClientDetail() {
   const { clientCode } = useParams({ from: '/clients/$clientCode' })
   const navigate = useGo()
@@ -74,8 +62,6 @@ function ClientDetail() {
   const mine = INVOICES.filter((x) => x.cl === c.n).sort((a, b) => +b.issued - +a.issued)
   const theirSla = sla.filter((s) => s.cl === c.n)
   const prefixes = prefixMap[c.n] ?? []
-
-  /* ── the outstanding modal ─────────────────────────────────────────────── */
 
   const openOutstanding = () =>
     openModal({
@@ -145,8 +131,6 @@ function ClientDetail() {
     })
 
   const openSla = () => navigate({ to: '/company', search: { tab: 'Turnaround & SLA', sub: 'Client promise' } })
-
-  /* ── overview ──────────────────────────────────────────────────────────── */
 
   const overview = (
     <>
@@ -240,8 +224,6 @@ function ClientDetail() {
     </>
   )
 
-  /* ── turnaround ────────────────────────────────────────────────────────── */
-
   const TCOLS = '1fr 130px 150px 160px'
 
   const turnaround = (
@@ -273,9 +255,6 @@ function ClientDetail() {
                     <div className="v mono">{s.h}h</div>
                   </div>
                   <div className="cell">
-                    {/* Read from the workspace's own clock setting rather than
-                        stated here, or this line keeps saying "24/7" after
-                        somebody switches the clock to business hours. */}
                     <div className="v gr" style={{ fontSize: '12.5px' }}>
                       {CLOCK_RUN[clock.run] ?? clock.run}
                     </div>
@@ -304,8 +283,6 @@ function ClientDetail() {
       </div>
     </Card>
   )
-
-  /* ── invoices ──────────────────────────────────────────────────────────── */
 
   const invoiceRows: DataRow[] = mine.map((x) => {
     const bal = balance(x)
@@ -361,8 +338,6 @@ function ClientDetail() {
       emptyText={`Nothing has been invoiced to ${c.n} yet.`}
     />
   )
-
-  /* ── order prefixes ────────────────────────────────────────────────────── */
 
   const prefixTab = (
     <Card>

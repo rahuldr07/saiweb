@@ -25,7 +25,7 @@ import { useTimeclock } from '@/state/timeclock'
 import { UpdateForm } from './mywork/UpdateForm'
 import { SwapForm } from './mywork/SwapForm'
 import { OvertimeForm } from './mywork/OvertimeForm'
-import { postUpdate, useUpdates } from './mywork/updates'
+import { postUpdate, useUpdates } from '@/state/updates'
 import { STAFF, HOLIDAYS } from '@/data/people'
 import { UPDKIND } from '@/data/production'
 import { ATT, LEAVETYPES, PAYMONTHS } from '@/data/hrms'
@@ -35,7 +35,7 @@ import { leaveBalance } from '@/lib/payroll'
 import { useQcRules } from '@/state/qcRules'
 import { DEFAULT_RANGE, inRange, resolveRange } from '@/lib/range'
 import { useQcLog } from '@/lib/useQcLog'
-import { hhmm, hm, restCheck, shiftOf, worked } from '@/lib/timeclock'
+import { hhmm, hm, restCheck, shiftOf, worked } from '@/lib/workingDay'
 import { whoName } from '@/lib/permissions'
 import { celebrationsWithin } from '@/lib/celebrations'
 import { fmtDT, fmtDate, parseUsDate } from '@/lib/format'
@@ -46,19 +46,8 @@ const QCOLS = '150px 150px 140px 1fr 150px 110px'
 
 const greeting = (h: number) => (h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening')
 
-/** The month payroll is currently working on. */
 const payMonth = () => PAYMONTHS[PAYMONTHS.length - 1]
 
-/**
- * My work — the screen production staff live in.
- *
- * It answers four questions in the order a day asks them: am I marked in, what
- * is on my desk, where does my month stand, and what did the rest of my
- * department say. Nothing on it compares anyone to a colleague: the target is
- * their own, the checkpoints are their department's slice of the promise, and
- * the quality panel shows only their own ratings — and only if the company has
- * left that setting on.
- */
 export default function MyWork() {
   const { me } = useSession()
   const { openModal, closeModal, toast } = useUi()
@@ -92,9 +81,6 @@ export default function MyWork() {
     .filter((x) => x.dt >= now())
     .sort((a, b) => +a.dt - +b.dt)[0]
 
-  /* Birthdays and anniversaries in the week ahead. Derived from the roster, so
-     nothing has to be entered for one to appear. Rendered only when there is
-     something — an empty "no birthdays" panel every day is clutter. */
   const wishes = celebrationsWithin(STAFF, now(), 7)
   const yours = wishes.filter((c) => c.person.id === me.id && c.inDays === 0)
   const theirs = wishes.filter((c) => c.person.id !== me.id)
@@ -107,8 +93,6 @@ export default function MyWork() {
         (STAFF.find((x) => x.id === u.who)?.dep ?? []).some((d) => me.dep.includes(d)),
     )
     .slice(0, 4)
-
-  /* ── the clock ─────────────────────────────────────────────────────────── */
 
   const workedToday = mark?.out ? worked(mark) - (mark.breakMins ?? 0) : 0
 
@@ -163,8 +147,6 @@ export default function MyWork() {
         />
       ),
     })
-
-  /* ── the modals behind the figures ─────────────────────────────────────── */
 
   const note = (children: React.ReactNode) => (
     <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -288,8 +270,6 @@ export default function MyWork() {
     })
   }
 
-  /* ── the clock card's buttons ──────────────────────────────────────────── */
-
   const clockActions = !mark ? (
     <Btn onClick={() => clock.checkIn(me.id, toast)}>Check in</Btn>
   ) : !mark.out ? (
@@ -343,7 +323,6 @@ export default function MyWork() {
 
       <YourWish celebrations={yours} firstName={me.n.split(' ')[0]} />
 
-      {/* ── today's clock ── */}
       <Card padded style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 220 }}>
@@ -420,7 +399,6 @@ export default function MyWork() {
         ) : null}
       </Card>
 
-      {/* ── the four figures ── */}
       <Kpis>
         <Kpi
           title="On your desk"
@@ -454,7 +432,6 @@ export default function MyWork() {
         />
       </Kpis>
 
-      {/* ── the month, and leave ── */}
       <div className="two" style={{ marginTop: 16 }}>
         <Card padded>
           <Label>Your {month}</Label>
@@ -528,11 +505,8 @@ export default function MyWork() {
         </Banner>
       ) : null}
 
-      {/* ── the shift log ── */}
       <div className="two" style={{ marginTop: 18 }}>
         <Card padded>
-          {/* The card is already padded, so its head loses the rule and the
-              inset the standalone `CardHead` carries. */}
           <div className="ch" style={{ border: 'none', padding: '0 0 10px' }}>
             <Label>What you wrote</Label>
             <div className="r">
@@ -570,7 +544,6 @@ export default function MyWork() {
         </Card>
       </div>
 
-      {/* ── the queue ── */}
       <SectionHead id="mwQueue">
         {open.length ? `Your queue — ${open.length} to do` : 'Your queue is clear'}
       </SectionHead>
@@ -626,12 +599,6 @@ export default function MyWork() {
                           ) : null}
                         </div>
                         <div className="cell">
-                          {/* An arrival carries where the property is but not its
-                              address — that is taken at intake. The design prints
-                              an em-dash above the county for every row; the county
-                              on its own says the same thing without the dash
-                              claiming something is missing that was never asked
-                              for. */}
                           <div className="v" style={{ fontSize: '12.5px' }}>
                             {o.co ? `${o.co}, ${o.st}` : '—'}
                           </div>
@@ -672,7 +639,6 @@ export default function MyWork() {
         </Card>
       )}
 
-      {/* ── finished ── */}
       {wk.done ? (
         <>
           <SectionHead id="mwDone">Finished today — {wk.done}</SectionHead>
@@ -713,7 +679,6 @@ export default function MyWork() {
         </>
       ) : null}
 
-      {/* ── quality, and where you fit ── */}
       <div className="two" style={{ marginTop: 18 }}>
         <Card padded>
           <Label>Your quality</Label>

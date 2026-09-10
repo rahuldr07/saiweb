@@ -5,7 +5,7 @@ import { fmtTime, initials, LOCAL_OFFSET_H, TZ, TZ2 } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { alerts } from '@/lib/derived'
 import { DEMO_IDENTITY } from '@/lib/demo'
-import { useCoverage } from '@/state/coverage'
+import { useCoverage } from '@/state/counties'
 import { ROUTE_LABEL } from './nav'
 import { Empty, Row, Rows } from '@/components/ui'
 
@@ -20,9 +20,6 @@ export function TopBar({ current }: { current: string }) {
   const label = ROUTE_LABEL[current]
   const crumb = label ? `${tenant.name} · ${label}` : tenant.name
 
-  /* Back goes to the dashboard from every screen — except for someone who cannot
-     see every order, since the dashboard is gated on that capability and would
-     only show them a refusal. They go to My work, which is their equivalent. */
   const hasDash = can('all')
   const target = hasDash ? '/dash' : '/mywork'
   const targetLabel = hasDash ? 'dashboard' : 'my work'

@@ -2,16 +2,9 @@ import { Btn, Card, CardHead, Rows, SecHead } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { useRoles, usePerms, useStaff } from '@/state/company'
 import { RoleForm, RoleDelete } from './forms/RoleForm'
-import { PermsManager, type PermView } from './forms/PermsForm'
+import { PermsManager, type PermView } from './forms/PermsManager'
 import { csvName, downloadCSV } from '@/lib/csv'
 
-/**
- * What each role can do, and who holds it.
- *
- * The flagged row is the point of the matrix: one permission no role can hold,
- * because a blocking rule that somebody can be granted their way around is not a
- * blocking rule. It is shown rather than hidden so the absence is deliberate.
- */
 export function RolesTab({
   tenantName,
   isAdmin,

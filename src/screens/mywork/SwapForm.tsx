@@ -1,17 +1,10 @@
 import { useState } from 'react'
 import { Banner, Btn, Field, Form, FormActions } from '@/components/ui'
-import { shiftOf } from '@/lib/timeclock'
+import { shiftOf } from '@/lib/workingDay'
 import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 import type { Person } from '@/data/types'
 
-/**
- * Asking a colleague to take a day.
- *
- * It goes to a manager because it changes who is covering that day, not because
- * anyone doubts the two people involved — which the banner says, so the approval
- * step does not read as suspicion.
- */
 export function SwapForm({
   peers,
   onCancel,

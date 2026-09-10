@@ -1,4 +1,3 @@
-/* AUTO-GENERATED from the Claude Design "Title CRM 897". Values are the design's own. */
 import type {
   ChipKind,
   Leave,
@@ -1192,18 +1191,6 @@ export const PETTY: PettyEntry[] = [
 
 export const PETTYCFG: PettyConfig = { float: 25000, limit: 5000, custodian: "Harry Whitfield", countEvery: "week" }
 
-/**
- * Counts of the box, newest first.
- *
- * Counted by Ashok S rather than by Harry Whitfield, who holds it — a custodian
- * who checks their own float is not a control.
- *
- * The design's figures were written against an earlier ledger and had drifted:
- * both counts carry the note "Matched." while sitting against balances they do
- * not match, so the screen rendered "Short by ₹1,200 — Matched." The dates here
- * put each count where its figure is actually the ledger balance, which is what
- * the notes say happened.
- */
 export const COUNTS: PettyCount[] = [
   {
     id: "C1",
@@ -1221,7 +1208,6 @@ export const COUNTS: PettyCount[] = [
   },
 ]
 
-/** The hiring ladder, in the order a candidate climbs it. */
 export const HIRESTAGES: HireStage[] = [
   "Applied",
   "Screened",
@@ -1477,10 +1463,6 @@ export const CANDIDATES: Candidate[] = [
   },
 ]
 
-/**
- * Income-tax slabs: [upper bound of the slab, rate %]. The top slab is open-ended,
- * which JSON cannot carry — so these two are written out rather than generated.
- */
 export const TAXSLABS: [number, number][] = [
   [400000, 0],
   [800000, 5],
@@ -1501,12 +1483,10 @@ export const OLDSLABS: [number, number][] = [
 export interface Overtime {
   id: string
   who: string
-  /** MM/DD/YYYY */
   d: string
   mins: number
   why: string
   st: string
-  /** Who approved it — null while it is still pending. */
   by: string | null
 }
 

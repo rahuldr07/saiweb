@@ -8,20 +8,8 @@ import { now } from '@/lib/clock'
 import type { Leave } from '@/data/types'
 import { iso, parseIso } from '@/lib/format'
 
-/**
- * Applying for leave.
- *
- * The form says what the request will mean before it is sent — how much balance
- * would be left, whether it is short notice, and whether it would take the
- * department below cover. That judgement comes from `leaveCheck`, the same call
- * the approver's row is built from, so the applicant and the approver are never
- * shown two different readings of one request.
- */
-
-/** Lengths people actually ask for, rather than a free number. */
 const LENGTHS = [1, 2, 3, 4, 5, 7, 10, 14]
 
-/** One of the form's live verdicts, in the banner style that matches its weight. */
 function NoteBanner({ note }: { note: Note }) {
   if (note.kind === 'plain') {
     return (

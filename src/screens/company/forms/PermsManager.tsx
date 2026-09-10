@@ -3,15 +3,6 @@ import { Banner, Btn, Chip, FormActions, Rows } from '@/components/ui'
 import { isDuplicateName } from '@/lib/forms'
 import { removePerm, savePerm, usePerms, useRoles } from '@/state/company'
 
-/**
- * The permission vocabulary.
- *
- * The built-in ones are wired to real behaviour, so they can be reworded but not
- * deleted. One you add is a label you can tick against roles — it records intent
- * and gates nothing until that behaviour exists, which the form says plainly
- * rather than letting somebody assume otherwise.
- */
-
 export type PermView = { at: 'list' } | { at: 'edit'; k?: string } | { at: 'confirm'; k: string }
 
 export function PermsManager({

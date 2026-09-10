@@ -17,7 +17,6 @@ const st = (k: string) => STATUS[k]?.[0] ?? k
 
 const uniq = (xs: string[]) => [...new Set(xs)].sort()
 
-/** `[value, label]` pairs for a filter select, with the "everything" option first. */
 const allFirst = (allLabel: string, values: string[]): [string, string][] => [
   ['all', allLabel],
   ...values.map((v) => [v, v] as [string, string]),
@@ -28,7 +27,6 @@ export default function Orders() {
   const { toast } = useUi()
   const navigate = useGo()
 
-  /* The dashboard tiles deep-link into a filter, so the pill lives in the URL. */
   const { pill: pillParam } = useSearch({ from: '/orders' })
   const [pill, setPill] = useState(pillParam ?? 'all')
   const [product, setProduct] = useState('all')
@@ -36,9 +34,6 @@ export default function Orders() {
   const [dept, setDept] = useState('all')
   const [staff, setStaff] = useState('all')
 
-  /* Someone without "see every order" gets only the orders they are on. That is
-     the permission doing its job, not the screen falling short — so the subtitle
-     says so rather than showing an empty register. */
   const scope = can('all') ? ORDERS : ORDERS.filter((o) => Object.values(o.a).includes(me.id))
 
   const base = useMemo(
@@ -87,8 +82,6 @@ export default function Orders() {
               {STAGES.map((s) => {
                 const a = o.a[s]
                 const person = a ? STAFF.find((x) => x.id === a) : undefined
-                /* A red ring means the same person is set to both type and QC this
-                   order — self-review. Assignment blocks it; this surfaces it. */
                 const conflict = !!person?.conflict && (s === 'Typing' || s === 'Typing QC')
                 return (
                   <Avatar
@@ -96,8 +89,6 @@ export default function Orders() {
                     name={a ? whoName(a) : null}
                     self={conflict}
                     title={a ? `${s}: ${whoName(a)} — open their profile` : `${s}: unassigned`}
-                    /* A filled slot is a person, so it opens them. The row underneath
-                       opens the order, hence the stop. */
                     onClick={
                       a
                         ? (e) => {
@@ -131,16 +122,12 @@ export default function Orders() {
     setClient('all')
   }
 
-  /* Whichever of the two workload views answers the filter on screen: a named
-     person if there is one, otherwise the department. */
   const openWorkload = () =>
     navigate({
       to: '/reports',
       search: staff !== 'all' ? { tab: 'By staff', sw: staff } : { tab: 'By department', dw: dept },
     })
 
-  /* The file is built from the rows on screen after the filters — exporting
-     something other than what you are looking at is worse than not exporting. */
   const exportOrders = () => {
     const out = downloadCSV(csvName('orders'), [
       ['Order', 'Client', 'Product', 'Property', 'County', 'State', 'Stage', 'Due', 'Received', 'Fee', ...STAGES],
@@ -217,8 +204,6 @@ export default function Orders() {
         onPill={setPill}
         pills={[
           { key: 'all', label: 'All', count: base.length },
-          /* Each count is the same judgement as the row key it filters on, so a
-             pill can never claim a number its own filter cannot produce. */
           { key: 'late', label: 'Past due', count: inState('late'), urgent: true },
           { key: 'soon', label: `Due < ${SOON_HOURS}h`, count: inState('soon'), urgent: true },
           { key: 'open', label: 'On track', count: inState('open') },
@@ -242,8 +227,6 @@ export default function Orders() {
             value: dept,
             onChange: (v) => {
               setDept(v)
-              /* The staff list narrows to that department, so a person who is
-                 not in it can no longer be the selected one. */
               if (v !== 'all' && staff !== 'all' && !STAFF.find((s) => s.id === staff)?.dep.includes(v)) {
                 setStaff('all')
               }

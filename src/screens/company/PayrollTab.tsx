@@ -4,17 +4,6 @@ import { inr, payTotals } from '@/lib/payroll'
 import { setPayCfg, useCompany } from '@/state/company'
 import type { PayConfig } from '@/data/types'
 
-/**
- * The salary structure, and what it produces.
- *
- * One set of rules applied to every payslip — nothing is stored per person
- * except the CTC. That is what makes this screen worth having and also what
- * makes it dangerous: the panel on the right recomputes across the whole roster
- * as you type, so a change that looks wrong here is about to look wrong on
- * twenty-eight payslips.
- */
-
-/** The 50% wage rule the labour codes set. Below it, PF and gratuity understate. */
 const WAGE_RULE = 50
 
 function Num({
@@ -68,7 +57,6 @@ export function PayrollTab() {
   const month = PAYMONTHS[PAYMONTHS.length - 1]
   const t = payTotals(month)
 
-  /* What contributing on the full basic would cost, rather than describing it. */
   const pfOnFull = t.list.reduce((a, x) => a + Math.round((x.earn[0][1] * pay.pfPct) / 100), 0)
   const gratuity = t.list.reduce((a, x) => a + x.st.grat, 0)
 

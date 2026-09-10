@@ -8,32 +8,17 @@ import { usePayslipDownloads } from './payslips/usePayslipDownloads'
 
 const COLS = '150px 140px 140px 140px 1fr'
 
-/**
- * A person's own payslip history.
- *
- * Only published months appear. An approved run is not a payslip yet — payroll
- * can still move a figure in it — so showing a draft here would be showing
- * somebody a number that is going to change. The months that are not out are
- * named at the bottom instead, because "my June payslip is missing" and "June
- * has not been released" are different worries and only one of them is real.
- *
- * Nothing on this screen compares anyone to anyone else.
- */
 export default function MyPayslips() {
   const { me } = useSession()
   const navigate = useGo()
   const download = usePayslipDownloads()
 
-  /* Published state is set by the pay run, so it is read rather than stored —
-     publishing a month on the Payroll screen makes it appear here. */
   const published = useMemo(() => PAYMONTHS.filter((m) => PAYRUNS[m]?.published).reverse(), [])
   const pending = useMemo(() => PAYMONTHS.filter((m) => !PAYRUNS[m]?.published), [])
 
   const openPayslip = (month: string) =>
     navigate({ to: '/payslips/$personId', params: { personId: me.id }, search: { m: month } })
 
-  /* No salary on the record means no payslip has been produced — which is a
-     different thing from none being published, and says who can fix it. */
   if (!me.ctc) {
     return (
       <>
@@ -79,8 +64,6 @@ export default function MyPayslips() {
             hint="Open that payslip"
             onClick={() => openPayslip(newest)}
           />
-          {/* Not clickable, and deliberately: year-to-date spans every published
-              payslip, so there is no single document to open. */}
           <Kpi
             title="Deducted this year"
             value={inr(year.ded)}

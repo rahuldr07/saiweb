@@ -2,25 +2,13 @@ import { useState } from 'react'
 import { Banner, Btn, FormActions } from '@/components/ui'
 import { DEPTLIST } from '@/data/org'
 import { STAFF } from '@/data/people'
-import { useBoard } from './store'
+import { useBoard } from '@/state/hiring'
 import { now } from '@/lib/clock'
 import { fmtDate } from '@/lib/format'
 import type { Opening } from '@/data/types'
 
 const TYPES = ['Full time', 'Part time', 'Contract', 'Intern'] as const
 
-/**
- * Raising an opening.
- *
- * "Why" is required rather than optional, and it is the field this form exists
- * for. Every seeded opening carries a real reason — "volume from MGR has grown
- * faster than Search can absorb" — because an opening is a request for money and
- * the person approving it is not the person who felt the pressure. A title and a
- * headcount alone put that argument nowhere.
- *
- * The department list comes from `DEPTLIST`, so a company that renames or adds a
- * department gets it here without this form knowing anything about it.
- */
 export function NewOpening({
   raisedBy,
   onSubmit,
@@ -28,7 +16,6 @@ export function NewOpening({
 }: {
   raisedBy: string
   onSubmit: (opening: Opening) => void
-  /** Backs out without raising anything. The modal's own dismiss, in the form. */
   onCancel?: () => void
 }) {
   const [title, setTitle] = useState('')
@@ -40,7 +27,6 @@ export function NewOpening({
   const { openings } = useBoard()
 
   const n = Number(seats)
-  /* How many already work the department, so the ask has a size next to it. */
   const inDept = STAFF.filter((s) => s.dep.includes(dep) && s.active !== false).length
 
   const submit = () => {
@@ -50,8 +36,6 @@ export function NewOpening({
     if (!why.trim())
       return setError('The reason. Whoever approves this did not feel the pressure that caused it.')
 
-    /* Numbered off the board rather than the seed, or the second opening raised
-       in a session collides with the first. */
     const next =
       openings.reduce((max, o) => Math.max(max, Number(o.id.replace(/\D/g, '')) || 0), 0) + 1
 

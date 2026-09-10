@@ -38,7 +38,7 @@ import {
   useOrderState,
   workingOn,
   type OrderEdits,
-} from './orders/store'
+} from '@/state/orders'
 import { ORDERS } from '@/data/production'
 import { PRODUCTS, COUNTIES, LINKTYPES, LINKCHECK, BADSTATES } from '@/data/catalog'
 import { ASSIGN_STAGES, PAIRS, STAGES, STATUS } from '@/data/org'
@@ -65,22 +65,8 @@ import type { Assignments, OrderStatus } from '@/data/types'
 
 const st = (k: string) => STATUS[k]?.[0] ?? k
 
-/** The pipeline statuses, as a check rather than a cast. */
 const isStatus = (v: string): v is OrderStatus => Object.hasOwn(STATUS, v)
 
-/**
- * One order, eight tabs.
- *
- * The tabs are the design's own and each answers a different question: what the
- * order is, who owns each stage of it, how the work was scored, what is in the
- * package, what it cost to run, what has happened to it, what people said about
- * it, and where the searcher goes to research the county.
- *
- * Everything typed here lives in `orders/store` rather than in this component,
- * because a note written on one tab has to still be there from another — and
- * because the seed register is read by six other screens and must not be
- * mutated by the record it opens.
- */
 const TABS = [
   'Details',
   'Assignment',
@@ -108,14 +94,8 @@ export default function OrderDetail() {
   const [tab, setTab] = useState<Tab>('Details')
   const [note, setNote] = useState('')
 
-  /* Subscribed, so an edit on one tab redraws the others that read it — the
-     total on Costs follows the product chosen on Details. */
   useOrderState()
 
-  /* The register first, then today's assignment run. A queue built from the run
-     — My work, the workload reports — holds ids the register has never seen, and
-     linking those at a screen that only knows the register is what turned a row
-     somebody was told to work into "that order is not here". */
   const arrival = arrivalById(orderId)
   const base =
     ORDERS.find((x) => x.id === orderId) ??
@@ -151,9 +131,6 @@ export default function OrderDetail() {
   const o = orderAsEdited(base, w)
   const assign: Assignments = o.a
 
-  /* Somebody without "see every order" gets the orders they are working. Opening
-     one they are not on is a permission answer rather than an error, so it says
-     which, and where the fix is. */
   if (!can('all') && !Object.values(assign).includes(me.id)) {
     return (
       <>
@@ -185,23 +162,11 @@ export default function OrderDetail() {
   const ratingRequired = qcRules.find((r) => r.k === 'mand')?.on ?? false
   const overdueBy = Math.abs(Math.round((o.due.getTime() - now().getTime()) / 3600000))
 
-  /* An order taken at intake has a street address; one still moving through
-     today's run does not, so the address reads from the county rather than
-     opening on a stray comma. */
   const where = [o.prop, `${o.co} County`, o.st].filter(Boolean).join(', ')
 
   const field = <K extends keyof OrderEdits>(key: K, value: OrderEdits[K]) =>
     setOrderField(o.id, key, value)
 
-  /* ── assignment ────────────────────────────────────────────────────────── */
-
-  /**
-   * QC independence, refused at the point of choosing rather than after.
-   *
-   * The engine filters the author out and the API re-checks before it writes.
-   * This is the third place, and the one that has to explain itself — somebody
-   * is about to wonder why the name they picked did not stick.
-   */
   const setStage = (stage: string, value: string) => {
     if (!value) return
     if (value === '__clear') {
@@ -233,16 +198,6 @@ export default function OrderDetail() {
     toast(`${stage} → ${whoName(value)}`)
   }
 
-  /**
-   * The engine's own narrowing, asked about this order.
-   *
-   * Assigning by hand and the automatic pass go through this one implementation,
-   * so neither can drift into proposing somebody the other excludes: routing and
-   * coverage narrow the pool here because they narrow it there, and a rule
-   * switched off is off for both. The single difference is the daily target,
-   * which `narrowPool` takes as an option — see there for why assigning by hand
-   * does not answer to it.
-   */
   const pickFor = (stage: string, taken: Assignments) =>
     narrowPool(o, stage, { load: board().run.load, taken, target: false })
 
@@ -259,12 +214,6 @@ export default function OrderDetail() {
       return { stage, person, steps: narrowed.steps }
     })
 
-    /* Named from the rules the narrowing actually consulted rather than from a
-       list written out here. Everything but membership, self-review and the
-       tie-break can be switched off under Assignment → Rules, and a sentence
-       claiming a rule that is off is the same lie a second copy of the narrowing
-       would have told. Listed in the rules' own order, so the names line up with
-       the numbered list on that screen. */
     const consulted = new Set(preview.flatMap((p) => p.steps.map((s) => s.r)))
     const applied = rules.filter((r) => consulted.has(r.id)).map((r) => r.n)
 
@@ -322,8 +271,6 @@ export default function OrderDetail() {
     })
   }
 
-  /* ── the other actions ─────────────────────────────────────────────────── */
-
   const openCost = () =>
     openModal({
       title: 'Add a pass-through cost',
@@ -365,8 +312,6 @@ export default function OrderDetail() {
     toast('Note added')
   }
 
-  /* Every field commits as it is changed, so this reports what is held rather
-     than pretending to be the thing that persisted it. */
   const save = () => {
     const n = Object.keys(w.edits).length
     toast(
@@ -399,7 +344,6 @@ export default function OrderDetail() {
 
       <Tabs tabs={[...TABS]} value={tab} onChange={setTab} />
 
-      {/* ── details ── */}
       {tab === 'Details' ? (
         <>
           <Card padded>
@@ -432,8 +376,6 @@ export default function OrderDetail() {
                   className="inp"
                   aria-label="Stage"
                   value={o.stt}
-                  /* Narrowed rather than cast: a select can only offer these,
-                     but the value arriving is a string either way. */
                   onChange={(e) => {
                     const next = e.target.value
                     if (isStatus(next)) field('stt', next)
@@ -647,7 +589,6 @@ export default function OrderDetail() {
         </>
       ) : null}
 
-      {/* ── assignment ── */}
       {tab === 'Assignment' ? (
         <>
           <Card>
@@ -737,7 +678,6 @@ export default function OrderDetail() {
         </>
       ) : null}
 
-      {/* ── quality ── */}
       {tab === 'Quality' ? (
         <>
           <Banner
@@ -855,7 +795,6 @@ export default function OrderDetail() {
         </>
       ) : null}
 
-      {/* ── documents ── */}
       {tab === 'Documents' ? (
         <>
           <Card>
@@ -986,7 +925,6 @@ export default function OrderDetail() {
         </>
       ) : null}
 
-      {/* ── costs ── */}
       {tab === 'Costs' ? (
         <Card>
           <CardHead
@@ -1044,7 +982,6 @@ export default function OrderDetail() {
         </Card>
       ) : null}
 
-      {/* ── history ── */}
       {tab === 'History' ? (
         <>
           <Card>
@@ -1092,7 +1029,6 @@ export default function OrderDetail() {
         </>
       ) : null}
 
-      {/* ── notes ── */}
       {tab === 'Notes' ? (
         <Card>
           <CardHead title="Internal notes" />
@@ -1144,7 +1080,6 @@ export default function OrderDetail() {
         </Card>
       ) : null}
 
-      {/* ── county links ── */}
       {tab === 'County links' ? (
         <Card padded>
           <Label>

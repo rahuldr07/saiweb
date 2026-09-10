@@ -3,12 +3,6 @@ import { Banner, Btn, FormActions } from '@/components/ui'
 import { isDuplicateName } from '@/lib/forms'
 import { removeStatus, saveStatus, useStatuses } from '@/state/company'
 
-/**
- * One order status: a name and a colour.
- *
- * Colour is never the only signal — the name is shown beside it everywhere — so
- * the picker is a convenience, not an accessibility problem.
- */
 export function StatusForm({
   statusKey,
   onCancel,
@@ -84,12 +78,6 @@ export function StatusForm({
   )
 }
 
-/**
- * Deleting a status.
- *
- * A status live orders point at cannot go — deleting it would leave them
- * pointing at nothing, so the refusal carries the count and a way to see them.
- */
 export function StatusDelete({
   statusKey,
   name,

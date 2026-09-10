@@ -30,25 +30,12 @@ import {
   total,
   unvouched,
 } from '@/lib/petty'
-import { recordCount, recordEntry, setConfig, useBox } from './petty/store'
+import { recordCount, recordEntry, setConfig, useBox } from '@/state/petty'
 import { EntryForm } from './petty/EntryForm'
 import { CountForm } from './petty/CountForm'
 
-/**
- * Petty cash.
- *
- * The screen is built around one identity — previous + credit − debit = new
- * balance — shown on every row rather than summarised at the bottom, because
- * that is the only check that catches a mistake at the moment it is made.
- *
- * The three things that go wrong with a cash box each get a banner rather than a
- * column: nobody has counted it, money left with no voucher, and a payment large
- * enough that it should not have been cash at all.
- */
-
 const LEDGER_COLS = '105px 1fr 150px 120px 120px 120px 130px'
 
-/** Below this share of the float the box is close to empty and says so. */
 const LOW = 0.2
 
 function PettyCash() {
@@ -66,8 +53,6 @@ function PettyCash() {
   const due = countDue(counts, cfg)
 
   const focusCounts = () => focusElement(countsPanel.current)
-
-  /* ── the two things you can do to the box ──────────────────────────────── */
 
   const addEntry = () =>
     openModal({
@@ -108,8 +93,6 @@ function PettyCash() {
         />
       ),
     })
-
-  /* ── what each tile opens ──────────────────────────────────────────────── */
 
   const showBalance = () =>
     openModal({
@@ -275,8 +258,6 @@ function PettyCash() {
     toast(`${out.name} — ${out.rows.length - 1} rows`)
   }
 
-  /* A setting is only written when the new value is usable — an empty custodian
-     or a zero float is a mis-key, not an instruction. */
   const num = (key: 'float' | 'limit') => (raw: string) => {
     const n = Number(raw)
     if (n > 0) setConfig(key, n)

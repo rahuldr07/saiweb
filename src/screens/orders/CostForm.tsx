@@ -1,13 +1,6 @@
 import { useState } from 'react'
 import { Banner, Btn, Field, Form, FormActions } from '@/components/ui'
 
-/**
- * A pass-through cost.
- *
- * Both fields are required for one reason: a cost line with no description or no
- * amount cannot be billed on, so accepting it only moves the problem to whoever
- * raises the invoice.
- */
 export function CostForm({
   onCancel,
   onSubmit,

@@ -7,7 +7,6 @@ import { ASSIGN_STAGES } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
 import { whoName } from '@/lib/permissions'
 
-/** What each exclusion means, and what would actually clear it. */
 const CAUSE: Record<string, [string, string]> = {
   capacity: [
     'Everyone eligible was already at their daily target',
@@ -28,13 +27,6 @@ const CAUSE: Record<string, [string, string]> = {
   ],
 }
 
-/**
- * What a headline workload figure actually contains.
- *
- * Shared by the two workload tabs because the question — which stage tasks are
- * behind this number — is the same one whether you arrived at it per person or
- * per department. Only the grouping differs.
- */
 export function WorkFocus({
   focus,
   mode,

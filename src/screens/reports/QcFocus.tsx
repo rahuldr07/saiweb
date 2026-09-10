@@ -4,22 +4,11 @@ import { hh } from '@/lib/sla'
 import type { QcEntry } from '@/data/quality'
 import type { StageWork } from '@/lib/quality'
 
-/**
- * What one of a person's four figures is actually made of.
- *
- * A number you cannot get behind is a number you have to take on trust, so each
- * tile opens the list it counts. The defect panel leads with what the rater
- * wrote rather than the score — the sentence is the thing worth acting on; the
- * number is only how it was filed.
- */
-
 const scaleWord = (v: number) => QC_SCALE.find((q) => q[0] === v)?.[1] ?? ''
 
 export function QcDefects({ defects }: { defects: QcEntry[] }) {
   const list = [...defects].sort((a, b) => b.d.getTime() - a.d.getTime())
 
-  /* One rating can lose marks on more than one criterion, so a defect counts
-     against each one it failed. */
   const byCrit = list.reduce<Record<string, number>>((acc, x) => {
     const failed = QC_CRITERIA.filter(([, field]) => x[field] <= 3).map(([name]) => name)
     for (const c of failed.length ? failed : ['Accuracy']) acc[c] = (acc[c] ?? 0) + 1
@@ -129,7 +118,6 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
 
 const OVER_COLS = '120px 165px 130px 105px 105px 1fr'
 
-/** The stages that ran over their budget, worst overrun first. */
 export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: boolean }) {
   const items = work.items
     .filter((x) => x.over && (!lateOnly || x.d.late))
@@ -213,28 +201,11 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
   )
 }
 
-/**
- * The two sizes the same five bars are drawn at.
- *
- * One person's marks sit in a narrow card beside another and are counted; the
- * whole team's fill the width, where the share of the total is the point and a
- * four-figure count needs the room. The numbers are the design's.
- */
 const SPREAD = {
   person: { cols: '118px 1fr 62px', gap: 11, pad: '5px 0' },
   team: { cols: '150px 1fr 120px', gap: 12, pad: '6px 0' },
 } as const
 
-/**
- * How a set of marks falls across the 1–5 scale, one bar per score.
- *
- * Counted per criterion rather than per rating, so a single order can contribute
- * a 5 and a 3 — which is the point: an average of 4 hides whether it was three
- * fours or a five and a three.
- *
- * `team` shows each score's share as well as its count, because at that size the
- * reading is "97% of all marks are a 5" rather than "this person dropped two".
- */
 export function MarkSpread({ marks, mode }: { marks: number[]; mode: keyof typeof SPREAD }) {
   const { cols, gap, pad } = SPREAD[mode]
 
@@ -271,7 +242,6 @@ export function MarkSpread({ marks, mode }: { marks: number[]; mode: keyof typeo
   )
 }
 
-/** How one person's marks are spread. */
 export function QcMarks({ ratings }: { ratings: QcEntry[] }) {
   const all = ratings.flatMap((x) => [x.acc, x.comp, x.fmt])
 

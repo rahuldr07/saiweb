@@ -9,15 +9,6 @@ import { removeStaff, saveStaff, useCompany, useRoles, useStaff } from '@/state/
 import { newPerson, type Person } from '@/data/types'
 import { EMAIL_ERROR, isDuplicateName, isEmail } from '@/lib/forms'
 
-/**
- * A person's record.
- *
- * Longer than the other forms because it is four records in one: who they are,
- * what they work on, who to call in an emergency, and what payroll needs. The
- * last two are grouped and explained rather than left as bare fields — a missing
- * joining date makes the first month and gratuity wrong, and a missing account
- * number means the bank file has nowhere to send the money.
- */
 export function StaffForm({
   id,
   draft,
@@ -27,7 +18,6 @@ export function StaffForm({
   onNewRole,
 }: {
   id?: string | undefined
-  /** What was typed before stepping out to create a role, put back on return. */
   draft?: Partial<Person> | null | undefined
   onCancel: () => void
   onDone: (message: string) => void
@@ -80,15 +70,11 @@ export function StaffForm({
     const mail = email.trim().toLowerCase()
     if (!name) return setError('A name is required.')
     if (!isEmail(mail)) return setError(EMAIL_ERROR)
-    /* An address is a name here: two people sharing one is how a sign-in resolves
-       to whichever record happens to come first. */
     if (isDuplicateName(staff, mail, (x) => x.e ?? '', (x) => x.id === id))
       return setError(`${mail} already belongs to someone here.`)
 
     saveStaff(
       {
-        /* A new record starts complete: the form collects sixteen of the fields
-           a person must have, and the factory supplies the rest. */
         ...(rec ?? newPerson()),
         n: name,
         e: mail,
@@ -107,8 +93,6 @@ export function StaffForm({
         uan: uan.trim(),
         esicNo: esicNo.trim(),
         aadhaar: aadhaar.trim(),
-        /* Working a stage and its own QC is allowed, and flagged so the roster
-           can show it — assignment filters them per order regardless. */
         conflict: dep.includes('Typing') && dep.includes('Typing QC'),
       },
       id,
@@ -376,7 +360,6 @@ export function StaffForm({
   )
 }
 
-/** Removing somebody. Disabling keeps the history; removing does not. */
 export function StaffDelete({
   id,
   onCancel,

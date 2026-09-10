@@ -21,18 +21,17 @@ import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { STAFF } from '@/data/people'
 import { QC_FIX, type QcEntry } from '@/data/quality'
-import { QC_CRITERIA, stageWorkOf } from '@/lib/quality'
+import { QC_CRITERIA } from '@/lib/quality'
 import { useQcRules } from '@/state/qcRules'
 import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
 import { useDeliveries } from '@/lib/useDeliveries'
 import { useQcLog } from '@/lib/useQcLog'
+import { useStageWork } from '@/lib/useStageWork'
 import { fmtDate } from '@/lib/format'
 
-/** `A`, `A and B`, `A, B and C` — the design joins with " and " throughout. */
 const listOf = (xs: string[]) =>
   xs.length < 3 ? xs.join(' and ') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`
 
-/** Ratings grouped by the reason written on them, commonest first. */
 const byReason = (rows: QcEntry[]): [reason: string, count: number][] =>
   Object.entries(
     rows.reduce<Record<string, number>>((acc, x) => {
@@ -41,18 +40,6 @@ const byReason = (rows: QcEntry[]): [reason: string, count: number][] =>
     }, {}),
   ).sort((a, b) => b[1] - a[1])
 
-/**
- * How I'm doing — a person's own view of their work.
- *
- * It leads with reasons rather than with the score, and that ordering is the
- * whole design. Across the company the averages span about 0.06, so the number
- * ranks nobody; what is actionable is which mistake keeps recurring and the
- * practice that prevents it. So the page is built around `QC_FIX`, and the score
- * appears once, in a card whose job is to say it does not mean much on its own.
- *
- * A repeat and a one-off are separated for the same reason: something raised
- * once is a slip, and only the other kind is worth changing how you work for.
- */
 export default function MyPerformance() {
   const { me, can } = useSession()
   const { openModal } = useUi()
@@ -66,10 +53,8 @@ export default function MyPerformance() {
   const log = qcLog.data ?? []
   const rows = log.filter((x) => x.onName === me.n && inRange(x.d, range))
   const loading = qcLog.isPending || history.isPending
+  const stageWork = useStageWork(range)
 
-  /* Ratings are shown to the person rated only where the company has left that
-     rule on. It is a setting, not a judgement about them, so the refusal names
-     where it lives rather than just declining. */
   const allowed = useQcRules().find((r) => r.k === 'see')?.on ?? false
 
   if (!allowed) {
@@ -103,12 +88,8 @@ export default function MyPerformance() {
   const oneOffs = ranked.filter(([, n]) => n === 1)
   const mineAvg = rows.length ? rows.reduce((a, x) => a + x.avg, 0) / rows.length : null
 
-  const stageWork = stageWorkOf((history.data ?? []).filter((x) => inRange(x.d, range)))
   const t = stageWork.people[me.n] ?? null
 
-  /* Is the same reason still happening, or has it stopped? Split the range in
-     half rather than counting the whole of it — a habit that ended three weeks
-     ago should not read the same as one that is still going. */
   const half = new Date((range.from.getTime() + range.to.getTime()) / 2)
   const recent = below.filter((x) => x.d >= half)
   const older = below.filter((x) => x.d < half)
@@ -118,14 +99,8 @@ export default function MyPerformance() {
     n: below.filter((x) => x.crit === name).length,
     avg: rows.length ? rows.reduce((a, x) => a + x[field], 0) / rows.length : null,
   }))
-  /* Only where there was something to raise. With no ratings every axis is
-     trivially clean, and congratulating somebody on work nobody looked at is the
-     one way this panel could mislead. */
   const strongest = rows.length ? axes.filter((a) => a.n === 0) : []
 
-  /* The spread across everyone, so the reader can see how little their own score
-     separates them. Deliberately the whole log rather than the range — the point
-     is the shape of the scale, not this month's slice of it. */
   const perPerson = Object.values(
     log.reduce<Record<string, number[]>>((acc, x) => {
       ;(acc[x.onName] ??= []).push(x.avg)
@@ -135,8 +110,6 @@ export default function MyPerformance() {
   const spread = perPerson.length
     ? { lo: Math.min(...perPerson), hi: Math.max(...perPerson) }
     : null
-
-  /* ── the modals behind the figures ─────────────────────────────────────── */
 
   const note = (children: React.ReactNode) => (
     <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -207,8 +180,6 @@ export default function MyPerformance() {
     })
   }
 
-  /* ── the department roll-up, for whoever runs one ──────────────────────── */
-
   const dept = me.dep[0]
   const deptTop = dept
     ? byReason(
@@ -243,19 +214,9 @@ export default function MyPerformance() {
       />
 
       <Kpis>
-        {/* The answer to the question the page title asks, in the first place
-            anybody looks. It used to appear only in a panel below the tiles,
-            under a heading that opened by saying it did not mean much — true,
-            and no help at all to somebody wanting to know how they are doing. */}
         <Kpi
           title="Your score"
           value={mineAvg !== null ? <span className="ok">{mineAvg.toFixed(2)}</span> : '—'}
-          /* Where you sit, rather than the two numbers you sit between. The
-             spread is deliberately measured over the whole log while the score
-             follows the range, so quoting both invited the one thing a figure
-             must never do: a seven-day score of 4.90 printed beside the claim
-             that everyone here is 4.91 to 4.96. This says the same thing and
-             stays true whichever range is chosen; the numbers are on hover. */
           detail={
             mineAvg === null || !spread
               ? 'out of 5'
@@ -313,10 +274,6 @@ export default function MyPerformance() {
         </Card>
       ) : (
         <>
-          {/* The panel that used to sit here said the score and the spread over
-              again, a line below the tile that now says both. Two readings of
-              one number is one more than anybody needs before the part they can
-              act on. */}
           {habits.length ? (
             <>
               <SectionHead id="mfHabits">
@@ -384,8 +341,7 @@ export default function MyPerformance() {
                   ? 'Nothing has come up twice. Everything below is a one-off, and a one-off is not a habit worth changing your method for.'
                   : rows.length
                     ? `Nothing was raised against your work in this range — all ${rows.length} checks came back clean.`
-                    : /* No ratings is not the same as clean ratings, and the design's
-                         wording claims the second. Widening the range is the fix. */
+                    :
                       'None of your work was checked in this range. Widen the range, or check whether the work you do gets rated at all.'}
               </p>
             </Card>
@@ -436,8 +392,6 @@ export default function MyPerformance() {
                   color={a.n ? 'var(--warn)' : 'var(--ok)'}
                   right={
                     <>
-                      {/* An average of nothing is not zero — 0.00 reads as the worst
-                          possible score rather than as no data. */}
                       {a.avg === null ? <span className="gr">—</span> : a.avg.toFixed(2)}
                       {a.n ? <span className="gr"> · {a.n}</span> : null}
                     </>
@@ -508,8 +462,6 @@ export default function MyPerformance() {
             </Card>
           </div>
 
-          {/* Only for somebody who runs a department. For everyone else their own
-              work is the whole of what this page is about. */}
           {can('assign') && dept ? (
             <>
               <SectionHead id="mfDept">Your department</SectionHead>

@@ -5,16 +5,8 @@ import type { Update } from '@/data/types'
 
 const KINDS = Object.keys(UPDKIND) as Update['kind'][]
 
-/** Enough to be useful to somebody who was not here. */
 const MIN_BODY = 12
 
-/**
- * Writing a handover note.
- *
- * The length floor is the only validation, and it is the one that matters: a few
- * words is a note to yourself, not a handover. It is stated as such rather than
- * as "too short", because the reader has to know what would fix it.
- */
 export function UpdateForm({
   onCancel,
   onSubmit,

@@ -2,7 +2,6 @@ import { useGo } from '@/lib/nav'
 import { Btn, Card, Empty, PageHead } from '@/components/ui'
 import { useSession } from '@/state/session'
 
-/** The design's "that thing is not here" page, reused for any unmatched path. */
 export function NotFound() {
   const navigate = useGo()
   const { can } = useSession()

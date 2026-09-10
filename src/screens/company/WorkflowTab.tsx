@@ -7,18 +7,9 @@ import { ORDERS } from '@/data/production'
 import { csvName, downloadCSV } from '@/lib/csv'
 import { moveStatus, setNaming, useNaming, useStatuses } from '@/state/company'
 
-/**
- * The stages an order moves through, and what each is called.
- *
- * The naming table is the smaller half and the more important one: one name per
- * concept, used on every screen and every export. Two names for one thing is how
- * a report counts 8,746 of something the board counts 8,747 of.
- */
-
 const WTABS = ['Stages', 'Naming'] as const
 type WTab = (typeof WTABS)[number]
 
-/** The first seven statuses are the main line; the rest are exception branches. */
 const MAIN_LINE = 7
 
 export function WorkflowTab() {

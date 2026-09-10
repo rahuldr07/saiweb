@@ -5,15 +5,6 @@ import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
 import type { ChipKind } from '@/data/types'
 
-/**
- * How a person performed, on both axes at once.
- *
- * A quality score on its own is half a picture: somebody can hold a 5.00 by
- * taking twice the time they were given, and somebody fast can be quietly
- * leaving defects. The two have to be read together, so they are computed
- * together.
- */
-
 export interface StageItem {
   d: Delivery
   st: string
@@ -27,22 +18,18 @@ export interface StageWork {
   n: string
   items: StageItem[]
   stages: Record<string, StageItem[]>
-  /** Stages of work done in range. */
   c: number
   over: number
   onBudget: number
   ratio: number
   causedLate: number
-  /** What somebody doing this exact mix of stages would typically manage. */
   expected: number
   vsPeers: number
-  /** A good median with a poor hit rate means variance, not slowness. */
   erratic: boolean
 }
 
 export interface StageWorkResult {
   people: Record<string, StageWork>
-  /** Per-department hit rate, used to make the comparison fair. */
   dept: Record<string, { n: number; over: number; rate: number }>
 }
 
@@ -56,9 +43,6 @@ export function stageWorkOf(dels: Delivery[]): StageWorkResult {
       if (!name) return
       const c = plan.find((y) => y.stage === st)
       if (!c?.hours) return
-      /* Somebody is recorded for the stage but no hours are: there is nothing to
-         measure against the budget, and the NaN ratio it used to produce spread
-         through the person's median rather than staying on this one row. */
       const h = d.st[st]
       if (h === undefined) return
       m[name] ??= {
@@ -80,12 +64,6 @@ export function stageWorkOf(dels: Delivery[]): StageWorkResult {
     })
   })
 
-  /*
-   * Departments are not equally hard to hit. RTS almost never overruns; Search
-   * routinely does. Judging a searcher against an RTS clerk's percentage would
-   * compare the job, not the person — so each person is measured against the
-   * departments they actually worked in.
-   */
   const dept: Record<string, { n: number; over: number; rate: number }> = {}
   Object.values(m).forEach((p) =>
     p.items.forEach((x) => {
@@ -103,7 +81,6 @@ export function stageWorkOf(dels: Delivery[]): StageWorkResult {
     p.over = p.items.filter((x) => x.over).length
     p.onBudget = Math.round(((p.c - p.over) / p.c) * 100)
     p.ratio = median(p.items.map((x) => x.ratio))
-    /* Only counts against the person if their own stage was the one that overran. */
     p.causedLate = p.items.filter((x) => x.over && x.d.late).length
     p.expected = Math.round(
       ASSIGN_STAGES.reduce((a, st) => {
@@ -118,7 +95,6 @@ export function stageWorkOf(dels: Delivery[]): StageWorkResult {
   return { people: m, dept }
 }
 
-/** The plain-English read of the two axes together. */
 export function standing(q: number, vsPeers: number, teamQ: number): [string, ChipKind, string] {
   const clean = q >= teamQ - 0.03
   const quick = vsPeers >= -5
@@ -142,16 +118,13 @@ export interface RatedPerson {
   n: string
   c: number
   def: number
-  /** Per-axis averages. */
   a: number
   cm: number
   f: number
-  /** Overall, across all three axes. */
   o: number
   tw: StageWork | null
 }
 
-/** Ratings rolled up per person, keyed on the name stored at rating time. */
 export function ratedPeople(rows: QcEntry[], tw: StageWorkResult): RatedPerson[] {
   const by: Record<string, { n: string; c: number; acc: number; comp: number; fmt: number; def: number }> = {}
   rows.forEach((x) => {
@@ -176,7 +149,6 @@ export function ratedPeople(rows: QcEntry[], tw: StageWorkResult): RatedPerson[]
     .sort((x, y) => y.c - x.c)
 }
 
-/** 1 is the worst outcome and 5 the best — the opposite of what most people assume. */
 export const QC_SCALE: [score: number, label: string, kind: ChipKind][] = [
   [1, 'Critical', 'd'],
   [2, 'Non critical', 'r'],
@@ -185,24 +157,8 @@ export const QC_SCALE: [score: number, label: string, kind: ChipKind][] = [
   [5, 'Good', 'v'],
 ]
 
-/**
- * Where a mark sits on that scale, as the class name that colours it.
- *
- * The two thresholds are a judgement about the work — below Average is bad,
- * Average itself is a warning, Good is the only clean mark — so they belong
- * next to the scale rather than restated in each of the three screens that
- * render a mark.
- */
 export const markTone = (v: number): 'bad' | 'warn' | 'ok' => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
 
-/**
- * One number could not say *what* was wrong. Three can.
- *
- * The field is here because the name and the column it is stored in are one
- * fact, and five screens were each restating it: an axis renamed in the rating
- * form but left mapped to the old column reads plausibly and is wrong
- * everywhere. `crit` on a rating holds the *name*, so the two have to agree.
- */
 export const QC_CRITERIA: [
   name: string,
   field: keyof Pick<QcEntry, 'acc' | 'comp' | 'fmt'>,
@@ -218,7 +174,6 @@ export interface QcRule {
   n: string
   on: boolean
   d: string
-  /** What turning it off actually costs — stated, so a checkbox is not scenery. */
   cost: string
 }
 

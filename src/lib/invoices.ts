@@ -1,16 +1,7 @@
-/**
- * Scoping the invoice register.
- *
- * There is one filter with two faces: a month dropdown and a pair of dates. The
- * dropdown is a shortcut that sets the dates, and the dates report back which
- * month they happen to match — so the two controls can never contradict each
- * other, which is the failure this arrangement exists to prevent.
- */
 import { INVOICES } from '@/data/business'
 import { iso, parseIso, r2 } from '@/lib/format'
 import type { Invoice } from '@/data/types'
 
-/** The months invoices actually exist for, in order, rather than a hardcoded list. */
 export const INVOICE_MONTHS: string[] = [
   ...new Map(
     [...INVOICES].sort((a, b) => a.mi - b.mi).map((i) => [i.m, i.mi] as const),
@@ -19,15 +10,6 @@ export const INVOICE_MONTHS: string[] = [
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-/**
- * First and last day of a labelled month, as ISO dates.
- *
- * Read out of the label itself. This used to count from the label's *position*
- * in `INVOICE_MONTHS` against a hardcoded March 2026 — which agreed with the
- * label only for as long as the register happened to begin in March and skip no
- * month. Drop the oldest month from the data and every bound on the screen
- * shifts by one, silently, while each still carries the right name.
- */
 export function monthBounds(month: string): [string, string] {
   const [mon, year] = month.split(' ')
   const m = MONTHS.indexOf(mon ?? '')
@@ -43,7 +25,6 @@ export interface DateRange {
 
 export const EMPTY_RANGE: DateRange = { from: null, to: null }
 
-/** Filters on the issue date. An open end means open — not "today". */
 export function inRange(i: Invoice, { from, to }: DateRange): boolean {
   if (!from && !to) return true
   if (from && i.issued < parseIso(from)) return false
@@ -55,7 +36,6 @@ export function inRange(i: Invoice, { from, to }: DateRange): boolean {
   return true
 }
 
-/** Which month the range exactly matches, or `custom`, or `all`. */
 export function rangeMonth({ from, to }: DateRange): string {
   if (!from && !to) return 'all'
   for (const m of INVOICE_MONTHS) {
@@ -65,33 +45,22 @@ export function rangeMonth({ from, to }: DateRange): string {
   return 'custom'
 }
 
-/** A month's columns are dimmed and excluded when the range has cut them out. */
 export function monthInRange(month: string, range: DateRange): boolean {
   const [a, b] = monthBounds(month)
   return (!range.from || b >= range.from) && (!range.to || a <= range.to)
 }
 
-/**
- * A range from a month, keeping the two controls in step.
- *
- * `all` clears the dates rather than widening them, because "every month" and
- * "a range that happens to cover every month" read differently on the screen.
- */
 export function rangeForMonth(month: string): DateRange {
   if (month === 'all' || month === 'custom') return EMPTY_RANGE
   const [from, to] = monthBounds(month)
   return { from, to }
 }
 
-/** Reversed dates are swapped rather than shown as nothing. */
 export function normalise(range: DateRange): DateRange {
   const { from, to } = range
   return from && to && from > to ? { from: to, to: from } : range
 }
 
-/* A register with no invoices in it has no months to bound a preset by, and an
-   unrecognised label bounds to nothing — which is the same range "all time"
-   gives, and the right answer for every preset when there is nothing to scope. */
 const monthAt = (i: number) => INVOICE_MONTHS[i] ?? ''
 const LAST_MONTH = INVOICE_MONTHS.length - 1
 
@@ -113,8 +82,6 @@ export const RANGE_PRESETS: [label: string, range: DateRange][] = [
 
 export const sameRange = (a: DateRange, b: DateRange) =>
   (a.from ?? null) === (b.from ?? null) && (a.to ?? null) === (b.to ?? null)
-
-/* ── money ──────────────────────────────────────────────────────────────── */
 
 export const sumBy = (list: Invoice[], k: 'amt' | 'paid') =>
   r2(list.reduce((a, x) => a + x[k], 0))

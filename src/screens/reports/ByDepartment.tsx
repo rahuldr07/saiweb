@@ -3,7 +3,7 @@ import { useGo } from '@/lib/nav'
 import { Avatar, Banner, Bar, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
 import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
 import { workloadCsv } from '@/lib/report-csv'
-import { useReportExport } from './useReportExport'
+import { useReportExport } from '@/state/reportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusKpis } from '@/components/FocusKpis'
 import { WorkFocus } from './WorkFocus'
@@ -13,7 +13,6 @@ import { capacityTone } from '@/lib/metrics'
 
 const PEOPLE_COLS = '190px 1fr 85px 85px 130px'
 
-/** Departmental workload: the whole floor, then one department at a time. */
 export function ByDepartment({ initial, onOpenStaff }: { initial?: string | undefined; onOpenStaff: (id: string) => void }) {
   const { run, depts, dwork } = board()
   useReportExport(() => workloadCsv(depts, true))
@@ -236,8 +235,6 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
               <span>Load</span>
             </div>
             <div className="tb">
-              {/* Every member, not only those who were given something — a name
-                  with nothing against it is the useful signal here. */}
               {r.staff.map((s) => {
                 const v = r.people[s.id] ?? { done: 0, pend: 0 }
                 const tt = v.done + v.pend

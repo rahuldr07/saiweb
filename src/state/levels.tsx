@@ -1,23 +1,14 @@
-/**
- * The coverage ladder, as edited on Assignment → Levels.
- *
- * Editing a level moves everybody on it, so this is deliberately one shared store
- * rather than local state in the tab. What it does *not* do is re-run the day: the
- * design's own wording is that a change here moves people "tonight", so today's
- * completed placements stay as they were placed.
- */
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import { LEVELS } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { COUNTIES, LINKTYPES, PRODUCTS } from '@/data/catalog'
-import { makeCoverage } from '@/lib/coverage'
+import { makeCoverage } from '@/lib/qualification'
 import { isDuplicateName } from '@/lib/forms'
 import type { County, Level } from '@/data/types'
 
 type LevelsValue = ReturnType<typeof makeCoverage> & {
   levels: Level[]
   counties: County[]
-  /** null means "no level" — unrestricted, not "covers nothing". */
   personLevel: (id: string) => string | null
   selected: string | null
   select: (id: string) => void
@@ -28,7 +19,6 @@ type LevelsValue = ReturnType<typeof makeCoverage> & {
   addLevel: () => string
   rename: (lid: string, v: string) => void
   setNote: (lid: string, v: string) => void
-  /** Refuses while anybody is still on it — see the comment at the call site. */
   remove: (lid: string) => { ok: true } | { ok: false; held: typeof STAFF }
 }
 
@@ -56,7 +46,6 @@ export function LevelsProvider({ children }: { children: ReactNode }) {
 
   const cov = useMemo(() => makeCoverage(levels, personLevel, counties), [levels, personLevel, counties])
 
-  /* clone() always materialises counties, so the callback can treat it as present. */
   const edit = useCallback((lid: string, fn: (l: Level & { counties: Record<string, string[]> }) => void) => {
     setLevels((prev) =>
       prev.map((l) => {
@@ -115,8 +104,6 @@ export function LevelsProvider({ children }: { children: ReactNode }) {
       edit(lid, (l) => {
         if (l.states === 'all') l.states = allStateCodes
         if (!l.states.includes(st)) l.states = [...l.states, st]
-        /* Every pill is drawn on when no counties are named, so clicking a lit one
-           has to turn that one off and leave the rest — expand to the full list first. */
         const all = countiesOf(st)
         const cur = l.counties[st]?.length ? l.counties[st] : all
         const next = cur.includes(co) ? cur.filter((x) => x !== co) : [...cur, co]
@@ -126,15 +113,10 @@ export function LevelsProvider({ children }: { children: ReactNode }) {
     [edit, allStateCodes, countiesOf],
   )
 
-  /* A county added from the level that needs it goes onto the same list the rest of
-     the app reads, with no links — so it surfaces under Counties as a gap to fill
-     rather than quietly existing only inside a level. */
   const addCounty = useCallback<LevelsValue['addCounty']>(
     (st, name) => {
       const n = name.trim()
       if (!n) return { ok: false, error: 'A county name is required.' }
-      /* Nothing is being edited here, so there is no record to exclude — and the
-         state is half the identity, so only the ones in it can clash. */
       if (isDuplicateName(counties.filter((c) => c.st === st), n, (c) => c.n))
         return { ok: false, error: `${n}, ${st} is already on file.` }
       const links = Object.fromEntries(LINKTYPES.map((t) => [t.k, { u: '', s: 'none' }]))
@@ -167,8 +149,6 @@ export function LevelsProvider({ children }: { children: ReactNode }) {
   const remove = useCallback<LevelsValue['remove']>(
     (lid) => {
       const held = STAFF.filter((s) => personLevel(s.id) === lid && s.active !== false)
-      /* Removing a level out from under somebody would silently widen what they can
-         be given, which is the one change nobody would notice. */
       if (held.length) return { ok: false, held }
       setLevels((prev) => {
         const next = prev.filter((l) => l.id !== lid)

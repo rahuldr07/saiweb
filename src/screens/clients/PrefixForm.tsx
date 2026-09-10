@@ -1,16 +1,8 @@
 import { useState } from 'react'
 import { Banner, Btn, Field, FormActions } from '@/components/ui'
-import { addPrefix, clashOf } from './prefixes'
+import { addPrefix, clashOf } from '@/state/prefixes'
 import type { Client } from '@/data/types'
 
-/**
- * Claiming an order-number prefix for a client.
- *
- * The refusal is the reason this is a form rather than an inline input. An
- * overlapping prefix does not fail — it routes somebody else's mail to this
- * client, silently, and stays wrong until a person notices. So the overlap is
- * named, along with whose it is, before anything is written.
- */
 export function PrefixForm({
   client,
   onCancel,
