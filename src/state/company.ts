@@ -206,7 +206,15 @@ export function removeSla(i: number): void {
   store.update((prev) => ({ ...prev, sla: prev.sla.filter((_, j) => j !== i) }))
 }
 
-/** One stage's share, on the base split or on one product's override. */
+/**
+ * One stage's share, on the base split or on one product's override.
+ *
+ * The share is clamped to what the slider offers; the total is deliberately not.
+ * A split that divides the clock exactly leaves one acceptable value per stage —
+ * the one it already holds — so a store that refused an unbalanced result would
+ * refuse every edit, and both controls read their value straight off here.
+ * `budgetOK` is the check, and the SLA tab is where it is answered.
+ */
 export function setShare(pr: string, stage: string, v: string): void {
   const n = Math.max(0, Math.min(100, parseFloat(v)))
   if (!Number.isFinite(n)) return

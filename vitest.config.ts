@@ -16,6 +16,7 @@ export default defineConfig({
   },
   test: {
     include: ['tests/**/*.test.ts'],
+    setupFiles: ['./tests/setup.ts'],
     environment: 'node',
     /* The isolation tests share one database; running the files in parallel would
        have them truncating each other's fixtures. */

@@ -1,5 +1,15 @@
-import { describe, expect, it } from 'vitest'
-import { leaveBalance, paidStaff, payslipOf, structureOf, taxUnder, ytd } from '@/lib/payroll'
+import { afterEach, describe, expect, it } from 'vitest'
+import {
+  leaveBalance,
+  otMinsFor,
+  paidStaff,
+  payslipOf,
+  settlement,
+  structureOf,
+  taxUnder,
+  ytd,
+} from '@/lib/payroll'
+import { resetClock, setClock } from '@/lib/clock'
 import { PAYCFG, PAYMONTHS } from '@/data/hrms'
 
 /**
@@ -82,8 +92,47 @@ describe('a payslip', () => {
       } else {
         expect(s.lopAmt).toBe(0)
       }
-      expect(s.gross).toBeLessThanOrEqual(full + s.gross - full + 1e9) // gross may include arrears/OT
+
+      /* Take the two things that can push a month above the structure back out —
+         arrears, and approved overtime — and what is left has to be the structure
+         less the loss of pay. Stated the other way round, the deduction the slip
+         announces has to be the deduction it actually applied. The two routes
+         round differently — three components each, against one per-day figure —
+         and the widest gap that opens across the seed roster is a rupee. */
+      if (otMinsFor(p.id, month) === 0) {
+        expect(
+          Math.abs(s.gross - s.arr - (full - s.lopAmt)),
+          `${p.n}: the loss of pay shown is not the loss of pay taken`,
+        ).toBeLessThanOrEqual(2)
+      }
     })
+  })
+
+  /**
+   * The figure above, worked out by hand for one person, because a property that
+   * holds for everyone can still hold at the wrong number.
+   *
+   * Kavitha V, July 2026 — the only month in the seed carrying arrears, so it is
+   * also the case the deleted assertion was gesturing at: a month can pay more
+   * than the structure and still owe a day.
+   *
+   *   CTC 3,17,000 → 26,417 a month → basic 13,208, HRA 5,283, special 5,706,
+   *   so the structure grosses 24,197 across 27 working days: 896 a day.
+   *   One unpaid day pays 26/27 of each line — 12,719 + 5,087 + 5,495 = 23,301 —
+   *   and the 4,200 backdated revision is paid on top of that, not scaled by it.
+   */
+  it('states a July gross that adds up by hand, arrears and all', () => {
+    const kavitha = staff.find((p) => p.id === 'kv')!
+    const s = payslipOf(kavitha, 'Jul 2026')
+
+    expect(structureOf(kavitha).gross).toBe(24_197)
+    expect(s.unpaid).toBe(1)
+    expect(s.lopAmt).toBe(896)
+    expect(s.arr).toBe(4_200)
+    expect(s.gross).toBe(27_501)
+    expect(s.gross, 'arrears are being pro-rated by attendance').toBeGreaterThan(
+      structureOf(kavitha).gross,
+    )
   })
 
   it('never pays a negative net', () => {
@@ -129,12 +178,124 @@ describe('income tax', () => {
 })
 
 describe('leave balances', () => {
+  afterEach(resetClock)
+
+  /**
+   * Unpaid leave is defined as everything beyond the balance, so it is the one
+   * kind nobody accrues and the one kind being overdrawn on is the point. The
+   * claims below are about the four kinds that carry an entitlement.
+   */
+  const ACCRUING = ['pl', 'cl', 'sl', 'co']
+
   it('never shows more taken than earned, or a negative balance', () => {
     staff.forEach((p) => {
-      Object.entries(leaveBalance(p.id)).forEach(([kind, b]) => {
-        expect(b.left, `${p.n}/${kind}: negative balance`).toBeGreaterThanOrEqual(0)
-        expect(b.left).toBe(Math.max(0, b.earned - b.taken - b.pending))
-      })
+      Object.entries(leaveBalance(p.id))
+        .filter(([kind]) => ACCRUING.includes(kind))
+        .forEach(([kind, b]) => {
+          /* Nobody on the roster has booked past their accrual — three of them
+             sit exactly on it, so this holds by a margin of zero and not by
+             luck. The counter-example below relies on it: the only way to reach
+             the clamp is to move the clock back, not to find an overdrawn
+             record. */
+          expect(
+            b.taken + b.pending,
+            `${p.n}/${kind}: booked ${b.taken + b.pending} days against ${b.earned} accrued`,
+          ).toBeLessThanOrEqual(b.earned)
+
+          /* Which makes the clamp inert here, so state the subtraction itself
+             rather than restating the clamp. A balance that stopped counting
+             pending requests, or counted comp-off by the wrong rule, shows up
+             as a wrong number rather than as a merely non-negative one. */
+          expect(b.left, `${p.n}/${kind}: the balance shown is not what is left`).toBe(
+            b.earned - b.taken - b.pending,
+          )
+        })
     })
+  })
+
+  /**
+   * Paid leave accrues by the month, so the balance a person is shown depends on
+   * when they look — which is the part a property test cannot see, because it
+   * asks the same question at the same instant every time.
+   *
+   * Asha P is the fixed input: three days of paid leave still awaiting approval,
+   * three days of sick leave already taken, and nothing else on her record.
+   */
+  it('accrues by the month, against the clock', () => {
+    setClock(() => new Date(2026, 5, 30)) // 30 June — half the year gone
+
+    const june = leaveBalance('ap')
+    /* 18 a year × 6/12 = 9 earned, 3 of them spoken for by a pending request. */
+    expect(june.pl).toEqual({ annual: 18, earned: 9, taken: 0, pending: 3, left: 6 })
+    /* 8 a year × 6/12 = 4 earned, 3 taken. */
+    expect(june.sl).toEqual({ annual: 8, earned: 4, taken: 3, pending: 0, left: 1 })
+  })
+
+  it('shows less of it in March than in June, which is what "accrues" means', () => {
+    /* The counter-example. Same person, same leave record, earlier in the year:
+       if the entitlement were the flat annual figure these two would agree, and
+       the assertion above would be pinning nothing. */
+    setClock(() => new Date(2026, 2, 31)) // 31 March
+
+    const march = leaveBalance('ap')
+    expect(march.pl.earned, 'the accrual no longer moves with the month').toBe(5)
+    expect(march.pl.left).toBe(2)
+
+    /* And three days of sick leave taken against two accrued floors at nothing
+       rather than going negative — the case the property test cannot reach,
+       because nobody in the seed is overdrawn at the seed clock. */
+    expect(march.sl.earned).toBe(2)
+    expect(march.sl.taken).toBe(3)
+    expect(march.sl.left).toBe(0)
+  })
+})
+
+describe('a full and final settlement', () => {
+  afterEach(resetClock)
+
+  /**
+   * Worked out by hand, because a settlement is the one payslip nobody gets to
+   * correct next month.
+   *
+   * Kavitha V leaving on 15 July 2026. Her structure grosses 24,197 over 27
+   * working days — 896.19 a day. Fifteen days of a thirty-day month is 14
+   * payable days, so 12,547 of salary. Eleven days of paid leave stand to July
+   * (18 a year, seven months accrued, none taken) and encash at basic ÷ 26 →
+   * 5,588. She joined in April 2025, so at fifteen months served she is under
+   * the five-year gratuity threshold and gets nothing for it.
+   */
+  it('pays salary to the last day and encashes the balance', () => {
+    setClock(() => new Date(2026, 6, 15))
+
+    const kavitha = staff.find((p) => p.id === 'kv')!
+    const s = settlement(kavitha, new Date(2026, 6, 15))
+
+    expect(s.lines.map(([, amount]) => amount)).toEqual([12_547, 5_588, 0])
+    expect(s.total).toBe(18_135)
+    expect(s.bal.pl.left).toBe(11)
+  })
+
+  it('withholds gratuity under five years, and says why on the line itself', () => {
+    setClock(() => new Date(2026, 6, 15))
+
+    const kavitha = staff.find((p) => p.id === 'kv')!
+    const s = settlement(kavitha, new Date(2026, 6, 15))
+
+    expect(s.yrs).toBeCloseTo(1.22, 2)
+    expect(s.lines[2][0]).toContain('under the five-year threshold')
+  })
+
+  it('pays it once the five years are served, which is what makes that a threshold', () => {
+    /* The counter-example, made by moving the clock rather than the record: the
+       same person, six years on, crosses the threshold and is owed 15 days of
+       basic for each of the six completed years — 13,208 × 15 ÷ 26 × 6. */
+    setClock(() => new Date(2031, 6, 15))
+
+    const kavitha = staff.find((p) => p.id === 'kv')!
+    const s = settlement(kavitha, new Date(2031, 6, 15))
+
+    expect(s.yrs, 'the counter-example no longer crosses the threshold').toBeGreaterThanOrEqual(5)
+    expect(s.lines[2][1]).toBe(45_720)
+    expect(s.lines[2][0]).toContain('6 completed years')
   })
 })

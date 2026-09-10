@@ -90,7 +90,7 @@ The application runs both ways, and only one of them is wired to the screens.
 - **Seed.** The screens read `src/data/*.ts`, bundled at build time rather than
   fetched. That is why `npm run dev` alone shows all of it with no database, and
   why the numbers are the design's. The one dataset that is not a static import
-  is the 767-row delivery history: `src/data/deliveries.ts:80` pulls
+  is the 767-row delivery history: `src/data/deliveries.ts:78` pulls
   `deliveries.json` in dynamically, so its chunk is requested only by the four
   screens that report on it (`src/lib/useDeliveries.ts`).
 - **Server.** A Hono API mounts six route modules under `/api`
@@ -117,7 +117,7 @@ way to tell which figure came from where (README, *Known scope*;
 field names — `Order` is `{cl, pr, stt, st, co, prop}` where the `orders` table
 is `{clientId, productId, status, state, county, property}`
 (`src/data/types.ts:233-243`, `server/db/schema.ts:266-284`), and the routes
-return table rows unmapped (`server/routes/reference.ts:52`). So a migrated
+return table rows unmapped (`server/routes/reference.ts:55-59`). So a migrated
 screen needs a mapping, not only a different source.
 
 ## 4. The short field names stay short
@@ -139,7 +139,8 @@ Renaming them makes the seed data and the design disagree, and a regeneration
 would put them straight back. For the same reason, a defect fixed in the
 generated output is a defect a regeneration reintroduces:
 `tests/rules/dates.test.ts` exists as the guard against exactly that. eslint
-skips every `src/data/*.ts` and un-ignores only `types.ts`.
+skips every `src/data/*.ts` and un-ignores only `types.ts`
+(`eslint.config.js:16`), because that one is the hand-maintained domain model.
 
 ## Comments
 

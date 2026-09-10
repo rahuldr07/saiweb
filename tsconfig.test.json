@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    /* The tests run in node, but they import application modules that are
+       browser code — `downloadCSV` reaches for `document`, guarded, because the
+       same module builds the rows a test asserts on. Without DOM here the test
+       project cannot type-check the code it covers. */
+    "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "skipLibCheck": true,
 

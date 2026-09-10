@@ -4,8 +4,11 @@ import { createDb, withTenantOn, type Db } from '../../server/db/connect'
 import {
   clients,
   departments,
+  leaveRequests,
   orderStages,
   orders,
+  payRuns,
+  payslips,
   people,
   products,
   roles,
@@ -63,6 +66,10 @@ describe.skipIf(!configured)('the API', () => {
     await owner.execute(sql`delete from order_stages where order_id in (select id from orders where ref like 'test-order-%')`)
     await owner.execute(sql`delete from order_events where order_id in (select id from orders where ref like 'test-order-%')`)
     await owner.execute(sql`delete from orders where ref like 'test-order-%'`)
+    /* Payslips go with their run; the leave rows are hung on a *seeded* person,
+       so nothing cascades them away and they have to be named. */
+    await owner.execute(sql`delete from pay_runs where period like 'test-narrowing%'`)
+    await owner.execute(sql`delete from leave_requests where reason like 'test-narrowing%'`)
     await owner.execute(sql`delete from people where ref like 'test-isolation%'`)
     await owner.execute(sql`delete from "user" where email like 'isolation-%@example.test'`)
 
@@ -304,10 +311,245 @@ describe.skipIf(!configured)('the API', () => {
 
     it('narrows the order register instead of refusing it', async () => {
       /* Someone without "see every order" is not locked out of Orders — they
-         see the ones they are on. The register and the API agree about that. */
+         see the ones they are on. The register and the API agree about that.
+         *Which* orders come back is asserted below, where there are fixtures to
+         assert it against; what this one pins is that the answer is an answer
+         and not a 403, because "narrows" and "refuses" are the two ways this
+         route could have gone and only one of them is right. */
       const res = await call('/api/orders', keystone)
-      expect(res.status).toBe(200)
-      expect(Array.isArray(await res.json())).toBe(true)
+      expect(res.status, await res.clone().text()).toBe(200)
+    })
+  })
+
+  /**
+   * Narrowing to the person, not just to the workspace.
+   *
+   * Row-level security scopes every query to a workspace and stops there — a
+   * colleague's payslip is in the same workspace as yours, and Postgres has no
+   * opinion about that. What keeps it off your screen is four `where` clauses
+   * and one `.filter` in the handlers, all of them ordinary code:
+   *
+   *   hrms.ts:73    leave     → your own unless you can decide leave
+   *   hrms.ts:134   payslips  → your own unless you run payroll
+   *   hrms.ts:138   payslips  → published runs only, for the person they are about
+   *   production.ts:79   the order register → the orders you are on
+   *   production.ts:100  one order          → the same, or 404
+   *
+   * Every test below asks the same question twice against the same rows — once
+   * as staff, once as an admin — because a request that returns nothing proves
+   * nothing. The admin run is the counter-example: it shows the row is there to
+   * be found, so the staff run's *absence* is the gate working rather than an
+   * empty table.
+   */
+  describe('narrowing to the person', () => {
+    const colleagueRef = 'kv'
+    const colleagueName = 'Kavitha V'
+
+    let mine: { payslip: string; draft: string; leave: string; order: string; orderRef: string }
+    let theirs: { payslip: string; leave: string; order: string; orderRef: string }
+
+    /* The capability guard reads the database per request, so a role change
+       takes effect on the next call without signing in again — which is what
+       lets one session stand in for two people. */
+    const beRole = (key: 'admin' | 'staff') =>
+      withTenantOn(owner, keystone, async (tx) => {
+        const [role] = await tx.select().from(roles).where(eq(roles.key, key)).limit(1)
+        await tx.update(people).set({ roleId: role.id }).where(eq(people.ref, ref))
+      })
+
+    const ids = async (res: Response) =>
+      ((await res.json()) as { id: string }[]).map((r) => r.id)
+
+    beforeAll(async () => {
+      await withTenantOn(owner, keystone, async (tx) => {
+        const [me] = await tx.select().from(people).where(eq(people.ref, ref)).limit(1)
+        const [them] = await tx.select().from(people).where(eq(people.ref, colleagueRef)).limit(1)
+        expect(them, `the seed no longer has a person called ${colleagueRef}`).toBeDefined()
+        expect(them.name).toBe(colleagueName)
+
+        /* Two runs, because the published/draft split is its own gate. */
+        const runs = await tx
+          .insert(payRuns)
+          .values([
+            { tenantId: keystone, period: 'test-narrowing published', state: 'paid', published: true },
+            { tenantId: keystone, period: 'test-narrowing draft', state: 'draft', published: false },
+          ])
+          .returning()
+        const published = runs.find((r) => r.published)!
+        const draft = runs.find((r) => !r.published)!
+
+        const slips = await tx
+          .insert(payslips)
+          .values([
+            { tenantId: keystone, payRunId: published.id, personId: me.id, gross: '50000.00', deductions: '5000.00', net: '45000.00' },
+            { tenantId: keystone, payRunId: published.id, personId: them.id, gross: '60000.00', deductions: '6000.00', net: '54000.00' },
+            { tenantId: keystone, payRunId: draft.id, personId: me.id, gross: '51000.00', deductions: '5100.00', net: '45900.00' },
+          ])
+          .returning()
+        const slipFor = (personId: string, payRunId: string) =>
+          slips.find((s) => s.personId === personId && s.payRunId === payRunId)!.id
+
+        const leave = await tx
+          .insert(leaveRequests)
+          .values([
+            { tenantId: keystone, personId: me.id, kind: 'pl', fromDate: '2026-07-06', toDate: '2026-07-07', days: '2.0', reason: 'test-narrowing mine' },
+            { tenantId: keystone, personId: them.id, kind: 'cl', fromDate: '2026-07-08', toDate: '2026-07-08', days: '1.0', reason: 'test-narrowing theirs' },
+          ])
+          .returning()
+
+        const [client] = await tx.select().from(clients).limit(1)
+        const [product] = await tx.select().from(products).limit(1)
+        const [search] = await tx.select().from(departments).where(eq(departments.name, 'Search')).limit(1)
+
+        const stamp = Date.now()
+        const refs = { mine: `test-order-mine-${stamp}`, theirs: `test-order-theirs-${stamp}` }
+        const both = await tx
+          .insert(orders)
+          .values(
+            [refs.mine, refs.theirs].map((r) => ({
+              tenantId: keystone,
+              ref: r,
+              clientId: client.id,
+              productId: product.id,
+              state: 'PA',
+              county: 'Cambria',
+              property: '2 Narrowing Lane',
+              dueAt: new Date(stamp + 86_400_000),
+              fee: '250.00',
+            })),
+          )
+          .returning()
+        const orderFor = (r: string) => both.find((o) => o.ref === r)!
+
+        /* One stage each. Being on a stage of an order is the whole of what
+           "your order" means to this API — there is no other column for it. */
+        await tx.insert(orderStages).values([
+          { tenantId: keystone, orderId: orderFor(refs.mine).id, departmentId: search.id, assigneeId: me.id },
+          { tenantId: keystone, orderId: orderFor(refs.theirs).id, departmentId: search.id, assigneeId: them.id },
+        ])
+
+        mine = {
+          payslip: slipFor(me.id, published.id),
+          draft: slipFor(me.id, draft.id),
+          leave: leave.find((l) => l.personId === me.id)!.id,
+          order: orderFor(refs.mine).id,
+          orderRef: refs.mine,
+        }
+        theirs = {
+          payslip: slipFor(them.id, published.id),
+          leave: leave.find((l) => l.personId === them.id)!.id,
+          order: orderFor(refs.theirs).id,
+          orderRef: refs.theirs,
+        }
+      })
+    })
+
+    describe('payslips', () => {
+      it('gives a person their own and not their colleague’s', async () => {
+        await beRole('staff') // no "pricing"
+        const res = await call('/api/hr/payslips', keystone)
+        expect(res.status, await res.clone().text()).toBe(200)
+
+        const body = (await res.json()) as { id: string; person: string }[]
+        expect(body.map((r) => r.id)).toContain(mine.payslip)
+        expect(
+          body.map((r) => r.id),
+          `${colleagueName}'s payslip was served to somebody else`,
+        ).not.toContain(theirs.payslip)
+        /* Not one row about anybody else, named or otherwise. */
+        expect(body.every((r) => r.person === 'Isolation Test')).toBe(true)
+      })
+
+      it('and hands the same row to payroll, which is what makes that a gate', async () => {
+        await beRole('admin') // holds "pricing"
+        const seen = await ids(await call('/api/hr/payslips', keystone))
+        expect(seen, 'the counter-example no longer reproduces').toContain(theirs.payslip)
+        expect(seen).toContain(mine.payslip)
+      })
+
+      it('keeps an unpublished run off the screen of the person it is about', async () => {
+        await beRole('staff')
+        const seen = await ids(await call('/api/hr/payslips', keystone))
+        expect(seen).toContain(mine.payslip)
+        expect(seen, 'a draft run was shown to the person it is about').not.toContain(mine.draft)
+      })
+
+      it('while payroll sees the draft, because that is what a draft is for', async () => {
+        await beRole('admin')
+        const seen = await ids(await call('/api/hr/payslips', keystone))
+        expect(seen, 'the counter-example no longer reproduces').toContain(mine.draft)
+      })
+    })
+
+    describe('leave', () => {
+      it('gives a person their own and not their colleague’s', async () => {
+        await beRole('staff') // no "people"
+        const res = await call('/api/hr/leave', keystone)
+        expect(res.status, await res.clone().text()).toBe(200)
+
+        const body = (await res.json()) as { id: string; person: string }[]
+        expect(body.map((r) => r.id)).toContain(mine.leave)
+        expect(
+          body.map((r) => r.id),
+          `${colleagueName}'s leave was served to somebody who cannot decide it`,
+        ).not.toContain(theirs.leave)
+        expect(body.every((r) => r.person === 'Isolation Test')).toBe(true)
+      })
+
+      it('and shows an approver both, which is what makes that a gate', async () => {
+        await beRole('admin') // holds "people"
+        const seen = await ids(await call('/api/hr/leave', keystone))
+        expect(seen, 'the counter-example no longer reproduces').toContain(theirs.leave)
+        expect(seen).toContain(mine.leave)
+      })
+    })
+
+    describe('the order register', () => {
+      const refsIn = async (res: Response) =>
+        ((await res.json()) as { ref: string }[]).map((r) => r.ref)
+
+      it('lists the orders they are on, and not the ones they are not', async () => {
+        await beRole('staff') // no "all"
+        const res = await call('/api/orders', keystone)
+        expect(res.status, await res.clone().text()).toBe(200)
+
+        const seen = await refsIn(res)
+        expect(seen).toContain(mine.orderRef)
+        expect(seen, `an order only ${colleagueName} is on was in someone else's register`).not.toContain(
+          theirs.orderRef,
+        )
+      })
+
+      it('and lists both for a lead, which is what makes that a gate', async () => {
+        await beRole('admin') // holds "all"
+        const seen = await refsIn(await call('/api/orders', keystone))
+        expect(seen, 'the counter-example no longer reproduces').toContain(theirs.orderRef)
+        expect(seen).toContain(mine.orderRef)
+      })
+    })
+
+    describe('one order by id', () => {
+      it('opens the one they are on', async () => {
+        await beRole('staff')
+        const res = await call(`/api/orders/${mine.order}`, keystone)
+        expect(res.status, await res.clone().text()).toBe(200)
+        expect(((await res.json()) as { order: { ref: string } }).order.ref).toBe(mine.orderRef)
+      })
+
+      it('answers 404 for one they are not, rather than to anybody holding the id', async () => {
+        /* The register hiding a row is not the protection. Someone who reads an
+           id out of a link, a report or a stale tab arrives here directly. */
+        await beRole('staff')
+        const res = await call(`/api/orders/${theirs.order}`, keystone)
+        expect(res.status, `the detail route handed over ${colleagueName}'s order`).toBe(404)
+      })
+
+      it('and opens it for a lead, so the 404 was a refusal and not a missing row', async () => {
+        await beRole('admin')
+        const res = await call(`/api/orders/${theirs.order}`, keystone)
+        expect(res.status, 'the counter-example no longer reproduces').toBe(200)
+        expect(((await res.json()) as { order: { ref: string } }).order.ref).toBe(theirs.orderRef)
+      })
     })
   })
 })
