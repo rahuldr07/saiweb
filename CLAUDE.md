@@ -142,6 +142,42 @@ generated output is a defect a regeneration reintroduces:
 skips every `src/data/*.ts` and un-ignores only `types.ts`
 (`eslint.config.js:16`), because that one is the hand-maintained domain model.
 
+## 5. Type sizes come from the scale, and there are two greys
+
+Typography is set in [`src/styles/index.css`](src/styles/index.css), not in
+`design.css` — the design's own sizes are still in the port, and every one of
+them is restated in the override layer under invariant 2.
+
+**Never write a raw px font size.** Use a step:
+
+```
+--t-micro 10.5   --t-label 13     --t-lead 16     --t-h1      25
+--t-mini  11     --t-small 13.5   --t-h3   18.5   --t-display 28
+--t-eyebrow 12   --t-body  14.5   --t-h2   20.5
+```
+
+Ten steps replace the design's thirteen unrelated sizes, and every step is
+larger than the value it replaced — the lift is biggest at the bottom, where
+this app spends most of its time. Inline styles take the token too
+(`fontSize: 'var(--t-small)'`); 611 of them across 86 files already do, so a
+literal `'12.5px'` appearing again is a regression, not a local choice.
+
+There are two greys and they are not interchangeable. `--gr` is for text that
+recedes — a hint, a timestamp, an empty state, the `.gr` utility that ~465
+component call sites use for asides. `--gr2` is for text that *labels* something
+else: section eyebrows, column heads, field labels, page subtitles, the term
+half of a key/value pair. A label printed in `--gr` reads as an aside, which is
+the bug this split fixes. `--gr2` inverts under `body.dark` — there the
+emphatic grey is the lighter one.
+
+The faces are Geist and Geist Mono, vendored under
+[`src/styles/fonts/`](src/styles/fonts) (OFL) rather than fetched, so there is
+no third-party request at first paint and no `<link>` in `index.html` to keep in
+step. The `@font-face` fallbacks carry `ascent-override`/`size-adjust` computed
+from Geist's own head/hhea/OS-2 tables — that, not a preload, is what stops the
+swap from shifting layout. If the fonts are ever replaced, those four numbers
+have to be recomputed from the new files or the overrides become wrong.
+
 ## Comments
 
 Comments here say *why* — a bug that was hit, an invariant, a constraint — in

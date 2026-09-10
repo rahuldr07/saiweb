@@ -8,12 +8,10 @@
       content="Title CRM — multi-tenant title production system and HRMS for title abstracting vendors."
     />
     <title>Title CRM — multi-tenant production system</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Geist and Geist Mono are self-hosted and declared in src/styles/index.css,
+         so there is nothing to preconnect to and no render-blocking stylesheet
+         from a third party. Vite fingerprints the two woff2 files into /assets/,
+         which is where vercel.json's `immutable` cache header applies. -->
   </head>
   <body>
     <div id="root"></div>

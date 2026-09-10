@@ -29,12 +29,12 @@ function CandidateCard({ c, onMove }: { c: Candidate; onMove: (c: Candidate) => 
         width: '100%',
       }}
     >
-      <div style={{ fontSize: '12.5px', fontWeight: 650 }}>{c.n}</div>
-      <div className="gr" style={{ fontSize: '11.5px' }}>
+      <div style={{ fontSize: 'var(--t-small)', fontWeight: 650 }}>{c.n}</div>
+      <div className="gr" style={{ fontSize: 'var(--t-label)' }}>
         {c.exp} yr{c.exp === 1 ? '' : 's'} · {c.src}
       </div>
       {c.note ? (
-        <div className="gr" style={{ fontSize: '11.5px', marginTop: 3 }}>
+        <div className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 3 }}>
           {c.note}
         </div>
       ) : null}
@@ -61,8 +61,8 @@ function StageColumn({
           marginBottom: 9,
         }}
       >
-        <b style={{ fontSize: '12.5px' }}>{stage}</b>
-        <span className="mono gr" style={{ fontSize: '11.5px' }}>
+        <b style={{ fontSize: 'var(--t-small)' }}>{stage}</b>
+        <span className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
           {list.length}
         </span>
       </div>
@@ -72,12 +72,12 @@ function StageColumn({
             .slice(0, SHOWN_PER_STAGE)
             .map((c) => <CandidateCard key={c.id} c={c} onMove={onMove} />)
         ) : (
-          <div className="gr" style={{ fontSize: '11.5px', padding: '8px 0' }}>
+          <div className="gr" style={{ fontSize: 'var(--t-label)', padding: '8px 0' }}>
             nobody
           </div>
         )}
         {list.length > SHOWN_PER_STAGE ? (
-          <div className="gr" style={{ fontSize: '11.5px' }}>
+          <div className="gr" style={{ fontSize: 'var(--t-label)' }}>
             and {list.length - SHOWN_PER_STAGE} more
           </div>
         ) : null}
@@ -107,7 +107,7 @@ function Recruitment() {
       title: `Move ${c.n} to ${next}?`,
       body: (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             {c.n} · {c.exp} year{c.exp === 1 ? '' : 's'} · from {c.src}
             {c.note ? ` · ${c.note}` : ''}
           </p>
@@ -204,12 +204,12 @@ function Recruitment() {
             ))}
           </div>
         ) : (
-          <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             Nobody has applied to this role yet. The pipeline fills as candidates come in against
             it.
           </p>
         )}
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Click anyone to move them a stage on. A candidate at Joined becomes a staff record — that
           is the only way people get into the system, so nobody exists without a hiring trail.
         </p>
@@ -235,7 +235,7 @@ function Recruitment() {
                     {o.why}
                   </div>
                 </span>
-                <span className="mono gr" style={{ fontSize: '11.5px' }}>
+                <span className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
                   {mine.length} in pipeline
                   <br />
                   {atOffer} at offer
@@ -245,7 +245,7 @@ function Recruitment() {
           })}
         </Rows>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Every opening carries why it exists. A req without a reason is how headcount grows without
         anyone deciding to grow it.
       </p>

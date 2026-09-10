@@ -53,7 +53,7 @@ export function CostForm({
           />
         </Field>
       </Form>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 4 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 4 }}>
         Pass-through costs are billed on at cost. They do not touch the product fee.
       </p>
 

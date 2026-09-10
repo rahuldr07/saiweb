@@ -58,7 +58,7 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
                 }}
                 title={`${h.hr}:00 — ${pct}% of total capacity used`}
               >
-                <span className="mono gr" style={{ fontSize: '10.5px', textAlign: 'center' }}>
+                <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)', textAlign: 'center' }}>
                   {pct}%
                 </span>
                 <span
@@ -68,14 +68,14 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
                     height: `${Math.min(100, pct)}%`,
                   }}
                 />
-                <span className="mono gr" style={{ fontSize: '9.5px', textAlign: 'center' }}>
+                <span className="mono gr" style={{ fontSize: 'var(--t-mini)', textAlign: 'center' }}>
                   {h.hr}
                 </span>
               </div>
             )
           })}
         </div>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Total capacity consumed as the day fills. Green under {CAPACITY_AMBER}%, amber to{' '}
           {CAPACITY_RED}%, red above —
           the point at which the next arrival is likely to become an exception.
@@ -104,7 +104,7 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
                       {' '}
                       <span
                         className={`chip ${AVAIL[s.avail][1]}`}
-                        style={{ fontSize: '10.5px', padding: '1px 7px' }}
+                        style={{ fontSize: 'var(--t-eyebrow)', padding: '1px 7px' }}
                       >
                         {AVAIL[s.avail][0]}
                       </span>
@@ -123,7 +123,7 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
               }
               title={`${before} already open, ${added} added, target ${s.cap}`}
               rightClass={`mono ${at ? 'bad' : 'gr'}`}
-              rightStyle={{ fontSize: '11.5px' }}
+              rightStyle={{ fontSize: 'var(--t-label)' }}
               right={
                 <>
                   {total} / {s.cap}
@@ -133,7 +133,7 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
             />
           )
         })}
-        <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 10 }}>
           Purple is what they already had, green is what this batch added. Red means at target.
         </p>
       </Card>

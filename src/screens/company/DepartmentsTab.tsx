@@ -113,7 +113,7 @@ export function DepartmentsTab({ onOpenStaff }: { onOpenStaff: () => void }) {
               marginTop: 11,
             }}
           >
-            <span className="gr" style={{ fontSize: '12.5px' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
               Off to one side:
             </span>
             {exc.map((d) => (
@@ -123,7 +123,7 @@ export function DepartmentsTab({ onOpenStaff }: { onOpenStaff: () => void }) {
             ))}
           </div>
         ) : null}
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           An order passes through the numbered stages in order. An exception branch is entered on
           demand from any stage, and the order returns to where it left.
         </p>
@@ -153,7 +153,7 @@ export function DepartmentsTab({ onOpenStaff }: { onOpenStaff: () => void }) {
                       {d.pair ? <div className="s">checks {d.pair}</div> : null}
                     </div>
                     <div className="cell">
-                      <div className="v gr" style={{ fontSize: '12.5px' }}>
+                      <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                         {d.desc || '—'}
                       </div>
                     </div>

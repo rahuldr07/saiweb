@@ -72,13 +72,13 @@ function ThisMonth({
         <>
           <Rows>
             <Row
-              icon={<span className="gr" style={{ fontSize: '14.5px' }}>·</span>}
+              icon={<span className="gr" style={{ fontSize: 'var(--t-lead)' }}>·</span>}
               title="Gross earnings"
               detail="before anything is taken off"
               right={<span className="mono">{inr(totals.gross)}</span>}
             />
             <Row
-              icon={<span className="bad" style={{ fontSize: '14.5px' }}>⚑</span>}
+              icon={<span className="bad" style={{ fontSize: 'var(--t-lead)' }}>⚑</span>}
               title="Less deductions"
               detail="PF, PT, ESI and tax"
               right={<span className="mono bad">−{inr(totals.ded)}</span>}
@@ -89,7 +89,7 @@ function ThisMonth({
               display: 'flex',
               justifyContent: 'space-between',
               padding: '13px 2px 0',
-              fontSize: '14.5px',
+              fontSize: 'var(--t-lead)',
               borderTop: '1px solid var(--hair)',
               marginTop: 10,
             }}
@@ -97,7 +97,7 @@ function ThisMonth({
             <b>Credited to {totals.list.length} accounts</b>
             <b className="mono ok">{inr(totals.net)}</b>
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', margin: '14px 0 0' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '14px 0 0' }}>
             The same figures the payroll register was approved on. A payslip is not recomputed when
             it is opened.
           </p>
@@ -140,7 +140,7 @@ function ThisMonth({
 
       {!run?.published ? (
         <Card padded>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             {month} is <b>{RUNSTATE[run?.state ?? 'draft'][0].toLowerCase()}</b>. Payslips are
             produced when the run is published — until then there is nothing to show, and showing a
             draft to anyone would be worse than showing nothing.
@@ -167,7 +167,7 @@ function ThisMonth({
             <Kpi
               title="Total net"
               value={
-                <span className="ok" style={{ fontSize: '23px' }}>
+                <span className="ok" style={{ fontSize: 'var(--t-h1)' }}>
                   {inr(totals.net)}
                 </span>
               }
@@ -190,7 +190,7 @@ function ThisMonth({
             />
             <Kpi
               title="Approved by"
-              value={<span style={{ fontSize: '17px' }}>{(run.by ?? '—').split(' ')[0]}</span>}
+              value={<span style={{ fontSize: 'var(--t-h3)' }}>{(run.by ?? '—').split(' ')[0]}</span>}
               detail={run.at ?? ''}
               icon="›"
               hint="Open the run it was approved on"
@@ -242,7 +242,7 @@ function ThisMonth({
                   {!rows.length ? (
                     <div className="rw" style={{ padding: 18 }}>
                       <span />
-                      <span className="gr" style={{ fontSize: '13.5px' }}>
+                      <span className="gr" style={{ fontSize: 'var(--t-body)' }}>
                         Nobody matches that.
                       </span>
                       <span />
@@ -271,7 +271,7 @@ function ThisMonth({
                           </div>
                         </div>
                         <div className="cell">
-                          <div className="v gr" style={{ fontSize: '12.5px' }}>
+                          <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                             {x.p.dep[0] ?? '—'}
                           </div>
                         </div>
@@ -308,7 +308,7 @@ function ThisMonth({
             </div>
           </Card>
 
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Each person sees only their own, under My payslips. This list exists so whoever runs
             payroll can answer a question without asking them to forward it.
           </p>
@@ -367,7 +367,7 @@ function OnePerson({
               {withUnpaid.map((r) => (
                 <Row
                   key={r.m}
-                  icon={<span className="bad" style={{ fontSize: '14.5px' }}>⚑</span>}
+                  icon={<span className="bad" style={{ fontSize: 'var(--t-lead)' }}>⚑</span>}
                   title={r.m}
                   detail={`${r.s.unpaid} unpaid of ${r.s.a.working} working days`}
                   right={<span className="mono bad">−{inr(r.s.lopAmt)}</span>}
@@ -375,11 +375,11 @@ function OnePerson({
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               No month has an unpaid day — every payslip is a full month.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', margin: '14px 0 0' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '14px 0 0' }}>
             An unpaid day is the commonest reason someone queries a payslip. Having the month named
             makes that a thirty-second conversation.
           </p>
@@ -408,7 +408,7 @@ function OnePerson({
 
       {!rows.length ? (
         <Card padded>
-          <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             No month has been published yet, so there is nothing to send.
           </p>
         </Card>
@@ -417,7 +417,7 @@ function OnePerson({
           <Kpis>
             <Kpi
               title="Gross so far"
-              value={<span style={{ fontSize: '23px' }}>{inr(sum.gross)}</span>}
+              value={<span style={{ fontSize: 'var(--t-h1)' }}>{inr(sum.gross)}</span>}
               detail={`across ${rows.length} months`}
               icon="›"
               hint="The latest payslip"
@@ -426,7 +426,7 @@ function OnePerson({
             <Kpi
               title="Deducted"
               value={
-                <span className="warn" style={{ fontSize: '23px' }}>
+                <span className="warn" style={{ fontSize: 'var(--t-h1)' }}>
                   {inr(sum.ded)}
                 </span>
               }
@@ -438,7 +438,7 @@ function OnePerson({
             <Kpi
               title="Taken home"
               value={
-                <span className="ok" style={{ fontSize: '23px' }}>
+                <span className="ok" style={{ fontSize: 'var(--t-h1)' }}>
                   {inr(sum.net)}
                 </span>
               }
@@ -550,7 +550,7 @@ function OnePerson({
             </div>
           </Card>
 
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             This is the view for the question people actually ask — <i>send me my last three
             payslips</i>. It used to mean switching month by month and downloading one at a time.
           </p>
@@ -590,7 +590,7 @@ function Payslips() {
       <>
         <PageHead title="Payslips" sub="Nobody is on the payroll yet." />
         <Card padded>
-          <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             No active person has a salary on record, so there is nothing to pay and no payslip to
             produce. Set a CTC on someone’s record and they appear here from the next run.
           </p>

@@ -145,7 +145,7 @@ export function ClientForm({
 
       {c ? (
         <Banner kind="b" icon="◔" style={{ margin: '16px 0 0' }}>
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             <b>{c.orders.toLocaleString()} orders</b> and <b>{money(c.total)}</b> invoiced to date.
             Changing the code does not rewrite past order numbers.
           </span>
@@ -154,10 +154,10 @@ export function ClientForm({
         <Banner
           kind="b"
           icon="◷"
-          title={<span style={{ fontSize: '12.5px' }}>Set their turnaround next</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>Set their turnaround next</span>}
           style={{ margin: '16px 0 0' }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             A new client falls back to the 24h default until you give them their own SLA.
           </span>
         </Banner>
@@ -193,7 +193,7 @@ export function ClientDelete({
 
   return (
     <>
-      <p style={{ fontSize: '13.5px' }}>
+      <p style={{ fontSize: 'var(--t-body)' }}>
         {c.orders ? (
           <>
             They have <b>{c.orders.toLocaleString()} orders</b> and <b>{money(c.total)}</b> invoiced.
@@ -204,7 +204,7 @@ export function ClientDelete({
         )}
       </p>
       <Banner kind="r" icon="⚑" style={{ marginTop: 14 }}>
-        <span style={{ fontSize: '12.5px' }}>
+        <span style={{ fontSize: 'var(--t-small)' }}>
           Marking them inactive stops new orders without losing anything. Removing is only right
           when the record should never have existed.
         </span>

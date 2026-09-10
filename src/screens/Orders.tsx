@@ -265,7 +265,7 @@ export default function Orders() {
         }
       />
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         A red ring on an avatar means the same person is set to both type and QC that order —{' '}
         <b>self-review</b>. Assignment blocks it; see Quality.
       </p>

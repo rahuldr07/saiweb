@@ -14,7 +14,7 @@ export function PatternsTab({
   if (!flagged.length) {
     return (
       <Card padded>
-        <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
           No patterns worth raising. Absence is spread the way you would expect it to be.
         </p>
       </Card>
@@ -27,7 +27,7 @@ export function PatternsTab({
         <Rows bare>
           {flagged.map(({ p, a }) => (
             <div className="rw" key={p.id}>
-              <span className="warn" style={{ fontSize: '14.5px' }}>
+              <span className="warn" style={{ fontSize: 'var(--t-lead)' }}>
                 ◷
               </span>
               <span>
@@ -50,7 +50,7 @@ export function PatternsTab({
           ))}
         </Rows>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Patterns, not totals. Somebody who took three weeks in one go does not appear here; somebody
         who takes every third Monday does. The second is the one a manager can actually help with.
       </p>

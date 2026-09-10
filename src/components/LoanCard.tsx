@@ -21,7 +21,7 @@ export function LoanCard({ personId }: { personId: string }) {
           const next = scheduleFor(loan, payments).find((r) => r.status === 'due')
           return (
             <div key={loan.id}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13.5px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--t-body)' }}>
                 <b>{LNKIND[loan.kind][0]}</b>
                 <span className="mono">{inr(loan.amt)}</span>
               </div>
@@ -30,7 +30,7 @@ export function LoanCard({ personId }: { personId: string }) {
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: '12.5px',
+                  fontSize: 'var(--t-small)',
                   marginTop: 6,
                 }}
                 className="gr"

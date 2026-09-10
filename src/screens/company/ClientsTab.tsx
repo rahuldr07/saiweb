@@ -62,7 +62,7 @@ export function ClientsTab() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                fontSize: '12.5px',
+                fontSize: 'var(--t-small)',
                 color: 'var(--gr)',
               }}
             >
@@ -105,7 +105,7 @@ export function ClientsTab() {
         emptyText="No client matches that."
       />
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         Outstanding is invoiced minus paid, computed — never stored, so the list and the client page
         can’t disagree.
       </p>

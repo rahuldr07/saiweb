@@ -55,21 +55,21 @@ function LeaveScreen() {
       title: started ? 'That leave has already started' : 'Cancel this leave?',
       body: started ? (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             It began on {fmtDate(l.from)}. Cancelling it now would rewrite attendance that has already
             been counted, and possibly a payslip that has already gone out.
           </p>
-          <p className="gr" style={{ fontSize: '12.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
             Raise it as an attendance correction instead, so the change is recorded rather than silently
             applied.
           </p>
         </>
       ) : (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             {l.days} day{l.days === 1 ? '' : 's'} of {type?.n ?? l.type} from {fmtDate(l.from)}.
           </p>
-          <p className="gr" style={{ fontSize: '12.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
             The balance goes straight back. Whoever approved it is not told automatically — worth a word
             if it was hard to arrange cover.
           </p>
@@ -193,7 +193,7 @@ function LeaveScreen() {
           )
         })}
       </Kpis>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Balances are earned minus taken, computed from the requests below — not a number anyone typed
         in. {mine ? '' : 'Shown for you; open a person to see theirs.'}
       </p>
@@ -299,7 +299,7 @@ function LeaveScreen() {
                         </div>
                         <div className="cell">
                           {mine ? (
-                            <div className="v mono" style={{ fontSize: '12.5px' }}>
+                            <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
                               {fmtDate(l.from)}
                             </div>
                           ) : (
@@ -307,7 +307,7 @@ function LeaveScreen() {
                           )}
                         </div>
                         <div className="cell">
-                          <div className="v" style={{ fontSize: '12.5px' }}>
+                          <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                             {mine ? l.reason : `${fmtDate(l.from)} → ${fmtDate(l.to)}`}
                           </div>
                         </div>
@@ -318,7 +318,7 @@ function LeaveScreen() {
                           {mine ? (
                             <Chip kind={LVSTATUS[l.st][1]}>{LVSTATUS[l.st][0]}</Chip>
                           ) : (
-                            <div className="v" style={{ fontSize: '12.5px' }}>
+                            <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                               {l.reason}
                             </div>
                           )}
@@ -345,7 +345,7 @@ function LeaveScreen() {
                             can('assign') ? (
                               <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                                 {approver?.id === me.id ? null : (
-                                  <span className="gr" style={{ fontSize: '11.5px' }}>
+                                  <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                                     {approver?.n ?? '—'}
                                   </span>
                                 )}
@@ -373,7 +373,7 @@ function LeaveScreen() {
                             </span>
                           ) : (
                             <>
-                              <div className="v" style={{ fontSize: '12.5px' }}>
+                              <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                                 <Chip kind={LVSTATUS[l.st][1]}>{LVSTATUS[l.st][0]}</Chip>
                               </div>
                               {l.by ? <div className="s">{l.by}</div> : null}
@@ -388,14 +388,14 @@ function LeaveScreen() {
             </div>
           </Card>
           {rows.length > PAGE ? (
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Showing the {PAGE} most recent of {rows.length}.
             </p>
           ) : null}
         </>
       ) : (
         <Card padded>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             Nothing {filter === 'all' ? 'at all' : 'in this state'}.
           </p>
         </Card>
@@ -411,12 +411,12 @@ function LeaveScreen() {
             <span>
               <div className="sd">{t.d}</div>
             </span>
-            <span className="mono gr" style={{ fontSize: '11.5px' }}>
+            <span className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
               {t.annual ? `${t.annual} a year` : 'earned'}
             </span>
           </div>
         ))}
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Anything taken beyond the balance becomes unpaid leave, and shows on the payslip as a
           deduction rather than disappearing.
         </p>

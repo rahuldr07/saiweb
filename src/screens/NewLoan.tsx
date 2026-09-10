@@ -102,7 +102,7 @@ function NewLoan() {
               </div>
             </Form>
             {instalments ? (
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 {instalments} instalment{instalments === 1 ? '' : 's'}, the last one adjusted so it never
                 overshoots the balance.
               </p>
@@ -124,7 +124,7 @@ function NewLoan() {
         <aside>
           <Card padded style={{ position: 'sticky', top: 76 }}>
             <div className="lb">Your numbers</div>
-            <div style={{ display: 'grid', gap: 8, marginTop: 10, fontSize: '12.5px' }}>
+            <div style={{ display: 'grid', gap: 8, marginTop: 10, fontSize: 'var(--t-small)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Monthly gross</span>
                 <b className="mono">{inr(monthlyGross)}</b>
@@ -138,7 +138,7 @@ function NewLoan() {
             <div className="lb" style={{ marginTop: 20 }}>
               Policy
             </div>
-            <div style={{ display: 'grid', gap: 6, marginTop: 8, fontSize: '12.5px' }}>
+            <div style={{ display: 'grid', gap: 6, marginTop: 8, fontSize: 'var(--t-small)' }}>
               <div>Advance ≤ {LOAN_POLICY.advancePctOfNet}% of monthly net</div>
               <div>Loan ≤ {LOAN_POLICY.loanMultipleOfGross}× monthly gross</div>
               <div>One loan and one advance at a time</div>
@@ -147,7 +147,7 @@ function NewLoan() {
             {errors.length ? (
               <div className="bnr d" style={{ marginTop: 16 }}>
                 <span className="bi">⚑</span>
-                <div style={{ fontSize: '12.5px' }}>
+                <div style={{ fontSize: 'var(--t-small)' }}>
                   {errors.map((e) => (
                     <div key={e}>{e}</div>
                   ))}

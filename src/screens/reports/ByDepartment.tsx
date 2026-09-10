@@ -143,7 +143,7 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
                       <div className="s">{x.pct}% complete</div>
                     </>
                   ) : (
-                    <span className="gr" style={{ fontSize: '12.5px' }}>
+                    <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                       not auto-assigned
                     </span>
                   )}
@@ -161,7 +161,7 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
             )
           })}
         </FlexTable>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Doc Req shows no tasks because it is an exception branch — work only enters it when an order needs a
           document, so it is never part of the automatic pass.
         </p>
@@ -272,7 +272,7 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
                           <span style={{ width: `${100 - pct}%`, background: 'var(--warn)' }} />
                         </div>
                       ) : (
-                        <span className="gr" style={{ fontSize: '12.5px' }}>
+                        <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                           {s.avail === 'ok' ? 'nothing assigned today' : 'unavailable'}
                         </span>
                       )}

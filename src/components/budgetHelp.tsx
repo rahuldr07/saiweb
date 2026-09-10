@@ -21,7 +21,7 @@ export function useBudgetHelp() {
               detail="other people doing the same stages, not the company average"
             />
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Stages differ enormously — RTS finishes inside budget almost every time and Search barely
             60% of the time. Comparing you against the company average would say more about which
             stage you work on than about you.

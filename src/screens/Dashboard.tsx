@@ -162,7 +162,7 @@ function Dashboard() {
                     }}
                   >
                     <div className="cell">
-                      <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                      <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                         {oi + 1}
                       </div>
                     </div>
@@ -186,7 +186,7 @@ function Dashboard() {
                       <Due at={o.due} />
                     </div>
                     <div className="cell">
-                      <div className="v" style={{ fontSize: '12.5px' }}>
+                      <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                         {o.age}
                       </div>
                       {o.flag ? <div className="s bad">{o.flag}</div> : null}

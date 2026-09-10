@@ -14,7 +14,7 @@ export function HowTab() {
             label={
               <>
                 <b>{x.n}</b>
-                <div className="gr" style={{ fontSize: '11.5px' }}>
+                <div className="gr" style={{ fontSize: 'var(--t-label)' }}>
                   {x.lat}, {x.lng}
                 </div>
               </>
@@ -22,7 +22,7 @@ export function HowTab() {
             value={<b className="mono">{x.radius} m</b>}
           />
         ))}
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           A check-in outside every radius is still recorded — it is marked as away from site rather
           than refused. Refusing it would mean someone at a courthouse cannot start their day.
         </p>
@@ -37,7 +37,7 @@ export function HowTab() {
           <b>This is worth building properly with someone who knows that Act, or buying from a vendor
           who has.</b> A mock here would suggest a control that does not exist.
         </Assumption>
-        <p className="gr" style={{ fontSize: '12.5px' }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
           What the geofence does give you: the check-in records the device location and its accuracy,
           and flags anything outside the site radius.
         </p>

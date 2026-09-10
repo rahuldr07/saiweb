@@ -11,6 +11,291 @@
 @custom-variant dark (&:where(body.dark, body.dark *));
 
 /*
+ * ─────────────────────────────────────────────────────────────────────────
+ * Typography
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * The design shipped Inter and IBM Plex Mono off the Google Fonts CDN, at 13
+ * distinct sizes that accumulated rather than scaled, with slate-500 doing duty
+ * for both "secondary" and "this is a heading". All three are changed here, and
+ * all three are changed *here* rather than in design.css, which stays a verbatim
+ * port so it can still be diffed against the export (CLAUDE.md, invariant 2).
+ *
+ * The cost of that choice is this file: 80 of design.css's typographic rules are
+ * restated below. They are grouped by scale step rather than by component, so
+ * the scale is legible as a scale — which is the thing design.css cannot show.
+ */
+
+/*
+ * Geist and Geist Mono, vendored from the `geist` npm package (v1.5.1, OFL —
+ * see ./fonts/LICENSE.txt) rather than fetched. Self-hosting drops a
+ * third-party connection from first paint, lets the app run offline, and puts
+ * the files through Vite so they land in /assets/ with hashed names — the only
+ * path vercel.json grants `immutable` caching.
+ *
+ * Both are variable across 100-900, which is why design.css's `font-weight: 650`
+ * on #mdt now renders at 650 instead of being rounded to the nearest static cut.
+ */
+@font-face {
+  font-family: 'Geist';
+  src: url('./fonts/Geist-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geist Mono';
+  src: url('./fonts/GeistMono-Variable.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Metric-matched fallbacks, and the reason there is no `<link rel=preload>`.
+ *
+ * `font-display: swap` means text paints in the fallback first, so whatever the
+ * fallback measures differently — line height, character width — moves when the
+ * real face arrives. Preloading only shortens that window; overriding the
+ * fallback's metrics closes it. The numbers are Geist's own, read out of the
+ * head/hhea/OS-2 tables of the shipped .ttf and divided through by the size
+ * adjustment: Geist is 1000 upem, ascent 1005, descent -295, no line gap, and
+ * average character width 581 against Arial's 0.5562em and Courier New's
+ * 0.6001em.
+ */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial'), local('Helvetica');
+  ascent-override: 96.2%;
+  descent-override: 28.24%;
+  line-gap-override: 0%;
+  size-adjust: 104.47%;
+}
+@font-face {
+  font-family: 'Geist Mono Fallback';
+  src: local('Courier New'), local('Courier');
+  ascent-override: 100.5%;
+  descent-override: 29.5%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
+:root {
+  --sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
+
+  /*
+   * The scale. Ten steps, replacing the design's thirteen unrelated sizes —
+   * 9.5, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14.5, 17, 19, 23, 26 — none of
+   * which were more than a pixel from a neighbour at the bottom end, where most
+   * of this app lives.
+   *
+   * Every step is larger than the value it replaces. The lift is deliberate and
+   * biggest at the small end: a chip was 11.5px and is 13px, a count 12.5px and
+   * is 13.5px, body 13.5px and is 14.5px. Geist sets a little narrower than
+   * Inter at matched size, so the density this app depends on survives it.
+   *
+   * --t-micro exists only for inline styles: four of them asked for 8.5px,
+   * which is below anything design.css names and too small to read.
+   */
+  --t-micro: 10.5px; /* was 8.5 */
+  --t-mini: 11px; /* was 9.5  — nav labels, badges, avatars */
+  --t-eyebrow: 12px; /* was 10.5 — section eyebrows, table heads */
+  --t-label: 13px; /* was 11 / 11.5 / 12 — chips, field labels, row subtitles */
+  --t-small: 13.5px; /* was 12.5 — counts, key/value terms, mono cells */
+  --t-body: 14.5px; /* was 13 / 13.5 — body, cell values, buttons, inputs */
+  --t-lead: 16px; /* was 14.5 — card headings */
+  --t-h3: 18.5px; /* was 17 — modal and section titles */
+  --t-h2: 20.5px; /* was 19 */
+  --t-h1: 25px; /* was 23 — page title */
+  --t-display: 28px; /* was 26 — KPI figures */
+
+  /*
+   * A second grey.
+   *
+   * design.css spends `--gr` on two unrelated jobs: text that should recede — a
+   * timestamp, a hint, an empty state — and text that should not, which is every
+   * section eyebrow, table head and field label on the screen. The second group
+   * is structure, and structure printed in the same tone as an aside reads as an
+   * aside.
+   *
+   * `--gr2` is that group's colour: slate-700, 9.7:1 on the page ground, against
+   * `--gr`'s 5.1:1. Both are still clearly separated, so the hierarchy the
+   * design intended survives — it is now expressed in two tones rather than one.
+   */
+  --gr2: #334155;
+
+  /*
+   * `--gr` itself moves one notch, #64748b -> #5c6b80. Not a style change: at
+   * #64748b it was 4.44:1 on `--bg`, which fails WCAG AA for body text, and it
+   * was being used at 10.5px. #5c6b80 is 5.06:1 and still visibly the lighter of
+   * the two greys.
+   */
+  --gr: #5c6b80;
+}
+
+body.dark {
+  /* Inverted: in dark mode the emphatic grey is the lighter one. 12.8:1 on the
+     dark ground, against `--gr`'s 7.4:1, which already passes and is left. */
+  --gr2: #cbd5e1;
+}
+
+/* The faces. design.css names Inter in three places — `body`, the `--mono`
+   token, and a hardcoded `font-family: Inter` on `.due .sub`. The token is
+   redefined above; the other two are restated here. */
+body {
+  font-family: var(--sans);
+}
+.due .sub {
+  font-family: var(--sans);
+}
+
+/* ── The scale, applied. Grouped by step, in the order of the scale above. ── */
+
+.navlbl,
+.ava,
+.tabs .bdg {
+  font-size: var(--t-mini);
+}
+
+.tenant .av,
+.tenant .nm span,
+.tenant .cx,
+.side nav button .bdg,
+.me .av,
+.me span,
+h2.sec,
+.lb,
+.kpi .t,
+.trow.h span,
+.due .sub,
+.mat th,
+.stepn .sn,
+.eyebrow,
+.hbar-n,
+.hbar-l {
+  font-size: var(--t-eyebrow);
+}
+
+.top .clock,
+.kpi .d,
+.cell .s,
+.chip,
+.pill .n,
+.fld label,
+.fld .hint,
+.rw .sd,
+.step .sn,
+.eyebrow i,
+.tl-e > .tl-when,
+.legend {
+  font-size: var(--t-label);
+}
+
+.logo i,
+.tenant .nm b,
+.me,
+.me b,
+.btn.sm,
+.kpi .t .i,
+.pchip,
+.pchip .n,
+.cell .v.mono,
+.due,
+.pill,
+.cnt,
+.seg button,
+.bnr .bs,
+.asm,
+.asm b,
+.kv dt,
+.mat,
+.step .sd2,
+.stepn {
+  font-size: var(--t-small);
+}
+
+body,
+.side nav button,
+.side nav button i,
+.me .lo,
+p.sub,
+.btn,
+.cell .v,
+.empty p,
+.inp,
+.fld .ro,
+.tabs button,
+.bnr,
+.rw,
+.kv,
+.skip,
+#toast,
+.tl-who,
+.tl-what {
+  font-size: var(--t-body);
+}
+
+.logo,
+.top .ic,
+.card .ch h2,
+.asm .ai {
+  font-size: var(--t-lead);
+}
+
+#mdt,
+.bnr .bi,
+.modal .mh h3 {
+  font-size: var(--t-h3);
+}
+
+.modal .mh .x {
+  font-size: var(--t-h2);
+}
+
+h1.pg {
+  font-size: var(--t-h1);
+}
+
+.kpi .v,
+.empty .ei {
+  font-size: var(--t-display);
+}
+
+/*
+ * ── The structural greys, moved to `--gr2`. ──
+ *
+ * Everything here is a label for something else on the page: an eyebrow over a
+ * section, a column head, a field's name, a page's subtitle, the term half of a
+ * key/value pair, the count above a table. What stays on `--gr` is the text that
+ * genuinely recedes — `.empty`, `.fld .hint`, `.due .sub`, `.tl-when`, the
+ * `.gr` utility that 465 component call sites use for asides, and the neutral
+ * `.chip.n`, whose grey is a chip colour rather than a text tone.
+ */
+h2.sec,
+.lb,
+.kpi .t,
+.trow.h span,
+.mat th,
+.eyebrow,
+p.sub,
+.fld label,
+.kv dt,
+.cnt,
+.rw .sd,
+.cell .s,
+.bnr .bs,
+.hbar-n,
+.hbar-l,
+.seg button,
+.tabs button {
+  color: var(--gr2);
+}
+/* No companion rule for the selected tab or segment: design.css states both at
+   `.tabs button.on` / `.seg button.on`, which outrank the line above on
+   specificity rather than on order and so still win. */
+
+/*
  * Additions that are not in the design sheet, kept here so design.css stays a
  * faithful copy of it.
  *
@@ -275,8 +560,10 @@ body *::-webkit-scrollbar-thumb:hover {
   --color-flag: #fef9ee;
   --color-flagline: #f0d9ae;
 
-  --font-sans: Inter, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* Kept in step with `--sans` / `--mono` above, fallbacks included, so a
+     Tailwind `font-sans` utility and a design.css rule resolve to one stack. */
+  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', ui-monospace, monospace;
 
   --radius-card: 13px;
   --radius-ctl: 9px;

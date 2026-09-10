@@ -34,7 +34,7 @@ export function CountForm({
 
   return (
     <>
-      <p style={{ fontSize: '13.5px' }}>
+      <p style={{ fontSize: 'var(--t-body)' }}>
         Count the cash physically, then type what is actually there.{' '}
         <b>Do not look at the ledger figure first</b> — a count that starts from the expected number
         is not a count.

@@ -114,12 +114,12 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
             </Cell>
             <Cell>
               {over.length ? (
-                <div className="v" style={{ fontSize: '12.5px' }}>
+                <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                   <b>{over[0].st}</b> {hh(over[0].h)} against {hh(over[0].c)}
                   {over.length > 1 ? <span className="gr"> +{over.length - 1} more over</span> : null}
                 </div>
               ) : (
-                <div className="v gr" style={{ fontSize: '12.5px' }}>
+                <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                   every department inside its budget
                 </div>
               )}
@@ -209,14 +209,14 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
           {
             key: 'spread',
             title: 'Median turnaround',
-            value: <span className="mono" style={{ fontSize: '25px' }}>{hh(med)}</span>,
+            value: <span className="mono" style={{ fontSize: 'var(--t-h1)' }}>{hh(med)}</span>,
             detail: `mean ${hh(avg)}`,
             count: d.length,
           },
           {
             key: 'worst',
             title: 'Worst stage',
-            value: <span style={{ fontSize: '19px' }}>{worst.st}</span>,
+            value: <span style={{ fontSize: 'var(--t-h2)' }}>{worst.st}</span>,
             detail: <span className="warn">over budget on {worst.overPct}%</span>,
             count: worst.over,
           },
@@ -247,7 +247,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
               </FocusHead>
               <SectionHead>{focus === 'late' ? 'Late' : 'On time'}</SectionHead>
               {delRows(list)}
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 {focus === 'late'
                   ? 'Attribution is by budget, not by who was holding it at the deadline.'
                   : `${tight} of these cleared with less than 10% of the promise to spare. They are late deliveries that happened not to be.`}
@@ -297,7 +297,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                       right={c}
                     />
                   ))}
-                <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
                   Spread across the whole department, which is the signature of a budget that is too tight
                   rather than a person who is too slow.{' '}
                   <button type="button" className="br" style={{ fontWeight: 600 }} onClick={toBudgets}>
@@ -326,7 +326,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                   </FlexRow>
                 ))}
               </FlexTable>
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 {items.filter((i) => !i.x.late).length} of these were absorbed by the buffer and the other
                 departments. Overrunning is not the same as being late — but it spends the slack that covers
                 everything else.
@@ -380,14 +380,14 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                     />
                   )
                 })}
-                <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
                   Measured against each order's own promise, so a 48-hour full search and a 4-hour rush can
                   sit in the same bar.
                 </p>
               </Card>
               <SectionHead>Slowest first</SectionHead>
               {delRows(d.slice().sort((a, b) => b.hrs / b.slaH - a.hrs / a.slaH).slice(0, 40))}
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 Top 40 by share of the promise used.
               </p>
             </>
@@ -399,7 +399,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
         <>
           <Card padded style={{ marginTop: 18 }}>
             <Label>Where the time goes — median hours per department, against the budget it was given</Label>
-            <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 14px' }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '6px 0 14px' }}>
               The pale bar is the budget from{' '}
               <button type="button" className="br" style={{ fontWeight: 600 }} onClick={toBudgets}>
                 Company → Stage budgets
@@ -424,7 +424,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                 }
               />
             ))}
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               <b>{worst.st}</b> misses its checkpoint on {worst.overPct}% of orders —{' '}
               {worst.overPct > 25
                 ? 'either the budget is wrong or the department is under-resourced, and the two need telling apart before anything is fixed.'
@@ -448,7 +448,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                   }}
                   title={`${fmtDate(wk.from)} – ${fmtDate(wk.to)}: ${wk.pct === null ? 'nothing delivered' : `${wk.pct}% on time from ${wk.n} orders`}`}
                 >
-                  <span className="mono gr" style={{ fontSize: '10.5px', textAlign: 'center' }}>
+                  <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)', textAlign: 'center' }}>
                     {wk.pct === null ? '—' : `${wk.pct}%`}
                   </span>
                   <span
@@ -465,13 +465,13 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                       height: `${wk.pct === null ? 3 : Math.max(3, wk.pct)}%`,
                     }}
                   />
-                  <span className="mono gr" style={{ fontSize: '9.5px', textAlign: 'center' }}>
+                  <span className="mono gr" style={{ fontSize: 'var(--t-mini)', textAlign: 'center' }}>
                     {weekTick(wk.to)}
                   </span>
                 </div>
               ))}
             </div>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Green clears the {ONTIMETARGET}% target, amber is under 90%. A single late order in a thin week
               swings this a long way — read the bar heights with the order counts in the tooltip.
             </p>
@@ -506,7 +506,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                         <Cell v={hh(x.hrs)} mono tone="bad" />
                         <Cell v={`+${hh(x.hrs - x.slaH)}`} mono tone="warn" />
                         <Cell>
-                          <div className="v" style={{ fontSize: '12.5px' }}>
+                          <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                             {bad.length ? (
                               <>
                                 <b>{bad[0].st}</b> took {hh(bad[0].h)} against {hh(bad[0].c)}
@@ -523,14 +523,14 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                     )
                   })}
               </FlexTable>
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 Every late delivery is attributed to the stage that actually overran, not to whoever happened
                 to be holding it at the deadline.
               </p>
             </>
           ) : (
             <Card padded style={{ marginTop: 18 }}>
-              <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                 Nothing was late in this range.
               </p>
             </Card>

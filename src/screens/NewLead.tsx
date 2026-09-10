@@ -282,7 +282,7 @@ function NewLead() {
                 />
               </div>
             </Form>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               One is enough to start. You can add the rest — the orders desk, whoever signs — once you
               know who they are.
             </p>
@@ -310,7 +310,7 @@ function NewLead() {
                 </button>
               ))}
             </div>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               This becomes the first note. The follow-up clock runs from it, so a lead with nothing
               recorded is a lead nobody will chase.
             </p>
@@ -333,7 +333,7 @@ function NewLead() {
                 </option>
               ))}
             </select>
-            <p className="gr" style={{ fontSize: '11.5px', marginTop: 7 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 7 }}>
               Whoever will actually chase it.
             </p>
 
@@ -345,7 +345,7 @@ function NewLead() {
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 9,
-                fontSize: '12.5px',
+                fontSize: 'var(--t-small)',
                 padding: '10px 12px',
                 border: '1px solid var(--hair)',
                 borderRadius: 9,
@@ -360,12 +360,12 @@ function NewLead() {
               />
               <span>
                 <b>Flag it now</b>
-                <div className="sd gr" style={{ fontSize: '11.5px' }}>
+                <div className="sd gr" style={{ fontSize: 'var(--t-label)' }}>
                   Surfaces it immediately rather than waiting for it to go quiet.
                 </div>
               </span>
             </label>
-            <p className="gr" style={{ fontSize: '11.5px', marginTop: 9 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 9 }}>
               Otherwise it turns amber on its own after {STALE_WARN} days with no note, red after{' '}
               {STALE_BAD}. Nothing to schedule.
             </p>
@@ -373,7 +373,7 @@ function NewLead() {
             <div className="lb" style={{ marginTop: 20 }}>
               Check
             </div>
-            <div style={{ display: 'grid', gap: 6, fontSize: '12.5px' }}>
+            <div style={{ display: 'grid', gap: 6, fontSize: 'var(--t-small)' }}>
               <Check ok={!!f.co.trim()}>Company named</Check>
               <Check ok={!!(f.cn.trim() || f.ce.trim())}>Someone to reach</Check>
               <Check ok={!!f.note.trim()}>First note written</Check>

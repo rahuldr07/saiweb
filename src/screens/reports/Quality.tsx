@@ -213,7 +213,7 @@ function Scores({
                   }}
                   title={`${fmtDate(wk.from)} – ${fmtDate(wk.to)}: ${wk.pct}% rated, ${wk.n} checks`}
                 >
-                  <span className="mono gr" style={{ fontSize: '10.5px', textAlign: 'center' }}>
+                  <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)', textAlign: 'center' }}>
                     {wk.pct}%
                   </span>
                   <span
@@ -224,13 +224,13 @@ function Scores({
                       height: `${Math.max(3, wk.pct)}%`,
                     }}
                   />
-                  <span className="mono gr" style={{ fontSize: '9.5px', textAlign: 'center' }}>
+                  <span className="mono gr" style={{ fontSize: 'var(--t-mini)', textAlign: 'center' }}>
                     {weekTick(wk.to)}
                   </span>
                 </div>
               ))}
             </div>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Bars are the share of checks actually filled in, week ending. Amber is below 70%. The scores
               themselves barely move — coverage is the variable worth watching.
             </p>
@@ -239,7 +239,7 @@ function Scores({
           <Card style={{ marginTop: 18 }}>
             <div className="ch">
               <h2>By person</h2>
-              <div className="r gr" style={{ fontSize: '12.5px' }}>
+              <div className="r gr" style={{ fontSize: 'var(--t-small)' }}>
                 {people.length} rated in this range · click a row for the detail
               </div>
             </div>
@@ -366,7 +366,7 @@ function Scores({
             </Banner>
           ) : null}
 
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Every figure is computed from the {rows.length.toLocaleString()} ratings in range, so the table
             and the four cards above cannot disagree. Somebody who has left the company still appears against
             the work they did — the name is recorded on the rating, not looked up afterwards.
@@ -383,13 +383,13 @@ function ScoringConfig() {
 
   return (
     <>
-      <p className="gr" style={{ fontSize: '12.5px', margin: '0 0 16px' }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '0 0 16px' }}>
         How work is checked, and what a score is allowed to mean.
       </p>
 
       <Card padded>
         <Label>Rating scale</Label>
-        <p className="gr" style={{ fontSize: '12.5px', marginBottom: 13 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 13 }}>
           Note the direction: <b>1 is the worst outcome and 5 the best</b> — the opposite of what most people
           assume, so the word is shown next to the number everywhere it appears.
         </p>
@@ -410,7 +410,7 @@ function ScoringConfig() {
               <Chip kind={kind}>
                 {score} · {label}
               </Chip>
-              <span className="gr" style={{ fontSize: '12.5px', marginLeft: 'auto' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-small)', marginLeft: 'auto' }}>
                 {score === 1 ? 'blocks delivery until resolved' : score <= 3 ? 'logged as a defect' : 'passes'}
               </span>
             </div>
@@ -420,7 +420,7 @@ function ScoringConfig() {
 
       <Card padded style={{ marginTop: 18 }}>
         <Label>What gets scored</Label>
-        <p className="gr" style={{ fontSize: '12.5px', marginBottom: 13 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 13 }}>
           One number couldn't say <i>what</i> was wrong. Three can.
         </p>
         <div style={{ display: 'grid', gap: 9 }}>
@@ -439,7 +439,7 @@ function ScoringConfig() {
               <span className="ok">✓</span>
               <span>
                 <b>{name}</b>
-                <div className="sd gr" style={{ fontSize: '12.5px' }}>
+                <div className="sd gr" style={{ fontSize: 'var(--t-small)' }}>
                   {question}
                 </div>
               </span>
@@ -458,7 +458,7 @@ function ScoringConfig() {
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 11,
-                fontSize: '13.5px',
+                fontSize: 'var(--t-body)',
                 padding: '12px 14px',
                 border: '1px solid var(--hair)',
                 borderRadius: 9,
@@ -473,7 +473,7 @@ function ScoringConfig() {
               />
               <span>
                 <b>{r.n}</b>
-                <div className="sd gr" style={{ fontSize: '12.5px' }}>
+                <div className="sd gr" style={{ fontSize: 'var(--t-small)' }}>
                   {r.d}
                 </div>
               </span>

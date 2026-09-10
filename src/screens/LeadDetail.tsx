@@ -63,7 +63,7 @@ function ContactFields({
           </div>
         ))}
       </div>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: '13.5px', marginTop: 14 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 'var(--t-body)', marginTop: 14 }}>
         <input type="checkbox" checked={!!d.main} onChange={(e) => upd({ main: e.target.checked })} />{' '}
         Main contact for this company
       </label>
@@ -193,10 +193,10 @@ function LeadDetail() {
       title: 'Details to carry over',
       body: (
         <>
-          <p className="gr" style={{ fontSize: '12.5px', marginBottom: 14 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 14 }}>
             Create the client record under Clients, then paste these in.
           </p>
-          <Card padded style={{ fontFamily: 'var(--mono)', fontSize: '11.5px', lineHeight: 1.9 }}>
+          <Card padded style={{ fontFamily: 'var(--mono)', fontSize: 'var(--t-label)', lineHeight: 1.9 }}>
             <div>Company&nbsp;&nbsp; {lead.co}</div>
             <div>Location&nbsp; {lead.loc}</div>
             {lead.contacts.map((c) => (
@@ -373,7 +373,7 @@ function LeadDetail() {
           <Card>
             <div className="ch">
               <h2>Notes</h2>
-              <div className="r gr" style={{ fontSize: '12.5px' }}>
+              <div className="r gr" style={{ fontSize: 'var(--t-small)' }}>
                 {lead.notes.length} · last {age} day{age === 1 ? '' : 's'} ago
               </div>
             </div>
@@ -405,13 +405,13 @@ function LeadDetail() {
                   Add note
                 </Btn>
                 <label
-                  style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: '12.5px' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 'var(--t-small)' }}
                   className="gr"
                 >
                   <input type="checkbox" checked={!!lead.flag} onChange={toggleFlag} /> Keep flagged for
                   follow-up
                 </label>
-                <span className="gr" style={{ fontSize: '11.5px', marginLeft: 'auto' }}>
+                <span className="gr" style={{ fontSize: 'var(--t-label)', marginLeft: 'auto' }}>
                   Adding a note resets the quiet clock
                 </span>
               </div>
@@ -423,15 +423,15 @@ function LeadDetail() {
                   key={`${n.at.getTime()}-${i}`}
                   style={{ gridTemplateColumns: '32px 1fr auto', alignItems: 'flex-start' }}
                 >
-                  <span className="ava" style={{ width: 28, height: 28, fontSize: '9.5px' }}>
+                  <span className="ava" style={{ width: 28, height: 28, fontSize: 'var(--t-mini)' }}>
                     {initials(whoName(n.w ?? n.who ?? ''))}
                   </span>
                   <span>
-                    <div style={{ fontSize: '13.5px' }}>{n.t}</div>
+                    <div style={{ fontSize: 'var(--t-body)' }}>{n.t}</div>
                     <div className="sd">{whoName(n.w ?? n.who ?? '')}</div>
                   </span>
                   <span style={{ textAlign: 'right' }}>
-                    <div className="mono gr" style={{ fontSize: '11.5px' }}>
+                    <div className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
                       {fmtDate(n.at)}
                     </div>
                     <div className="sd">
@@ -453,7 +453,7 @@ function LeadDetail() {
                 style={{ padding: '11px 0', borderTop: i ? '1px solid var(--hair)' : undefined }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <b style={{ fontSize: '13.5px' }}>{c.n}</b>
+                  <b style={{ fontSize: 'var(--t-body)' }}>{c.n}</b>
                   {c.main ? <Chip kind="b">Main</Chip> : null}
                   <Btn
                     variant="ghost"
@@ -464,18 +464,18 @@ function LeadDetail() {
                     Edit
                   </Btn>
                 </div>
-                <div className="gr" style={{ fontSize: '12.5px', marginTop: 3 }}>
+                <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 3 }}>
                   {c.role}
                 </div>
                 {c.e ? (
-                  <div style={{ fontSize: '12.5px', marginTop: 4 }}>
+                  <div style={{ fontSize: 'var(--t-small)', marginTop: 4 }}>
                     <a href={`mailto:${c.e}`} className="br">
                       {c.e}
                     </a>
                   </div>
                 ) : null}
                 {c.p ? (
-                  <div className="gr mono" style={{ fontSize: '11.5px', marginTop: 2 }}>
+                  <div className="gr mono" style={{ fontSize: 'var(--t-label)', marginTop: 2 }}>
                     {c.p}
                   </div>
                 ) : null}
@@ -489,7 +489,7 @@ function LeadDetail() {
             >
               ＋ Add contact
             </Btn>
-            <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 10 }}>
               A firm usually has an orders desk, a manager and someone who signs. Keep them separate.
             </p>
           </Card>

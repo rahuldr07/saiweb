@@ -46,7 +46,7 @@ export function RangeBar({
           Custom
         </button>
         <div className="sp" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <label htmlFor={`${id}f`} className="gr" style={{ fontSize: '11.5px' }}>
+          <label htmlFor={`${id}f`} className="gr" style={{ fontSize: 'var(--t-label)' }}>
             From
           </label>
           <input
@@ -59,7 +59,7 @@ export function RangeBar({
             max={hi}
             onChange={(e) => onChange(setRangeEnd(value, 'from', e.target.value))}
           />
-          <label htmlFor={`${id}t`} className="gr" style={{ fontSize: '11.5px' }}>
+          <label htmlFor={`${id}t`} className="gr" style={{ fontSize: 'var(--t-label)' }}>
             to
           </label>
           <input

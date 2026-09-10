@@ -96,13 +96,13 @@ export function StatusDelete({
   if (used) {
     return (
       <>
-        <p style={{ fontSize: '13.5px' }}>
+        <p style={{ fontSize: 'var(--t-body)' }}>
           <b>
             {used} order{used === 1 ? ' is' : 's are'}
           </b>{' '}
           sitting in {name} right now.
         </p>
-        <p className="gr" style={{ fontSize: '12.5px' }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
           Deleting it would leave {used === 1 ? 'that order' : 'those orders'} pointing at nothing.
           Move {used === 1 ? 'it' : 'them'} first, then delete the status.
         </p>
@@ -118,7 +118,7 @@ export function StatusDelete({
 
   return (
     <>
-      <p style={{ fontSize: '13.5px' }}>Nothing is using it, so nothing breaks.</p>
+      <p style={{ fontSize: 'var(--t-body)' }}>Nothing is using it, so nothing breaks.</p>
       <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Keep it

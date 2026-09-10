@@ -73,10 +73,10 @@ export function TodayTab({
                     marginBottom: 9,
                   }}
                 >
-                  <b style={{ fontSize: '13.5px' }}>{dept}</b>
+                  <b style={{ fontSize: 'var(--t-body)' }}>{dept}</b>
                   <span
                     className={`mono ${din === 0 ? 'bad' : off ? 'warn' : 'gr'}`}
-                    style={{ fontSize: '11.5px' }}
+                    style={{ fontSize: 'var(--t-label)' }}
                   >
                     {din}/{people.length} in
                   </span>
@@ -103,13 +103,13 @@ export function TodayTab({
                           width: '100%',
                         }}
                       >
-                        <span className="ava" style={{ width: 22, height: 22, fontSize: '9.5px' }}>
+                        <span className="ava" style={{ width: 22, height: 22, fontSize: 'var(--t-mini)' }}>
                           {initials(p.n)}
                         </span>
                         <span style={{ flex: 1, minWidth: 0 }}>
                           <span
                             style={{
-                              fontSize: '12.5px',
+                              fontSize: 'var(--t-small)',
                               fontWeight: 600,
                               display: 'block',
                               whiteSpace: 'nowrap',
@@ -119,7 +119,7 @@ export function TodayTab({
                           >
                             {p.n}
                           </span>
-                          <span className="gr" style={{ fontSize: '11.5px' }}>
+                          <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                             {label}
                           </span>
                         </span>
@@ -128,7 +128,7 @@ export function TodayTab({
                   })}
                 </div>
                 {din === 0 ? (
-                  <div className="bad" style={{ fontSize: '11.5px', marginTop: 7 }}>
+                  <div className="bad" style={{ fontSize: 'var(--t-label)', marginTop: 7 }}>
                     Nobody in yet
                   </div>
                 ) : null}
@@ -136,7 +136,7 @@ export function TodayTab({
             )
           })}
         </div>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Live, and grouped by department because that is the unit that has to be covered. A
           department showing 0 in is the one worth acting on before the queue backs up.
         </p>
@@ -149,7 +149,7 @@ export function TodayTab({
             <Rows bare>
               {pendingCorrections.map((r) => (
                 <div className="rw" key={r.id}>
-                  <span className="warn" style={{ fontSize: '14.5px' }}>
+                  <span className="warn" style={{ fontSize: 'var(--t-lead)' }}>
                     ◷
                   </span>
                   <span>
@@ -186,7 +186,7 @@ export function TodayTab({
             <Rows bare>
               {pendingOt.map((o) => (
                 <div className="rw" key={o.id}>
-                  <span className="warn" style={{ fontSize: '14.5px' }}>
+                  <span className="warn" style={{ fontSize: 'var(--t-lead)' }}>
                     ◷
                   </span>
                   <span>
@@ -220,7 +220,7 @@ export function TodayTab({
             <Rows bare>
               {pendingSwaps.map((x) => (
                 <div className="rw" key={x.id}>
-                  <span className="warn" style={{ fontSize: '14.5px' }}>
+                  <span className="warn" style={{ fontSize: 'var(--t-lead)' }}>
                     ⇄
                   </span>
                   <span>
@@ -249,7 +249,7 @@ export function TodayTab({
       ) : null}
 
       {clock.waiting ? null : (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14 }}>
           Nothing is waiting on you. Corrections, overtime claims and shift swaps all arrive here when
           they are raised.
         </p>

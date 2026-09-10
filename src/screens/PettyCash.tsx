@@ -101,7 +101,7 @@ function PettyCash() {
         <>
           <Rows>
             <Row
-              icon={<span className="ok" style={{ fontSize: '14.5px' }}>✓</span>}
+              icon={<span className="ok" style={{ fontSize: 'var(--t-lead)' }}>✓</span>}
               title="Put in"
               detail={`${entries.filter((e) => e.kind === 'credit').length} top-ups including the opening float`}
               right={
@@ -111,7 +111,7 @@ function PettyCash() {
               }
             />
             <Row
-              icon={<span className="bad" style={{ fontSize: '14.5px' }}>⚑</span>}
+              icon={<span className="bad" style={{ fontSize: 'var(--t-lead)' }}>⚑</span>}
               title="Paid out"
               detail={`${entries.filter((e) => e.kind === 'debit').length} payments`}
               right={
@@ -126,7 +126,7 @@ function PettyCash() {
               display: 'flex',
               justifyContent: 'space-between',
               padding: '13px 2px 0',
-              fontSize: '14.5px',
+              fontSize: 'var(--t-lead)',
               borderTop: '1px solid var(--hair)',
               marginTop: 10,
             }}
@@ -134,7 +134,7 @@ function PettyCash() {
             <b>Should be in the box</b>
             <b className="mono">{inr(balance)}</b>
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', margin: '14px 0 0' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '14px 0 0' }}>
             <b>Previous + credit − debit = new balance</b>, checked on every single row.{' '}
             {last
               ? `Last actually counted on ${fmtDate(last.d)} by ${last.by}.`
@@ -174,7 +174,7 @@ function PettyCash() {
                     <Row
                       key={e.id}
                       icon={
-                        <span className={bad ? 'bad' : 'ok'} style={{ fontSize: '14.5px' }}>
+                        <span className={bad ? 'bad' : 'ok'} style={{ fontSize: 'var(--t-lead)' }}>
                           {bad ? '⚑' : '✓'}
                         </span>
                       }
@@ -188,11 +188,11 @@ function PettyCash() {
                 })}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing has been paid out of the box in the last 30 days.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', margin: '14px 0 0' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '14px 0 0' }}>
             Anything above the {inr(cfg.limit)} ceiling should have gone by bank transfer against an
             invoice, so there is a second record of it.
           </p>
@@ -210,7 +210,7 @@ function PettyCash() {
               {noReceipt.map((e) => (
                 <Row
                   key={e.id}
-                  icon={<span className="bad" style={{ fontSize: '14.5px' }}>⚑</span>}
+                  icon={<span className="bad" style={{ fontSize: 'var(--t-lead)' }}>⚑</span>}
                   title={e.what}
                   detail={`${fmtDate(e.d)} · ${e.by}`}
                   right={<span className="mono bad">{inr(e.amt)}</span>}
@@ -218,11 +218,11 @@ function PettyCash() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Every payment has a voucher against it.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', margin: '14px 0 0' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '14px 0 0' }}>
             Cash paid out without a voucher is the entry an auditor asks about first, and the one
             nobody remembers.
           </p>
@@ -287,7 +287,7 @@ function PettyCash() {
         <Kpi
           title="In the box, on paper"
           value={
-            <span className={balance < cfg.float * LOW ? 'warn' : ''} style={{ fontSize: '23px' }}>
+            <span className={balance < cfg.float * LOW ? 'warn' : ''} style={{ fontSize: 'var(--t-h1)' }}>
               {inr(balance)}
             </span>
           }
@@ -299,7 +299,7 @@ function PettyCash() {
         />
         <Kpi
           title="Spent in 30 days"
-          value={<span style={{ fontSize: '23px' }}>{inr(total(recent))}</span>}
+          value={<span style={{ fontSize: 'var(--t-h1)' }}>{inr(total(recent))}</span>}
           detail={`${recent.length} payment${recent.length === 1 ? '' : 's'}`}
           icon="›"
           hint="Every payment in the window"
@@ -316,7 +316,7 @@ function PettyCash() {
         />
         <Kpi
           title="Last counted"
-          value={<span style={{ fontSize: '17px' }}>{last ? fmtDate(last.d) : 'never'}</span>}
+          value={<span style={{ fontSize: 'var(--t-h3)' }}>{last ? fmtDate(last.d) : 'never'}</span>}
           tone={due ? 'warn' : undefined}
           detail={
             due ? <span className="warn">a count is due</span> : last ? `by ${last.by}` : undefined
@@ -393,12 +393,12 @@ function PettyCash() {
                 rows.map((e) => (
                   <div key={e.id} className="trow" style={{ gridTemplateColumns: LEDGER_COLS }}>
                     <div className="cell">
-                      <div className="v mono" style={{ fontSize: '12.5px' }}>
+                      <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
                         {fmtDate(e.d)}
                       </div>
                     </div>
                     <div className="cell">
-                      <div className="v" style={{ fontSize: '12.5px' }}>
+                      <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                         {e.what}
                       </div>
                       {e.kind === 'debit' && e.amt > cfg.limit ? (
@@ -406,7 +406,7 @@ function PettyCash() {
                       ) : null}
                     </div>
                     <div className="cell">
-                      <div className="v" style={{ fontSize: '12.5px' }}>
+                      <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                         {e.by}
                       </div>
                     </div>
@@ -428,11 +428,11 @@ function PettyCash() {
                     </div>
                     <div className="cell">
                       {e.receipt ? (
-                        <span className="ok" style={{ fontSize: '12.5px' }}>
+                        <span className="ok" style={{ fontSize: 'var(--t-small)' }}>
                           ✓ {e.ref}
                         </span>
                       ) : (
-                        <span className="bad" style={{ fontSize: '12.5px' }}>
+                        <span className="bad" style={{ fontSize: 'var(--t-small)' }}>
                           none
                         </span>
                       )}
@@ -444,7 +444,7 @@ function PettyCash() {
           </div>
         </div>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Every row shows the balance before and after, because{' '}
         <b>previous + credit − debit = new balance</b> is the only check that catches a mistake at
         the moment it is made rather than at the month end. The running figure is computed from the
@@ -463,7 +463,7 @@ function PettyCash() {
                   const drift = countDrift(x, entries)
                   return (
                     <div className="rw" key={x.id} style={{ padding: '9px 0' }}>
-                      <span className={drift === 0 ? 'ok' : 'bad'} style={{ fontSize: '14.5px' }}>
+                      <span className={drift === 0 ? 'ok' : 'bad'} style={{ fontSize: 'var(--t-lead)' }}>
                         {drift === 0 ? '✓' : '⚑'}
                       </span>
                       <span>
@@ -486,12 +486,12 @@ function PettyCash() {
                   )
                 })
             ) : (
-              <p className="gr" style={{ fontSize: '13.5px', margin: '10px 0 0' }}>
+              <p className="gr" style={{ fontSize: 'var(--t-body)', margin: '10px 0 0' }}>
                 Nobody has counted the box yet, so the ledger figure has never been checked against
                 what is actually in it.
               </p>
             )}
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               Counted by somebody other than the person holding the box. A custodian who checks
               their own float is not a control.
             </p>

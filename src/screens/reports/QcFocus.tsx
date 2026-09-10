@@ -49,14 +49,14 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
               >
                 <div className="cell" style={{ display: 'block' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
-                    <span className={severe ? 'bad' : 'warn'} style={{ fontSize: '17px', lineHeight: 1.2 }}>
+                    <span className={severe ? 'bad' : 'warn'} style={{ fontSize: 'var(--t-h3)', lineHeight: 1.2 }}>
                       ⚑
                     </span>
                     <div style={{ flex: 1, minWidth: 260 }}>
-                      <div style={{ fontSize: '13.5px', fontWeight: 650, marginBottom: 3 }}>
+                      <div style={{ fontSize: 'var(--t-body)', fontWeight: 650, marginBottom: 3 }}>
                         {x.note || 'No reason was recorded'}
                       </div>
-                      <div className="gr" style={{ fontSize: '12.5px' }}>
+                      <div className="gr" style={{ fontSize: 'var(--t-small)' }}>
                         {failed.map(([name, field], j) => (
                           <span key={name}>
                             {j ? ' · ' : ''}
@@ -68,13 +68,13 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', minWidth: 210 }}>
-                      <div className="mono" style={{ fontSize: '12.5px' }}>
+                      <div className="mono" style={{ fontSize: 'var(--t-small)' }}>
                         {x.order}
                       </div>
-                      <div className="gr" style={{ fontSize: '11.5px' }}>
+                      <div className="gr" style={{ fontSize: 'var(--t-label)' }}>
                         {x.cl} · {x.pr} · {x.stage}
                       </div>
-                      <div className="gr" style={{ fontSize: '11.5px' }}>
+                      <div className="gr" style={{ fontSize: 'var(--t-label)' }}>
                         {x.dk} · rated by {x.byName}
                       </div>
                     </div>
@@ -86,7 +86,7 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
                       marginTop: 11,
                       paddingTop: 11,
                       borderTop: '1px solid var(--hair)',
-                      fontSize: '12.5px',
+                      fontSize: 'var(--t-small)',
                     }}
                   >
                     {QC_CRITERIA.map(([name, field]) => (
@@ -108,7 +108,7 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
         </div>
       </Card>
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         A defect is any criterion scored 3 or below. The bold line is what the rater wrote — that,
         not the number, is the thing worth acting on.
       </p>
@@ -152,17 +152,17 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
                   style={{ gridTemplateColumns: OVER_COLS }}
                 >
                   <div className="cell">
-                    <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                    <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                       {i + 1}
                     </div>
                   </div>
                   <div className="cell">
-                    <div className="v mono" style={{ fontSize: '12.5px' }}>
+                    <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
                       {x.d.dk}
                     </div>
                   </div>
                   <div className="cell">
-                    <div className="v mono" style={{ fontSize: '12.5px' }}>
+                    <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
                       {x.d.id}
                     </div>
                     <div className="s">
@@ -175,7 +175,7 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
                     )}
                   </div>
                   <div className="cell">
-                    <div className="v" style={{ fontSize: '12.5px' }}>
+                    <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                       {x.st}
                     </div>
                   </div>
@@ -197,7 +197,7 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
         </div>
       </Card>
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Worst first.{' '}
         {lateOnly
           ? 'These are the ones nothing absorbed.'
@@ -254,11 +254,11 @@ export function QcMarks({ ratings }: { ratings: QcEntry[] }) {
   return (
     <Card padded>
       <Label>Spread of individual marks</Label>
-      <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 12px' }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '6px 0 12px' }}>
         {all.length} criterion marks across {ratings.length} ratings.
       </p>
       <MarkSpread marks={all} mode="person" />
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         Counted per criterion rather than per rating, so a single order can contribute a 5 and a 3.
       </p>
     </Card>

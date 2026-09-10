@@ -10,10 +10,10 @@ export function useNotBuilt() {
       title: `${what} is not built here`,
       body: (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             It needs <b>{needs}</b>, which this build does not have.
           </p>
-          <p className="gr" style={{ fontSize: '12.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
             {csv
               ? 'CSV carries the same fields and is working now — every value on this screen. Everything around this action is real; what is missing is the part that has to reach outside the workspace.'
               : 'Everything around it is real — the screen knows what the action means and where its result would go. What is missing is the part that has to reach outside this workspace.'}

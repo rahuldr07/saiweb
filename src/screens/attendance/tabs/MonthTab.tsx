@@ -94,7 +94,7 @@ export function MonthTab({
                       </div>
                     </div>
                     <div className="cell">
-                      <div className="v gr" style={{ fontSize: '12.5px' }}>
+                      <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                         {p.dep[0] ?? '—'}
                       </div>
                     </div>
@@ -123,7 +123,7 @@ export function MonthTab({
           </div>
         </div>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         This is the same attendance the payroll run reads. Approve a correction here and the payslip
         for that month moves with it — there is no second set of numbers.
       </p>
@@ -149,12 +149,12 @@ export function MonthTab({
                       style={{ gridTemplateColumns: '110px 180px 90px 100px 1fr' }}
                     >
                       <div className="cell">
-                        <div className="v mono" style={{ fontSize: '12.5px' }}>
+                        <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
                           {l.d}
                         </div>
                       </div>
                       <div className="cell">
-                        <div className="v" style={{ fontSize: '12.5px' }}>
+                        <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                           {whoName(l.who)}
                         </div>
                       </div>
@@ -165,7 +165,7 @@ export function MonthTab({
                         <Chip kind={l.kind === 'in' ? 'v' : 'n'}>{l.kind === 'in' ? 'In' : 'Out'}</Chip>
                       </div>
                       <div className="cell">
-                        <div className={`v ${l.inside ? '' : 'warn'}`} style={{ fontSize: '12.5px' }}>
+                        <div className={`v ${l.inside ? '' : 'warn'}`} style={{ fontSize: 'var(--t-small)' }}>
                           {l.inside ? '✓ ' : '◷ '}
                           {l.where}
                           {l.acc ? ` · ±${l.acc} m` : ''}
@@ -177,7 +177,7 @@ export function MonthTab({
               </div>
             </div>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Every punch is kept with where it was made. A correction cannot delete one — it adds an
             approved change on top, so the original is still there.
           </p>

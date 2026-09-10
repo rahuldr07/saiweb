@@ -106,7 +106,7 @@ export default function CommitmentReport() {
           <Rows>
             {docs.map(([name, ready]) => (
               <div className="rw" key={name}>
-                <span className={ready ? 'ok' : 'gr'} style={{ fontSize: '14.5px' }}>
+                <span className={ready ? 'ok' : 'gr'} style={{ fontSize: 'var(--t-lead)' }}>
                   {ready ? '✓' : '·'}
                 </span>
                 <span>

@@ -36,7 +36,7 @@ export function FocusKpis({
               <>
                 {c.detail}
                 {live ? (
-                  <span className={on ? 'brand' : 'gr'} style={{ fontSize: '10.5px' }}>
+                  <span className={on ? 'brand' : 'gr'} style={{ fontSize: 'var(--t-eyebrow)' }}>
                     {' '}
                     · {on ? 'showing these' : 'click to see'}
                   </span>

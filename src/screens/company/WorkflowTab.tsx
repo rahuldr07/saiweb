@@ -150,7 +150,7 @@ export function WorkflowTab() {
       ) : (
         <Card padded>
           <Label>Names used across the product</Label>
-          <p className="gr" style={{ fontSize: '12.5px', marginBottom: 14 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 14 }}>
             One name per concept, used on every screen and every export. Renaming here renames it
             everywhere.
           </p>

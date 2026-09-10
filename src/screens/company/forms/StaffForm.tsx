@@ -218,7 +218,7 @@ export function StaffForm({
               display: 'flex',
               alignItems: 'center',
               gap: 9,
-              fontSize: '13.5px',
+              fontSize: 'var(--t-body)',
               padding: '8px 11px',
               border: '1px solid var(--hair)',
               borderRadius: 9,
@@ -240,10 +240,10 @@ export function StaffForm({
       <Banner
         kind="b"
         icon="⚖"
-        title={<span style={{ fontSize: '12.5px' }}>Pairing a stage with its own QC is allowed</span>}
+        title={<span style={{ fontSize: 'var(--t-small)' }}>Pairing a stage with its own QC is allowed</span>}
         style={{ margin: '16px 0 0' }}
       >
-        <span style={{ fontSize: '12.5px' }}>
+        <span style={{ fontSize: 'var(--t-small)' }}>
           Someone in both Typing and Typing QC will simply be filtered out of QC on any order they
           typed.
         </span>
@@ -266,7 +266,7 @@ export function StaffForm({
       <div style={{ marginTop: 18 }}>
         <Label>In an emergency</Label>
       </div>
-      <p className="gr" style={{ fontSize: '12.5px', margin: '-4px 0 10px' }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '-4px 0 10px' }}>
         The one part of a personnel record read in a hurry, by someone who has never opened it
         before.
       </p>
@@ -288,7 +288,7 @@ export function StaffForm({
       <div style={{ marginTop: 18 }}>
         <Label>Pay and statutory</Label>
       </div>
-      <p className="gr" style={{ fontSize: '12.5px', margin: '-4px 0 10px' }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '-4px 0 10px' }}>
         Payroll cannot run without these. No joining date makes the first month and gratuity wrong;
         no account number means the bank file has nowhere to send the money.
       </p>
@@ -375,12 +375,12 @@ export function StaffDelete({
 
   return (
     <>
-      <p style={{ fontSize: '13.5px' }}>
+      <p style={{ fontSize: 'var(--t-body)' }}>
         <b>{s.n}</b> works {s.dep.join(', ') || 'no department'}
         {s.cap ? ` with a target of ${s.cap} a day` : ''}.
       </p>
       <Banner kind="r" icon="⚑" style={{ marginTop: 14 }}>
-        <span style={{ fontSize: '12.5px' }}>
+        <span style={{ fontSize: 'var(--t-small)' }}>
           Disabling them keeps their payslips, attendance and the work they did. Removing takes the
           record away, and the day re-runs without them.
         </span>

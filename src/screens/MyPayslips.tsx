@@ -25,7 +25,7 @@ export default function MyPayslips() {
       <>
         <PageHead title="My payslips" />
         <Card padded style={{ maxWidth: 560 }}>
-          <p style={{ fontSize: '13.5px', margin: 0 }}>
+          <p style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             There is no salary on your record yet, so no payslip has been produced. Whoever runs
             payroll can set it.
           </p>
@@ -157,14 +157,14 @@ export default function MyPayslips() {
         </Card>
       ) : (
         <Card padded>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             Nothing published yet.
           </p>
         </Card>
       )}
 
       {pending.length ? (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           {pending.join(', ')} {pending.length === 1 ? 'is' : 'are'} not published yet.{' '}
           {pending.length === 1 ? 'It' : 'They'} will appear here once payroll is approved and
           released — you are not missing anything.

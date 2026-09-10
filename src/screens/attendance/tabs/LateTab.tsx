@@ -145,9 +145,9 @@ export function LateTab({
                         </div>
                       </div>
                       <div className="cell">
-                        <div className="v gr" style={{ fontSize: '12.5px' }}>
+                        <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                           {sh.n}
-                          <div className="mono" style={{ fontSize: '11.5px' }}>
+                          <div className="mono" style={{ fontSize: 'var(--t-label)' }}>
                             from {sh.from}
                           </div>
                         </div>
@@ -162,7 +162,7 @@ export function LateTab({
                         <div className={`v mono ${x.worst >= 45 ? 'warn' : 'gr'}`}>{x.worst}m</div>
                       </div>
                       <div className="cell">
-                        <div className="v" style={{ fontSize: '12.5px' }}>
+                        <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                           {x.last ? `${x.last.dk} · in at ${x.last.at}` : '—'}
                           <div className="s">
                             {x.last?.why ?? <span className="gr">no reason given</span>}
@@ -232,7 +232,7 @@ export function LateTab({
                     <div className="cell">
                       <div className="v mono gr">
                         {x.due}
-                        <span style={{ fontSize: '11.5px' }}> · {x.shift}</span>
+                        <span style={{ fontSize: 'var(--t-label)' }}> · {x.shift}</span>
                       </div>
                     </div>
                     <div className="cell">
@@ -242,7 +242,7 @@ export function LateTab({
                       <div className={`v mono ${x.mins >= 45 ? 'bad' : 'warn'}`}>{x.mins}m</div>
                     </div>
                     <div className="cell">
-                      <div className="v" style={{ fontSize: '12.5px' }}>
+                      <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                         {x.why ?? <span className="gr">none</span>}
                       </div>
                     </div>
@@ -273,7 +273,7 @@ export function LateTab({
         pattern. <b>Attendance figures people cannot see the workings of are the ones they stop
         trusting</b>, so nothing here is deleted, only annotated.
       </Assumption>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         The grace period is {TIMECFG.lateGraceMins} minutes, set under <b>How it works</b>. A punch
         inside it is not recorded as late at all.
       </p>

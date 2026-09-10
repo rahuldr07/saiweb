@@ -35,7 +35,7 @@ export function TopBar({ current }: { current: string }) {
               <Row
                 key={i}
                 icon={
-                  <span className={a.sev === 'bad' ? 'bad' : 'warn'} style={{ fontSize: '14.5px' }}>
+                  <span className={a.sev === 'bad' ? 'bad' : 'warn'} style={{ fontSize: 'var(--t-lead)' }}>
                     {a.sev === 'bad' ? '⚑' : '◷'}
                   </span>
                 }
@@ -49,7 +49,7 @@ export function TopBar({ current }: { current: string }) {
               />
             ))}
           </Rows>
-          <p className="gr" style={{ fontSize: '11.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 12 }}>
             Going to {check.notify === 'admins' ? 'company admins' : check.notify}. Change who under
             Link monitor.
           </p>
@@ -85,7 +85,7 @@ export function TopBar({ current }: { current: string }) {
         </button>
       )}
 
-      <span className="gr crumb" style={{ fontSize: '12.5px' }}>
+      <span className="gr crumb" style={{ fontSize: 'var(--t-small)' }}>
         {crumb}
       </span>
 
@@ -126,7 +126,7 @@ export function TopBar({ current }: { current: string }) {
         aria-label={DEMO_IDENTITY ? 'Account — switch who you are signed in as' : 'Account'}
         onClick={() => navigate({ to: '/signin' })}
       >
-        <span className="ava" style={{ width: 26, height: 26, fontSize: '9.5px' }}>
+        <span className="ava" style={{ width: 26, height: 26, fontSize: 'var(--t-mini)' }}>
           {initials(me.n)}
         </span>
         <span
@@ -138,8 +138,8 @@ export function TopBar({ current }: { current: string }) {
             minWidth: 0,
           }}
         >
-          <b style={{ fontSize: '12.5px', whiteSpace: 'nowrap' }}>{me.n}</b>
-          <span className="gr" style={{ fontSize: '10.5px', whiteSpace: 'nowrap' }}>
+          <b style={{ fontSize: 'var(--t-small)', whiteSpace: 'nowrap' }}>{me.n}</b>
+          <span className="gr" style={{ fontSize: 'var(--t-eyebrow)', whiteSpace: 'nowrap' }}>
             {roleLabel}
           </span>
         </span>

@@ -34,7 +34,7 @@ export function LinkTypes({
     const last = linkTypes.length <= 1
     return (
       <>
-        <p style={{ fontSize: '13.5px' }}>
+        <p style={{ fontSize: 'var(--t-body)' }}>
           {usage.held ? (
             <>
               <b>
@@ -73,7 +73,7 @@ export function LinkTypes({
 
   return (
     <>
-      <p className="gr" style={{ fontSize: '12.5px', marginBottom: 14 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 14 }}>
         Every county holds one link of each type. Adding a type gives all {counties.length} counties
         a new empty slot, and the checker picks it up on its next run.
       </p>

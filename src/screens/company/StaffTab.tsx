@@ -85,7 +85,7 @@ export function StaffTab({ tenantName, onOpenRoles }: { tenantName: string; onOp
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8,
-                fontSize: '12.5px',
+                fontSize: 'var(--t-small)',
                 color: 'var(--gr)',
               }}
             >
@@ -146,7 +146,7 @@ export function StaffTab({ tenantName, onOpenRoles }: { tenantName: string; onOp
         emptyText="Nobody matches that."
       />
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         Target is today’s load against the daily maximum. Adding or disabling someone re-runs the
         day, so capacity and assignment follow immediately.
       </p>

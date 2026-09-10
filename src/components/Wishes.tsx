@@ -68,13 +68,13 @@ export function TeamWishes({
                 <Avatar name={c.person.n} />
               </span>
               <span>
-                <b style={{ fontSize: '13.5px' }}>{aboutOther(c)}</b>
+                <b style={{ fontSize: 'var(--t-body)' }}>{aboutOther(c)}</b>
                 <div className="sd gr">
                   {c.person.dep.join(', ') || 'No department'} · {fmtDate(c.at)}
                 </div>
               </span>
               <span>
-                <span className={c.inDays === 0 ? 'ok' : 'gr'} style={{ fontSize: '12.5px' }}>
+                <span className={c.inDays === 0 ? 'ok' : 'gr'} style={{ fontSize: 'var(--t-small)' }}>
                   {whenWord(c.inDays)}
                 </span>
               </span>
@@ -82,13 +82,13 @@ export function TeamWishes({
           ))}
         </Rows>
       ) : (
-        <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
           {empty}
         </p>
       )}
 
       {today.length ? (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           {today.length === 1 ? 'This one is today' : `${today.length} of these are today`} — worth a
           word before the day goes.
         </p>

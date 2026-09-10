@@ -75,7 +75,7 @@ function Leads() {
           s: `${l.contacts.length} contact${l.contacts.length === 1 ? '' : 's'} · ${l.notes.length} note${l.notes.length === 1 ? '' : 's'}`,
         },
         { v: main?.n ?? '—', s: main?.e },
-        { raw: <span className="gr" style={{ fontSize: '12.5px' }}>{l.loc}</span> },
+        { raw: <span className="gr" style={{ fontSize: 'var(--t-small)' }}>{l.loc}</span> },
         { v: LSTATUS[l.st][0], chip: LSTATUS[l.st][1] },
         {
           v: fmtDate(lastTouch(l)),
@@ -166,7 +166,7 @@ function Leads() {
         emptyText="No leads match this filter."
       />
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         Amber after {STALE_WARN} days without contact, red after {STALE_BAD}. Won, lost and “not now”
         leads are left alone.
       </p>

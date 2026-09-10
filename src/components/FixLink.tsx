@@ -33,7 +33,7 @@ export function FixLink({
             id="lk-u"
             placeholder="no link on file"
             autoComplete="off"
-            style={{ fontSize: '12.5px' }}
+            style={{ fontSize: 'var(--t-small)' }}
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
@@ -44,10 +44,10 @@ export function FixLink({
         <Banner
           kind="d"
           icon="⚑"
-          title={<span style={{ fontSize: '12.5px' }}>{LSTATE[l.s][0]}{l.err ? ` — ${l.err}` : ''}</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>{LSTATE[l.s][0]}{l.err ? ` — ${l.err}` : ''}</span>}
           style={{ marginTop: 14 }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             First seen {l.since ? days(l.since) : '—'} days ago. Searchers working {county.n} have
             been without it since.
           </span>
@@ -55,7 +55,7 @@ export function FixLink({
       ) : null}
 
       <Banner kind="b" icon="◷" style={{ marginTop: 14 }}>
-        <span style={{ fontSize: '12.5px' }}>
+        <span style={{ fontSize: 'var(--t-small)' }}>
           Checked every {check.every} days. Last run {since === 0 ? 'today' : `${since} days ago`},
           next {fmtDate(nextLinkCheck())}.
         </span>

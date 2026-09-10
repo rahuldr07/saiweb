@@ -14,7 +14,7 @@ function Row({ label, value, tone }: { label: string; value: number; tone?: 'war
 
 function Total({ label, value, tone }: { label: string; value: number; tone?: 'warn' | 'ok' }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: '14.5px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: 'var(--t-lead)' }}>
       <b>{label}</b>
       <b className={`mono ${tone ?? ''}`}>{inr2(value)}</b>
     </div>
@@ -50,7 +50,7 @@ export default function PayslipDetail() {
       <>
         <PageHead parent={{ to: '/payslips', label: 'Payslips' }} title="No such person" />
         <Card padded style={{ maxWidth: 560 }}>
-          <p style={{ fontSize: '13.5px', margin: 0 }}>
+          <p style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             Nobody on the roster has that reference.
           </p>
         </Card>
@@ -67,7 +67,7 @@ export default function PayslipDetail() {
           sub={`${me.n} can only see their own payslips.`}
         />
         <Card padded style={{ maxWidth: 560 }}>
-          <p style={{ fontSize: '13.5px', margin: 0 }}>
+          <p style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             Seeing another person’s pay needs the “See pricing and invoices” permission, which your role
             does not have.
           </p>
@@ -92,7 +92,7 @@ export default function PayslipDetail() {
       <>
         <PageHead parent={{ to: '/mypay', label: 'My payslips' }} title={`${month} is not out yet`} />
         <Card padded style={{ maxWidth: 560 }}>
-          <p style={{ fontSize: '13.5px', margin: 0 }}>
+          <p style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             {month} payroll is <b>{RUNSTATE[run.state][0].toLowerCase()}</b>. Payslips appear here the
             moment it is published — nothing is hidden from you, it simply is not final.
           </p>
@@ -146,17 +146,17 @@ export default function PayslipDetail() {
           }}
         >
           <div>
-            <div style={{ fontSize: '17px', fontWeight: 700 }}>{tenant.name}</div>
-            <div className="gr" style={{ fontSize: '12.5px' }}>
+            <div style={{ fontSize: 'var(--t-h3)', fontWeight: 700 }}>{tenant.name}</div>
+            <div className="gr" style={{ fontSize: 'var(--t-small)' }}>
               Payslip for {month}
               {run.at ? ` · approved ${run.at}` : ''}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div className="gr" style={{ fontSize: '12.5px' }}>
+            <div className="gr" style={{ fontSize: 'var(--t-small)' }}>
               Net pay
             </div>
-            <div className="mono" style={{ fontSize: '26px', fontWeight: 700 }}>
+            <div className="mono" style={{ fontSize: 'var(--t-display)', fontWeight: 700 }}>
               {inr(s.net)}
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function PayslipDetail() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   padding: '7px 0',
-                  fontSize: '12.5px',
+                  fontSize: 'var(--t-small)',
                   color: 'var(--warn)',
                 }}
               >
@@ -210,7 +210,7 @@ export default function PayslipDetail() {
             {s.reimb.map(([label, v]) => (
               <Row key={label} label={label} value={v} tone="ok" />
             ))}
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Paid back at cost and not taxed, which is why it sits outside earnings rather than inside
               them.
             </p>
@@ -221,11 +221,11 @@ export default function PayslipDetail() {
           className="rw"
           style={{ background: 'var(--oktint)', borderRadius: 9, padding: '14px 16px', marginTop: 18 }}
         >
-          <span className="ok" style={{ fontSize: '14.5px' }}>
+          <span className="ok" style={{ fontSize: 'var(--t-lead)' }}>
             ✓
           </span>
           <span>
-            <b style={{ fontSize: '14.5px' }}>Net pay {inr2(s.net)}</b>
+            <b style={{ fontSize: 'var(--t-lead)' }}>Net pay {inr2(s.net)}</b>
             <div className="sd">
               Rupees {words(s.net)} · credited to the account on file on the {PAYCFG.payDay}
               {PAYCFG.payDay === 1 ? 'st' : 'th'}
@@ -240,7 +240,7 @@ export default function PayslipDetail() {
             {s.employer.map(([label, v]) => (
               <Row key={label} label={label} value={v} />
             ))}
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               These do not come out of your pay. They are part of your cost to company, which is why the
               CTC on your letter is higher than twelve times the gross above.
             </p>
@@ -299,7 +299,7 @@ export default function PayslipDetail() {
           <b>Confirm the numbers with whoever files your returns before anyone is paid on them.</b>
         </Assumption>
 
-        <p className="gr" style={{ fontSize: '11.5px', marginTop: 14 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 14 }}>
           Computer-generated. No signature is required.
         </p>
       </Card>

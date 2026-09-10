@@ -89,11 +89,11 @@ function ClientDetail() {
                 ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing outstanding — every invoice is settled.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Invoices are raised when an order is delivered, so a gap here is either work that never
             completed or billing that never happened.
           </p>
@@ -255,7 +255,7 @@ function ClientDetail() {
                     <div className="v mono">{s.h}h</div>
                   </div>
                   <div className="cell">
-                    <div className="v gr" style={{ fontSize: '12.5px' }}>
+                    <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                       {CLOCK_RUN[clock.run] ?? clock.run}
                     </div>
                   </div>

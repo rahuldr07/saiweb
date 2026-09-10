@@ -18,7 +18,7 @@ export function DayPicker({ value, onChange }: { value: string; onChange: (dk: s
           onClick={() => onChange(d.dk)}
         >
           {d.dk === today ? 'Today' : DAY_LABEL[d.date.getDay()]}{' '}
-          <span className="mono gr" style={{ fontSize: '10.5px' }}>
+          <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)' }}>
             {d.dk}
           </span>
           <span className="n">{d.n}</span>

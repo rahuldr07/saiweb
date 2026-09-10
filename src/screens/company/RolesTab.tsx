@@ -136,7 +136,7 @@ export function RolesTab({
                         fontWeight: 400,
                         textTransform: 'none',
                         letterSpacing: 0,
-                        fontSize: '10.5px',
+                        fontSize: 'var(--t-eyebrow)',
                       }}
                     >
                       {holders(r.id).length}
@@ -151,11 +151,11 @@ export function RolesTab({
                   <td>
                     {p.n}
                     {p.never ? (
-                      <div className="sd gr" style={{ fontSize: '11.5px' }}>
+                      <div className="sd gr" style={{ fontSize: 'var(--t-label)' }}>
                         No role can hold this. A blocking rule is not configurable away.
                       </div>
                     ) : p.sys ? null : (
-                      <div className="sd gr" style={{ fontSize: '11.5px' }}>
+                      <div className="sd gr" style={{ fontSize: 'var(--t-label)' }}>
                         Added here — a label, not yet wired to anything
                       </div>
                     )}
@@ -172,7 +172,7 @@ export function RolesTab({
                 </tr>
               ))}
               <tr>
-                <td className="gr" style={{ fontSize: '11.5px' }}>
+                <td className="gr" style={{ fontSize: 'var(--t-label)' }}>
                   —
                 </td>
                 {ROLELIST.map((r) => (
@@ -181,7 +181,7 @@ export function RolesTab({
                       Edit
                     </Btn>
                     {r.lock ? (
-                      <div className="sd gr" style={{ fontSize: '10.5px', marginTop: 3 }}>
+                      <div className="sd gr" style={{ fontSize: 'var(--t-eyebrow)', marginTop: 3 }}>
                         cannot be deleted
                       </div>
                     ) : null}
@@ -223,7 +223,7 @@ export function RolesTab({
         </Rows>
       </Card>
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         <b>Staff</b> and <b>Company admin</b> can be renamed and adjusted like any other role, but
         not deleted — every workspace needs a floor and a ceiling. Add as many roles in between as
         you need, and you can create one without leaving the staff form.

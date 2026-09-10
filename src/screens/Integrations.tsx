@@ -22,7 +22,7 @@ function ConnectorIcon({ children }: { children: string }) {
         color: 'var(--brand)',
         display: 'grid',
         placeItems: 'center',
-        fontSize: '14.5px',
+        fontSize: 'var(--t-lead)',
         flex: 'none',
       }}
     >
@@ -49,10 +49,10 @@ function Integrations() {
           <Card padded key={c.k}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
               <ConnectorIcon>{c.icon}</ConnectorIcon>
-              <b style={{ fontSize: '14.5px' }}>{c.n}</b>
+              <b style={{ fontSize: 'var(--t-lead)' }}>{c.n}</b>
               {c.connected ? <Chip kind="v">Connected</Chip> : null}
             </div>
-            <p className="gr" style={{ fontSize: '12.5px', lineHeight: 1.55, minHeight: 38 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', lineHeight: 1.55, minHeight: 38 }}>
               {c.d}
             </p>
             <Btn

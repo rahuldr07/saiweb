@@ -42,7 +42,7 @@ function Num({
           onBlur={(e) => setPayCfg(k, e.target.value)}
         />
         {suffix ? (
-          <span className="gr" style={{ fontSize: '12.5px' }}>
+          <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
             {suffix}
           </span>
         ) : null}
@@ -71,7 +71,7 @@ export function PayrollTab() {
   return (
     <>
       <div className="ch" style={{ border: 'none', padding: '2px 0 15px', alignItems: 'flex-start' }}>
-        <div className="gr" style={{ fontSize: '12.5px', maxWidth: '70ch' }}>
+        <div className="gr" style={{ fontSize: 'var(--t-small)', maxWidth: '70ch' }}>
           One set of rules, applied to every payslip. Change a number here and the whole register
           moves — nothing is stored per person except the CTC.
         </div>
@@ -170,7 +170,7 @@ export function PayrollTab() {
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              fontSize: '13.5px',
+              fontSize: 'var(--t-body)',
               padding: '11px 13px',
               border: '1px solid var(--hair)',
               borderRadius: 9,
@@ -227,7 +227,7 @@ export function PayrollTab() {
           {produced.map(([label, value]) => (
             <DetailRow key={label} label={label} value={<b className="mono">{inr(value)}</b>} />
           ))}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Recomputed as you change the settings above, across all {t.list.length} people. If a
             change here looks wrong, it will look wrong on {t.list.length} payslips.
           </p>

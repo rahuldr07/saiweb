@@ -45,7 +45,7 @@ function NumberField({
           }}
         />
         {suffix ? (
-          <span className="gr" style={{ fontSize: '12.5px' }}>
+          <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
             {suffix}
           </span>
         ) : null}
@@ -170,7 +170,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
                       {t.enc ? <Chip kind="v">Yes</Chip> : <span className="gr">No</span>}
                     </div>
                     <div className="cell">
-                      <div className="v gr" style={{ fontSize: '12.5px' }}>
+                      <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                         {t.d}
                       </div>
                     </div>
@@ -193,7 +193,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
           </div>
         </div>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Changing a quota changes everyone’s balance from now, because a balance is earned minus taken
         rather than a stored number. A type somebody has already used cannot be removed — the history
         would stop making sense.
@@ -225,7 +225,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              fontSize: '13.5px',
+              fontSize: 'var(--t-body)',
               padding: '11px 13px',
               border: '1px solid var(--hair)',
               borderRadius: 9,
@@ -264,7 +264,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 10,
-                    fontSize: '13.5px',
+                    fontSize: 'var(--t-body)',
                     padding: '11px 13px',
                     border: `1px solid ${on ? 'var(--brand)' : 'var(--hair)'}`,
                     borderRadius: 9,
@@ -286,7 +286,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
               )
             })}
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Blocking outright is the strictest and the most likely to be worked around — somebody will
             simply not record the day. “Ask for a reason” keeps the record honest and still puts the
             decision in front of the approver.
@@ -316,7 +316,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
           <Outcome label="People affected" value={latePeople.size} />
           <Outcome label="Repeatedly late" value={lateRepeat.length} warn={!!lateRepeat.length} />
           <Outcome label="Waived" value={clock.late.filter((x) => x.waived).length} />
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Widening the grace period does not erase anything already recorded — it changes what gets
             recorded from here. The log is under <b>Attendance → Late logins</b>.
           </p>
@@ -361,7 +361,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              fontSize: '13.5px',
+              fontSize: 'var(--t-body)',
               padding: '11px 13px',
               border: '1px solid var(--hair)',
               borderRadius: 9,
@@ -395,7 +395,7 @@ export function LeavePolicy({ onChanged }: { onChanged: () => void }) {
             label="Approved so far"
             value={clock.overtime.filter((o) => o.st === 'approved').length}
           />
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Changing the rate above moves what overtime costs for everyone at once. It is worth seeing
             before you save it.
           </p>
@@ -459,7 +459,7 @@ function TypeFields({
           onChange={(e) => upd({ d: e.target.value })}
         />
       </div>
-      <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: '13.5px', marginTop: 12 }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 'var(--t-body)', marginTop: 12 }}>
         <input type="checkbox" checked={!!d.enc} onChange={(e) => upd({ enc: e.target.checked })} />{' '}
         Encashable when somebody leaves
       </label>

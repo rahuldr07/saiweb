@@ -105,7 +105,7 @@ export default function PersonDetail() {
   const maySeePersonal = isMe || can('people')
 
   const modalNote = (children: React.ReactNode) => (
-    <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+    <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
       {children}
     </p>
   )
@@ -129,7 +129,7 @@ export default function PersonDetail() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing has been placed with them today.
             </p>
           )}
@@ -163,7 +163,7 @@ export default function PersonDetail() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               None. Where an order ran late, their stage was inside its budget.
             </p>
           )}
@@ -218,7 +218,7 @@ export default function PersonDetail() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing in {range.label}.
             </p>
           )}
@@ -236,12 +236,12 @@ export default function PersonDetail() {
     <Card padded>
       <div className="ch" style={{ border: 'none', padding: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-          <span className="ava" style={{ width: 52, height: 52, fontSize: '17px' }}>
+          <span className="ava" style={{ width: 52, height: 52, fontSize: 'var(--t-h3)' }}>
             {initials(person.n)}
           </span>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0, fontSize: '19px' }}>{person.n}</h2>
+              <h2 style={{ margin: 0, fontSize: 'var(--t-h2)' }}>{person.n}</h2>
               <Chip kind={person.r === 'admin' ? 'b' : person.r === 'staff' ? 'n' : 'r'}>
                 {roleName(person.r)}
               </Chip>
@@ -253,7 +253,7 @@ export default function PersonDetail() {
               {sd ? <Chip kind={sd[1]}>{sd[0]}</Chip> : null}
               {isMe ? <Chip kind="b">You</Chip> : null}
             </div>
-            <div className="gr" style={{ fontSize: '12.5px', marginTop: 4 }}>
+            <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 4 }}>
               {person.dep.length ? (
                 person.dep.join(' · ')
               ) : (
@@ -386,7 +386,7 @@ export default function PersonDetail() {
                 marginTop: 12,
               }}
             >
-              <span className="bad" style={{ fontSize: '14.5px' }}>
+              <span className="bad" style={{ fontSize: 'var(--t-lead)' }}>
                 ☎
               </span>
               <span>
@@ -461,13 +461,13 @@ export default function PersonDetail() {
                   )
                 }
               />
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 Aadhaar shows its last four by default. Anything more should be a deliberate act, and
                 in a real deployment a logged one.
               </p>
             </>
           ) : (
-            <p className="gr" style={{ fontSize: '12.5px', margin: '10px 0 0' }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '10px 0 0' }}>
               Statutory identifiers and bank details need the “people” capability. Ask a company admin
               if you should be able to see them.
             </p>
@@ -491,7 +491,7 @@ export default function PersonDetail() {
                     gap: 12,
                     alignItems: 'center',
                     padding: '7px 0',
-                    fontSize: '12.5px',
+                    fontSize: 'var(--t-small)',
                   }}
                 >
                   <span>
@@ -506,7 +506,7 @@ export default function PersonDetail() {
               )
             })
           ) : (
-            <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
               No department, so the assignment engine can never pick them.{' '}
               <button type="button" className="lnk" onClick={() => editStaff(person.id)}>
                 Fix that
@@ -514,7 +514,7 @@ export default function PersonDetail() {
               .
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             A person in one department is a single point of failure for that stage on the day they
             are away.
           </p>
@@ -523,7 +523,7 @@ export default function PersonDetail() {
         <Card padded>
           <Label>Capacity</Label>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '8px 0 10px' }}>
-            <b className="mono" style={{ fontSize: '26px' }}>
+            <b className="mono" style={{ fontSize: 'var(--t-display)' }}>
               {load}
             </b>
             <span className="gr">of {person.cap} today</span>
@@ -533,12 +533,12 @@ export default function PersonDetail() {
             max={person.cap}
             color={load >= person.cap ? 'var(--warn)' : 'var(--ok)'}
           />
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             {load >= person.cap
               ? 'At target, so the engine will not give them anything else today. Anything that needed them became an exception.'
               : `${person.cap - load} more before the engine stops offering them work.`}
           </p>
-          <p className="gr" style={{ fontSize: '12.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
             Their target is set on their record, not by the department.
           </p>
         </Card>
@@ -572,7 +572,7 @@ export default function PersonDetail() {
             </div>
             {levelId && level ? (
               <div className="rw" style={{ padding: '11px 0', marginTop: 6 }}>
-                <span className="ok" style={{ fontSize: '14.5px' }}>
+                <span className="ok" style={{ fontSize: 'var(--t-lead)' }}>
                   ◈
                 </span>
                 <span>
@@ -597,7 +597,7 @@ export default function PersonDetail() {
                 </span>
               </div>
             ) : null}
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Levels apply to {COVSTAGES.join(' and ')} only — the stages that need local knowledge.
               Typing and RTS work from what the searcher found.
             </p>
@@ -685,7 +685,7 @@ export default function PersonDetail() {
               />
             )
           })}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Pale bar is the budget, solid is their median. Judged against people doing the same
             stages, not against the whole company.
           </p>
@@ -718,7 +718,7 @@ export default function PersonDetail() {
         </FlexTable>
       ) : (
         <Card padded>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             Nothing assigned today.
             {person.avail !== 'ok'
               ? ` They are ${AVAIL[person.avail][0].toLowerCase()}.`
@@ -800,7 +800,7 @@ export default function PersonDetail() {
                 <Rows bare>
                   {reasons.map(([why, n]) => (
                     <div className="rw" key={why}>
-                      <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
+                      <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: 'var(--t-lead)' }}>
                         {n > 1 ? '⚑' : '·'}
                       </span>
                       <span>
@@ -815,7 +815,7 @@ export default function PersonDetail() {
             </>
           ) : (
             <Card padded style={{ marginTop: 16 }}>
-              <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                 Every rating in this range was a straight 5 on all three criteria.
               </p>
             </Card>
@@ -826,7 +826,7 @@ export default function PersonDetail() {
         </>
       ) : (
         <Card padded style={{ marginTop: 16 }}>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             No ratings in this range. Either their work was not checked, or they do not do work that
             gets checked.
           </p>
@@ -838,7 +838,7 @@ export default function PersonDetail() {
           <SectionHead>As a checker — {given.length} ratings given</SectionHead>
           <Card padded>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-              <b className="mono" style={{ fontSize: '23px' }}>
+              <b className="mono" style={{ fontSize: 'var(--t-h1)' }}>
                 {gavg.toFixed(2)}
               </b>
               <span className="gr">
@@ -850,7 +850,7 @@ export default function PersonDetail() {
               max={100}
               color={Math.abs(gavg - teamAvg) > 0.06 ? 'var(--warn)' : 'var(--ok)'}
             />
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               {Math.abs(gavg - teamAvg) <= 0.06 ? (
                 'They mark in line with everyone else, so their scores can be compared with anyone’s.'
               ) : gavg > teamAvg ? (
@@ -866,7 +866,7 @@ export default function PersonDetail() {
                 </>
               )}
             </p>
-            <p className="gr" style={{ fontSize: '12.5px' }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
               On a scale where almost everything is a 5, who checks the work can matter more than who
               did it.
             </p>
@@ -887,7 +887,7 @@ export default function PersonDetail() {
             <Chip kind={person.r === 'admin' ? 'b' : person.r === 'staff' ? 'n' : 'r'}>
               {roleName(person.r)}
             </Chip>
-            <span className="gr" style={{ fontSize: '12.5px' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
               {role ? role.desc : 'role no longer exists'}
             </span>
           </div>
@@ -896,7 +896,7 @@ export default function PersonDetail() {
               const has = held.includes(x.k)
               return (
                 <div className="rw" key={x.k}>
-                  <span className={has ? 'ok' : 'gr'} style={{ fontSize: '13.5px' }}>
+                  <span className={has ? 'ok' : 'gr'} style={{ fontSize: 'var(--t-body)' }}>
                     {has ? '✓' : '·'}
                   </span>
                   <span>
@@ -908,7 +908,7 @@ export default function PersonDetail() {
               )
             })}
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             These come from the role, not from the person. Change them under{' '}
             <button
               type="button"
@@ -927,7 +927,7 @@ export default function PersonDetail() {
             const inIt = person.dep.includes(d)
             return (
               <div className="rw" style={{ padding: '9px 0' }} key={d}>
-                <span className={inIt ? 'ok' : 'gr'} style={{ fontSize: '13.5px' }}>
+                <span className={inIt ? 'ok' : 'gr'} style={{ fontSize: 'var(--t-body)' }}>
                   {inIt ? '✓' : '·'}
                 </span>
                 <span>
@@ -944,7 +944,7 @@ export default function PersonDetail() {
               </div>
             )
           })}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Department decides what work can reach them; the role decides what they can see and do.
           </p>
         </Card>
@@ -990,7 +990,7 @@ export default function PersonDetail() {
             }
           />
         </Rows>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Disabling keeps every rating and every hour they worked. Deleting a person would silently
           rewrite the reports they appear in, which is why it is not offered.
         </p>

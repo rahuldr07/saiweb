@@ -163,7 +163,7 @@ function LinkMonitor() {
         <Kpi
           title="Next check"
           value={
-            <span style={{ fontSize: '19px' }}>{due ? 'Due now' : fmtDate(nextLinkCheck())}</span>
+            <span style={{ fontSize: 'var(--t-h2)' }}>{due ? 'Due now' : fmtDate(nextLinkCheck())}</span>
           }
           tone={due ? 'warn' : undefined}
           detail={`every ${check.every} days`}
@@ -214,10 +214,10 @@ function LinkMonitor() {
                           <div className="v">{x.lbl}</div>
                         </div>
                         <div className="cell">
-                          <div className="v" style={{ fontSize: '12.5px' }}>
+                          <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                             {x.l.err || '—'}
                           </div>
-                          <div className="s mono" style={{ fontSize: '11.5px' }}>
+                          <div className="s mono" style={{ fontSize: 'var(--t-label)' }}>
                             {x.l.u || 'no address'}
                           </div>
                         </div>
@@ -299,7 +299,7 @@ function LinkMonitor() {
                 title="Last run"
                 detail={`${fmtDT(check.last)} ${TZ}`}
                 right={
-                  <span className="gr mono" style={{ fontSize: '11.5px' }}>
+                  <span className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                     {sinceLast === 0 ? 'today' : `${sinceLast}d ago`}
                   </span>
                 }
@@ -309,7 +309,7 @@ function LinkMonitor() {
                 title="Next run"
                 detail={fmtDate(nextLinkCheck())}
                 right={
-                  <span className={`${due ? 'warn' : 'gr'} mono`} style={{ fontSize: '11.5px' }}>
+                  <span className={`${due ? 'warn' : 'gr'} mono`} style={{ fontSize: 'var(--t-label)' }}>
                     {due ? 'due now' : 'scheduled'}
                   </span>
                 }
@@ -326,14 +326,14 @@ function LinkMonitor() {
                 <span>
                   <Chip kind={LSTATE[s][1]}>{LSTATE[s][0]}</Chip>
                 </span>
-                <span className="gr" style={{ fontSize: '12.5px' }}>
+                <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                   {what}
                 </span>
                 <span />
               </div>
             ))}
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             A redirect is reported rather than followed silently — a county that moved its portal
             usually changed how the search works too.
           </p>

@@ -9,7 +9,7 @@ export function RatingMarks({ x, legend }: { x: QcEntry; legend?: boolean | unde
 
   return (
     <Cell>
-      <div className="v mono" style={{ fontSize: '12.5px' }}>
+      <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
         <span className={markTone(x.acc)}>{x.acc}</span>
         {sep}
         <span className={markTone(x.comp)}>{x.comp}</span>

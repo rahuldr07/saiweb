@@ -192,7 +192,7 @@ function Counties() {
           value={
             <>
               {stats.covered}
-              <span className="gr" style={{ fontSize: '14.5px' }}> / {stats.total}</span>
+              <span className="gr" style={{ fontSize: 'var(--t-lead)' }}> / {stats.total}</span>
             </>
           }
           detail={`${linkTypes.length} per county`}
@@ -335,7 +335,7 @@ function Counties() {
         </div>
       </div>
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         Click any status to see the address and fix it. All {linkTypes.length} types are checked
         automatically every {check.every} days
         {isAdmin ? (

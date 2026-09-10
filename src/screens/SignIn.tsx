@@ -91,7 +91,7 @@ export default function SignIn() {
           onError={() => setLogoBroken(true)}
         />
       ) : (
-        <div style={{ fontSize: '23px', fontWeight: 650, letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: 'var(--t-h1)', fontWeight: 650, letterSpacing: '-0.02em' }}>
           <span style={{ color: 'var(--brand)', marginRight: 8 }}>{COMPANY_GLYPH}</span>
           {COMPANY_NAME}
         </div>
@@ -151,11 +151,11 @@ export default function SignIn() {
       <div className="authcol">
         {mark}
         <Card padded>
-          <div style={{ fontSize: '15px', fontWeight: 600 }}>{me.n}</div>
-          <div className="gr" style={{ fontSize: '12.5px', marginTop: 2 }}>
+          <div style={{ fontSize: 'var(--t-lead)', fontWeight: 600 }}>{me.n}</div>
+          <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 2 }}>
             {roleName(me.r)} · {me.dep.join(', ') || 'No department'}
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             You {can('all') ? 'can' : 'cannot'} see every order, and{' '}
             {can('pricing') ? 'can' : 'cannot'} see pricing and invoices. Your role decides which
             screens exist at all.
@@ -183,7 +183,7 @@ export default function SignIn() {
       {mark}
       {form}
       {DEMO_IDENTITY ? (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 14, textAlign: 'center' }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14, textAlign: 'center' }}>
           There is no database behind this build yet, so the password is asked for but not checked.{' '}
           <b className="mono">{ADMIN_EMAIL}</b> signs in as the administrator; any other address
           signs in as staff.

@@ -96,7 +96,7 @@ function Payroll() {
       title: `Lock attendance for ${month}?`,
       body: (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             Attendance is frozen at today’s figures. Payroll is then computed against a fixed set of
             numbers rather than a moving one.
           </p>
@@ -112,7 +112,7 @@ function Payroll() {
               </div>
             </div>
           ) : null}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             {totals.list.length} people · gross {inr(totals.gross)} · net {inr(totals.net)}.
           </p>
         </>
@@ -153,10 +153,10 @@ function Payroll() {
       title: `Publish ${totals.list.length} payslips?`,
       body: (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             Every person on the run can see their {month} payslip from their own account, immediately.
           </p>
-          <p className="gr" style={{ fontSize: '12.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
             The bank file becomes available at the same time — {inr(totals.net)} across{' '}
             {totals.list.length} accounts, drawn on {PAYCFG.bankName}.
           </p>
@@ -319,7 +319,7 @@ function Payroll() {
                       >
                         {done ? '✓' : i + 1}
                       </span>
-                      <b style={{ fontSize: '13.5px', color: done || nowAt ? 'var(--ink)' : 'var(--gr)' }}>
+                      <b style={{ fontSize: 'var(--t-body)', color: done || nowAt ? 'var(--ink)' : 'var(--gr)' }}>
                         {s[0]}
                       </b>
                     </span>
@@ -412,7 +412,7 @@ function Payroll() {
             </>
           ) : (
             <Card padded style={{ marginTop: 16 }}>
-              <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                 Nothing to check — every active person has a salary, and nobody has unpaid days this
                 month.
               </p>
@@ -458,7 +458,7 @@ function Payroll() {
                         </div>
                       </div>
                       <div className="cell">
-                        <div className="v gr" style={{ fontSize: '12.5px' }}>
+                        <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                           {x.p.dep[0] ?? '—'}
                         </div>
                       </div>
@@ -528,7 +528,7 @@ function Payroll() {
               </div>
             </div>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Every figure comes from the person’s CTC and this month’s attendance. Change either and the
             register moves — there is no separately stored salary to fall out of step.
           </p>
@@ -549,12 +549,12 @@ function Payroll() {
               <Line key={label} label={label} value={inr(v)} />
             ))}
             <div
-              style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: '14.5px' }}
+              style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: 'var(--t-lead)' }}
             >
               <b>Total cost</b>
               <b className="mono">{inr(totals.gross + totals.erpf + totals.grat)}</b>
             </div>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               Net pay is what lands in accounts; this is what the month actually costs. The difference is
               the employer’s own contributions.
             </p>
@@ -605,7 +605,7 @@ function Payroll() {
           leavers.map((p) => <Leaver key={p.id} p={p} onOpen={() => openPerson(p.id)} />)
         ) : (
           <Card padded>
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nobody is leaving this month. When someone is, their settlement is computed here from their
               joining date, leave balance and any advance outstanding — not worked out separately on a
               spreadsheet.
@@ -636,7 +636,7 @@ function Check({
 }) {
   return (
     <div className="rw">
-      <span className={bad ? 'bad' : 'warn'} style={{ fontSize: '14.5px' }}>
+      <span className={bad ? 'bad' : 'warn'} style={{ fontSize: 'var(--t-lead)' }}>
         {bad ? '⚑' : '◷'}
       </span>
       <span>
@@ -661,14 +661,14 @@ function Leaver({ p, onOpen }: { p: Person; onOpen: () => void }) {
           <button
             type="button"
             className="ava"
-            style={{ width: 34, height: 34, fontSize: '13.5px' }}
+            style={{ width: 34, height: 34, fontSize: 'var(--t-body)' }}
             onClick={onOpen}
           >
             {initials(p.n)}
           </button>
           <div>
-            <b style={{ fontSize: '14.5px' }}>{p.n}</b>
-            <div className="gr" style={{ fontSize: '12.5px' }}>
+            <b style={{ fontSize: 'var(--t-lead)' }}>{p.n}</b>
+            <div className="gr" style={{ fontSize: 'var(--t-small)' }}>
               {p.dep.join(', ')} · joined {p.doj || '—'} · last day{' '}
               {p.leaving ? fmtDate(p.leaving) : '—'}
             </div>
@@ -690,7 +690,7 @@ function Leaver({ p, onOpen }: { p: Person; onOpen: () => void }) {
           }
         />
       ))}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: '14.5px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: 'var(--t-lead)' }}>
         <b>Payable</b>
         <b className="mono ok">{inr(f.total)}</b>
       </div>
@@ -703,12 +703,12 @@ function Leaver({ p, onOpen }: { p: Person; onOpen: () => void }) {
           </div>
         </div>
       ) : f.yrs < 5 ? (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           {f.yrs.toFixed(1)} years served. Gratuity becomes payable at five, so none is due — this is the
           rule, not a rounding.
         </p>
       ) : (
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           {Math.floor(f.yrs)} completed years at fifteen days of last-drawn basic, which is what the Act
           provides.
         </p>
@@ -742,7 +742,7 @@ function ApproveForm({
         </div>
       </div>
       {totals.lop.length ? (
-        <p style={{ fontSize: '13.5px' }}>
+        <p style={{ fontSize: 'var(--t-body)' }}>
           <b>{totals.lop.length}</b> {totals.lop.length === 1 ? 'person has' : 'people have'} unpaid days.
           Confirm those are right — this is the last easy moment.
         </p>

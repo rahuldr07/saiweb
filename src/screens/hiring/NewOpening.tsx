@@ -157,7 +157,7 @@ export function NewOpening({
         </Btn>
       </FormActions>
 
-      <p className="gr" style={{ fontSize: '11.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 12 }}>
         Opens {fmtDate(now())} under {raisedBy}, with no candidates against it yet.
       </p>
     </>

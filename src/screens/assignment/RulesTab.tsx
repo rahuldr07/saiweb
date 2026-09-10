@@ -71,7 +71,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
                 }
               />
             </Kpis>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               Run against today’s {run.today.length} orders with the rules exactly as they stand. No
               queue was touched — this is what <i>would</i> happen.
             </p>
@@ -102,7 +102,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
               </div>
             ))}
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             This is the current state and how often each rule was consulted today.{' '}
             <b>A dated change log needs somewhere to store it</b> — nothing here writes to a database
             yet, so edits live only in this session.
@@ -200,7 +200,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
           <div className="lb" style={{ marginTop: 18 }}>
             When an order matches all of these
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', margin: '0 0 10px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '0 0 10px' }}>
             Leave one as <b>any</b> to ignore it. This is the condition the engine runs — not a
             description of one.
           </p>
@@ -258,7 +258,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
           {draft.k !== 'block' ? (
             <div style={{ marginTop: 18 }}>
               <div className="lb">Who it routes to</div>
-              <p className="gr" style={{ fontSize: '12.5px', margin: '0 0 10px' }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '0 0 10px' }}>
                 Tick the people this rule allows. Narrowing it to nobody is how an order ends up with
                 nowhere to go.
               </p>
@@ -313,8 +313,8 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
           {locked ? (
             <div className="bnr r" style={{ margin: '14px 0 0' }}>
               <span className="bi">🔒</span>
-              <div style={{ fontSize: '12.5px' }}>
-                <div className="bt" style={{ fontSize: '12.5px' }}>
+              <div style={{ fontSize: 'var(--t-small)' }}>
+                <div className="bt" style={{ fontSize: 'var(--t-small)' }}>
                   This rule cannot be switched off or retyped
                 </div>
                 {draft.k === 'prefer'
@@ -326,8 +326,8 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
 
           <div className="bnr b" style={{ margin: '14px 0 0' }}>
             <span className="bi">◷</span>
-            <div style={{ fontSize: '12.5px' }}>
-              <div className="bt" style={{ fontSize: '12.5px' }}>
+            <div style={{ fontSize: 'var(--t-small)' }}>
+              <div className="bt" style={{ fontSize: 'var(--t-small)' }}>
                 Applies to new orders only
               </div>
               Changing a rule does not move work already in somebody’s queue. A dry run shows what it
@@ -373,7 +373,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
       <Card style={{ marginTop: 16 }}>
         <div className="ch">
           <h2>Rules</h2>
-          <div className="r gr" style={{ fontSize: '12.5px' }}>
+          <div className="r gr" style={{ fontSize: 'var(--t-small)' }}>
             {on} of {rules.length} on
           </div>
         </div>
@@ -451,7 +451,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
           })}
         </Rows>
         <div className="cb">
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             <b>Department membership</b> and <b>self-review</b> cannot be switched off — doing so would
             let the system do something it should never do. <b>Fill the emptiest first</b> is locked for
             a different reason: there has to be some way to choose between two equally eligible people.
@@ -507,7 +507,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
 
         <Card padded>
           <Label>Test a change before it goes live</Label>
-          <p className="gr" style={{ fontSize: '12.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
             Run the current rules against today’s {run.today.length} orders and see what would move.
           </p>
           <Btn style={{ width: '100%', marginTop: 12 }} onClick={() => showDryRun()}>
@@ -516,7 +516,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
           <Btn variant="ghost" style={{ width: '100%', marginTop: 8 }} onClick={ruleHistory}>
             Rule change history
           </Btn>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             A dry run never touches anyone’s queue. It reports what the rules <i>would</i> have done.
           </p>
         </Card>

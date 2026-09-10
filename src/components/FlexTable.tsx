@@ -80,7 +80,7 @@ export function Cell({
         <>
           <div
             className={`v${mono ? ' mono' : ''}${tone ? ' ' + tone : ''}`}
-            style={{ fontSize: '12.5px' }}
+            style={{ fontSize: 'var(--t-small)' }}
           >
             {v}
           </div>

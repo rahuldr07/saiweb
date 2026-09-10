@@ -13,7 +13,7 @@ const LENGTHS = [1, 2, 3, 4, 5, 7, 10, 14]
 function NoteBanner({ note }: { note: Note }) {
   if (note.kind === 'plain') {
     return (
-      <div className="gr" style={{ fontSize: '12.5px', marginBottom: 10 }}>
+      <div className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 10 }}>
         {note.body}
       </div>
     )

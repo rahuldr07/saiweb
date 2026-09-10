@@ -178,7 +178,7 @@ export function DataTable({
                   >
                     {numbered ? (
                       <div className="cell">
-                        <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                        <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                           {ri + 1}
                         </div>
                       </div>

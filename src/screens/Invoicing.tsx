@@ -118,11 +118,11 @@ function Invoicing() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Everything in scope has been settled.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Follows whatever client and date filters are set above, so this total and the card always
             agree.
           </p>
@@ -214,7 +214,7 @@ function Invoicing() {
       />
 
       <div className="fbar">
-        <label className="gr" style={{ fontSize: '12.5px', fontWeight: 600 }} htmlFor="iv-from">
+        <label className="gr" style={{ fontSize: 'var(--t-small)', fontWeight: 600 }} htmlFor="iv-from">
           Issued
         </label>
         <input
@@ -226,7 +226,7 @@ function Invoicing() {
           aria-label="Invoices issued from"
           onChange={(e) => setRange((r) => normalise({ ...r, from: e.target.value || null }))}
         />
-        <span className="gr" style={{ fontSize: '12.5px' }}>
+        <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
           to
         </span>
         <input
@@ -407,7 +407,7 @@ function Invoicing() {
           </table>
         </div>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Amounts invoiced, in dollars. The bottom row totals each month, the right column totals each
         client, and the corner is everything
         {status === 'all' ? '' : ` marked ${ISTATUS[status][0].toLowerCase()}`}
@@ -492,10 +492,10 @@ function Invoicing() {
           padded
           style={{ marginTop: 14, display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}
         >
-          <span className="gr" style={{ fontSize: '12.5px' }}>
+          <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
             Total for {scope}
           </span>
-          <b className="mono" style={{ fontSize: '17px' }}>
+          <b className="mono" style={{ fontSize: 'var(--t-h3)' }}>
             {money(invoiced)}
           </b>
           <span className="gr">·</span>

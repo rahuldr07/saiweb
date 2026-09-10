@@ -97,15 +97,15 @@ export function QcStaffDetail({
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Avatar
               name={name}
-              style={{ width: 38, height: 38, fontSize: '13.5px' }}
+              style={{ width: 38, height: 38, fontSize: 'var(--t-body)' }}
               title={staff ? 'Full profile' : undefined}
               onClick={
                 staff ? () => navigate({ to: '/staff/$personId', params: { personId: staff.id } }) : undefined
               }
             />
             <div>
-              <h2 style={{ margin: 0, fontSize: '17px' }}>{name}</h2>
-              <div className="gr" style={{ fontSize: '12.5px' }}>
+              <h2 style={{ margin: 0, fontSize: 'var(--t-h3)' }}>{name}</h2>
+              <div className="gr" style={{ fontSize: 'var(--t-small)' }}>
                 {staff ? staff.dep.join(', ') : 'no longer on staff'} · {mine.length} ratings · {range.label}
               </div>
             </div>
@@ -147,7 +147,7 @@ export function QcStaffDetail({
         <div className="rw" style={{ background: gapBg, borderRadius: 9, padding: '12px 14px' }}>
           <span
             className={Math.abs(gap) < 0.05 ? 'gr' : gap < 0 ? 'warn' : 'ok'}
-            style={{ fontSize: '14.5px' }}
+            style={{ fontSize: 'var(--t-lead)' }}
           >
             {Math.abs(gap) < 0.05 ? '=' : gap < 0 ? '▾' : '▴'}
           </span>
@@ -235,7 +235,7 @@ export function QcStaffDetail({
       <div className="two" style={{ marginTop: 16 }}>
         <Card padded>
           <Label>Where the marks come off</Label>
-          <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 12px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '6px 0 12px' }}>
             {below.length
               ? `${below.length} rating${below.length === 1 ? '' : 's'} dropped below 5. This is which criterion caused it.`
               : 'Every rating in this range was a straight 5 on all three criteria.'}
@@ -257,7 +257,7 @@ export function QcStaffDetail({
             />
           ))}
           {below.length && crit[0].n >= 2 ? (
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               <b>{crit[0].c}</b> accounts for {Math.round((crit[0].n / below.length) * 100)}% of the marks
               lost — that is the thing to coach, not the average.
             </p>
@@ -286,7 +286,7 @@ export function QcStaffDetail({
             }
           />
         ))}
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           {raterRows.length > 1 &&
           Math.max(...raterRows.map((x) => x.avg)) - Math.min(...raterRows.map((x) => x.avg)) > 0.2
             ? `Worth noticing: their raters do not agree with each other — ${raterRows[0].n} averages ${raterRows[0].avg.toFixed(2)} while another averages ${Math.min(...raterRows.map((x) => x.avg)).toFixed(2)}. On a flat scale, who checks the work can matter more than who did it.`
@@ -301,7 +301,7 @@ export function QcStaffDetail({
             <Rows bare>
               {topReasons.map(([why, n]) => (
                 <div className="rw" key={why}>
-                  <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
+                  <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: 'var(--t-lead)' }}>
                     {n > 1 ? '⚑' : '·'}
                   </span>
                   <span>
@@ -317,7 +317,7 @@ export function QcStaffDetail({
               ))}
             </Rows>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             A repeated reason is worth a five-minute conversation; a one-off usually is not. That distinction
             is the difference between coaching and nagging.
           </p>
@@ -328,7 +328,7 @@ export function QcStaffDetail({
         <>
           <SectionHead>Time against the budget, department by department</SectionHead>
           <Card padded>
-            <p className="gr" style={{ fontSize: '12.5px', margin: '0 0 14px' }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '0 0 14px' }}>
               Their own stages only. The budget is whatever Stage budgets allows that department on that
               product, so a 40-year search is judged against a 40-year search budget.
             </p>
@@ -358,7 +358,7 @@ export function QcStaffDetail({
                 />
               )
             })}
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               The pale bar is the budget, the solid bar is their median.{' '}
               {t.erratic
                 ? `Their typical order is fine — a median of ${t.ratio.toFixed(2)}× — but they only land inside budget ${t.onBudget}% of the time against ${t.expected}% for their peers. That is a spread problem, not a speed problem: most orders are quick and a few run long. Worth finding out what the long ones have in common before treating it as pace.`
@@ -389,7 +389,7 @@ export function QcStaffDetail({
                       <Cell v={x.st} />
                       <Cell v={hh(x.h)} mono tone="warn" />
                       <Cell>
-                        <div className="v mono" style={{ fontSize: '12.5px' }}>
+                        <div className="v mono" style={{ fontSize: 'var(--t-small)' }}>
                           {hh(x.budget)}{' '}
                           <span className={x.ratio > 2 ? 'bad' : 'warn'}>· {x.ratio.toFixed(1)}×</span>
                         </div>
@@ -397,7 +397,7 @@ export function QcStaffDetail({
                     </FlexRow>
                   ))}
               </FlexTable>
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 An order can be late without this list growing — a stage that stayed inside its budget is not
                 the reason the order missed.
               </p>

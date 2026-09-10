@@ -38,7 +38,7 @@ export function Sidebar({ current }: { current: string }) {
       title: 'Switch company',
       body: (
         <>
-          <p className="gr" style={{ fontSize: '12.5px', marginBottom: 14 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 14 }}>
             Each company is a separate workspace. Staff, orders, clients, counties and quality data are
             private to it — nothing is shared between companies.
           </p>

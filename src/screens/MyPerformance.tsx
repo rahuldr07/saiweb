@@ -72,7 +72,7 @@ export default function MyPerformance() {
             <b>Reports → Quality → How scoring works</b>, the rule “Scores are visible to the person
             rated”.
           </Banner>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Measuring someone against something they cannot see is the fastest way to make a quality
             score resented rather than useful — worth saying to whoever owns that setting.
           </p>
@@ -112,7 +112,7 @@ export default function MyPerformance() {
     : null
 
   const note = (children: React.ReactNode) => (
-    <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+    <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
       {children}
     </p>
   )
@@ -135,7 +135,7 @@ export default function MyPerformance() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing has come up twice. What was raised was raised once.
             </p>
           )}
@@ -168,7 +168,7 @@ export default function MyPerformance() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               No checks in this range.
             </p>
           )}
@@ -286,12 +286,12 @@ export default function MyPerformance() {
                 return (
                   <Card padded key={reason} style={{ marginBottom: 12 }}>
                     <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <span className="warn" style={{ fontSize: '17px', lineHeight: 1.2 }}>
+                      <span className="warn" style={{ fontSize: 'var(--t-h3)', lineHeight: 1.2 }}>
                         ⚑
                       </span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '14.5px', fontWeight: 650 }}>{reason}</div>
-                        <div className="gr" style={{ fontSize: '12.5px', marginTop: 2 }}>
+                        <div style={{ fontSize: 'var(--t-lead)', fontWeight: 650 }}>{reason}</div>
+                        <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 2 }}>
                           {n} times in {range.label}
                           {stillHappening === 0 ? (
                             <>
@@ -314,7 +314,7 @@ export default function MyPerformance() {
                             marginTop: 11,
                           }}
                         >
-                          <span className="brand" style={{ fontSize: '14.5px' }}>
+                          <span className="brand" style={{ fontSize: 'var(--t-lead)' }}>
                             →
                           </span>
                           <span>
@@ -325,7 +325,7 @@ export default function MyPerformance() {
                           </span>
                           <span />
                         </div>
-                        <div className="gr" style={{ fontSize: '11.5px', marginTop: 9 }}>
+                        <div className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 9 }}>
                           On {below.filter((x) => x.note === reason).map((x) => x.order).join(', ')}
                         </div>
                       </div>
@@ -336,7 +336,7 @@ export default function MyPerformance() {
             </>
           ) : (
             <Card padded style={{ marginTop: 16 }}>
-              <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                 {below.length
                   ? 'Nothing has come up twice. Everything below is a one-off, and a one-off is not a habit worth changing your method for.'
                   : rows.length
@@ -356,11 +356,11 @@ export default function MyPerformance() {
                     const x = below.find((y) => y.note === reason)
                     return (
                       <div className="rw" key={reason}>
-                        <span className="gr" style={{ fontSize: '14.5px' }}>
+                        <span className="gr" style={{ fontSize: 'var(--t-lead)' }}>
                           ·
                         </span>
                         <span>
-                          <b style={{ fontSize: '13.5px' }}>{reason}</b>
+                          <b style={{ fontSize: 'var(--t-body)' }}>{reason}</b>
                           <div className="sd gr">
                             {x?.crit} · {x?.order} · {x?.dk}
                           </div>
@@ -408,7 +408,7 @@ export default function MyPerformance() {
                     marginTop: 12,
                   }}
                 >
-                  <span className="ok" style={{ fontSize: '14.5px' }}>
+                  <span className="ok" style={{ fontSize: 'var(--t-lead)' }}>
                     ✓
                   </span>
                   <span>
@@ -427,7 +427,7 @@ export default function MyPerformance() {
                   <div
                     style={{ display: 'flex', alignItems: 'baseline', gap: 9, margin: '8px 0 10px' }}
                   >
-                    <b className="mono" style={{ fontSize: '26px' }}>
+                    <b className="mono" style={{ fontSize: 'var(--t-display)' }}>
                       {t.ratio.toFixed(2)}×
                     </b>
                     <span className="gr">of the time allowed for your stage, typically</span>
@@ -440,7 +440,7 @@ export default function MyPerformance() {
                       }}
                     />
                   </span>
-                  <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+                  <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
                     {t.erratic
                       ? `Your typical order is comfortably inside budget. What costs you is the spread — ${t.over} of ${t.c} ran long. Those are worth a look: if the long ones have something in common, that is the thing to raise, not your pace.`
                       : t.vsPeers >= 5
@@ -449,13 +449,13 @@ export default function MyPerformance() {
                           ? `Others on the same stages land inside budget ${t.expected}% of the time against your ${t.onBudget}%. That is a real gap, and it is worth asking whether the budget matches the work you are given before treating it as pace.`
                           : 'You track the budget about as closely as everyone else on the same stages.'}
                   </p>
-                  <p className="gr" style={{ fontSize: '12.5px' }}>
+                  <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
                     The budget is your department’s slice of the client’s promise — set under
                     Turnaround &amp; SLA, not by you.
                   </p>
                 </>
               ) : (
-                <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                   No timed work in this range.
                 </p>
               )}
@@ -470,11 +470,11 @@ export default function MyPerformance() {
                 {deptTop.length ? (
                   deptTop.map(([reason, n]) => (
                     <div className="rw" style={{ padding: '9px 0' }} key={reason}>
-                      <span className={n > 2 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
+                      <span className={n > 2 ? 'warn' : 'gr'} style={{ fontSize: 'var(--t-lead)' }}>
                         {n > 2 ? '⚑' : '·'}
                       </span>
                       <span>
-                        <b style={{ fontSize: '13.5px' }}>{reason}</b>
+                        <b style={{ fontSize: 'var(--t-body)' }}>{reason}</b>
                         <div className="sd gr">{n} across the department</div>
                         <div className="sd" style={{ marginTop: 4 }}>
                           {QC_FIX[reason] ?? ''}
@@ -484,11 +484,11 @@ export default function MyPerformance() {
                     </div>
                   ))
                 ) : (
-                  <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+                  <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                     Nothing recurring in {dept}.
                   </p>
                 )}
-                <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
                   The same mistake made by different people is a process problem, not a person
                   problem — it usually means a step is missing from how the work is set up rather
                   than from how it is done.

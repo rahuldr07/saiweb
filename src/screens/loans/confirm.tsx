@@ -29,7 +29,7 @@ export function useLoanConfirm() {
     openModal({
       title: `${VERB[action]} ${who}’s ${LNKIND[loan.kind][0].toLowerCase()}?`,
       body: (
-        <p style={{ fontSize: '13.5px' }}>
+        <p style={{ fontSize: 'var(--t-body)' }}>
           {inr(loan.amt)} principal, {inr(loan.emi)} EMI, {inr(outstanding(loan))} still outstanding.
           {action === 'approve' ? ' Becomes active and starts recovering from the next payroll run.' : null}
           {action === 'reject' ? ' The request is closed with no amount disbursed.' : null}

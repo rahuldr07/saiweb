@@ -82,7 +82,7 @@ export function QcTeamFocus({
                   <Cell v={hh(x.hrs)} mono tone={x.late ? 'bad' : 'ok'} />
                   <Cell>{x.late ? <Chip kind="d">Late</Chip> : <Chip kind="v">On time</Chip>}</Cell>
                   <Cell>
-                    <div className="v" style={{ fontSize: '12.5px' }}>
+                    <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                       {rated.length === 2 ? (
                         <span className="ok">both checks rated</span>
                       ) : rated.length === 1 ? (
@@ -96,7 +96,7 @@ export function QcTeamFocus({
               )
             })}
         </FlexTable>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           Two checks are expected on every delivery — one on the search, one on the typing. The right-hand
           column is where the {cover}% coverage figure comes from.
         </p>
@@ -145,7 +145,7 @@ export function QcTeamFocus({
                 right={c}
               />
             ))}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Spread fairly evenly, which says the gap is a process problem rather than one person being
             skipped.{' '}
             <button type="button" style={{ color: 'var(--brand)' }} onClick={onOpenRules}>
@@ -193,7 +193,7 @@ export function QcTeamFocus({
         <Card padded>
           <Label>How the marks fall</Label>
           <MarkSpread marks={marks} mode="team" />
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             <b>{marks.length ? ((fives / marks.length) * 100).toFixed(0) : 0}% of all marks are a 5.</b> An
             average built from that cannot rank anyone — the question is not who scores lower, it is whether
             raters are willing to give a 3.
@@ -212,7 +212,7 @@ export function QcTeamFocus({
                   gap: 12,
                   alignItems: 'center',
                   padding: '5px 0',
-                  fontSize: '12.5px',
+                  fontSize: 'var(--t-small)',
                 }}
               >
                 <span>{p.n}</span>
@@ -237,7 +237,7 @@ export function QcTeamFocus({
               </div>
             )
           })}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             The dots span the full width, but the scale underneath runs only from {lo.toFixed(2)} to{' '}
             {hi.toFixed(2)}. Stretching a {(hi - lo).toFixed(2)} range across a chart is how a flat measure
             gets mistaken for a meaningful one.
@@ -267,7 +267,7 @@ export function QcTeamFocus({
               .sort((a, b) => b[1] - a[1])
               .map(([why, n]) => (
                 <div className="rw" key={why}>
-                  <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
+                  <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: 'var(--t-lead)' }}>
                     {n > 1 ? '⚑' : '·'}
                   </span>
                   <span>
@@ -297,7 +297,7 @@ export function QcTeamFocus({
             <Cell>
               <button
                 type="button"
-                style={{ fontSize: '12.5px', color: 'var(--brand)' }}
+                style={{ fontSize: 'var(--t-small)', color: 'var(--brand)' }}
                 onClick={() => onOpenPerson(x.onName)}
               >
                 {x.onName}
@@ -310,7 +310,7 @@ export function QcTeamFocus({
           </FlexRow>
         ))}
       </FlexTable>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Click a name to see everything about that person. A reason appearing more than once is a process
         problem — the same mistake made by different people is not a coincidence.
       </p>

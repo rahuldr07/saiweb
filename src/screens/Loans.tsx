@@ -204,7 +204,7 @@ function Loans() {
                               </div>
                             </div>
                             <div className="cell">
-                              <div className="v" style={{ fontSize: '12.5px' }}>
+                              <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                                 {LNKIND[l.kind][0]}
                               </div>
                             </div>
@@ -218,7 +218,7 @@ function Loans() {
                               <div className="v mono">{inr(outstanding(l))}</div>
                             </div>
                             <div className="cell">
-                              <div className="v" style={{ fontSize: '12.5px' }}>
+                              <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                                 {due ? due.due : '—'}
                               </div>
                             </div>
@@ -253,7 +253,7 @@ function Loans() {
                 </div>
               </Card>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
-                <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                   Showing {shown.length} of {sorted.length}
                 </p>
                 {pageCount > 1 ? (
@@ -289,13 +289,13 @@ function Loans() {
           <aside>
             <Card padded style={{ position: 'sticky', top: 76 }}>
               <div className="lb">Payroll — {previewMonth} preview</div>
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 4 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 4 }}>
                 Deduction line-items this module will inject
               </p>
               {previewRows.length ? (
                 <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
                   {previewRows.map((d) => (
-                    <div key={d.loan.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12.5px' }}>
+                    <div key={d.loan.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--t-small)' }}>
                       <span>
                         {whoName(d.loan.who)} · {d.loan.kind === 'loan' ? 'EMI' : 'advance recovery'}
                       </span>
@@ -304,11 +304,11 @@ function Loans() {
                   ))}
                 </div>
               ) : (
-                <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                   Nothing due next run.
                 </p>
               )}
-              <p style={{ fontSize: '12.5px', marginTop: 12 }} className="bnr v" >
+              <p style={{ fontSize: 'var(--t-small)', marginTop: 12 }} className="bnr v" >
                 Injected automatically once the run advances — payslips print “Loan EMI ₹x · balance after
                 ₹y”.
               </p>
@@ -316,7 +316,7 @@ function Loans() {
 
             <Card padded style={{ marginTop: 16 }}>
               <div className="lb">Policy limits</div>
-              <div style={{ display: 'grid', gap: 8, marginTop: 10, fontSize: '12.5px' }}>
+              <div style={{ display: 'grid', gap: 8, marginTop: 10, fontSize: 'var(--t-small)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Advance</span>
                   <b>≤ {LOAN_POLICY.advancePctOfNet}% of monthly net</b>
@@ -332,7 +332,7 @@ function Loans() {
               </div>
               <div className="bnr r" style={{ marginTop: 12 }}>
                 <span className="bi">⚑</span>
-                <div style={{ fontSize: '12.5px' }}>
+                <div style={{ fontSize: 'var(--t-small)' }}>
                   A request is decided by whoever holds pricing — never the person who asked for it.
                 </div>
               </div>

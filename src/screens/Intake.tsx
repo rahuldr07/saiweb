@@ -24,8 +24,8 @@ function MailCard({ m }: { m: MailItem }) {
       <CardHead
         title={
           <div>
-            <h2 style={{ fontSize: '14.5px', margin: 0 }}>{m.s}</h2>
-            <div className="gr" style={{ fontSize: '12.5px', marginTop: 2 }}>
+            <h2 style={{ fontSize: 'var(--t-lead)', margin: 0 }}>{m.s}</h2>
+            <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 2 }}>
               {m.f} · {fmtDT(m.t)} {TZ}
             </div>
           </div>
@@ -39,7 +39,7 @@ function MailCard({ m }: { m: MailItem }) {
             padding: '11px 20px',
             background: 'var(--badsoft)',
             borderBottom: '1px solid #F3CFCF',
-            fontSize: '12.5px',
+            fontSize: 'var(--t-small)',
             color: 'var(--bad)',
             fontWeight: 500,
           }}
@@ -55,7 +55,7 @@ function MailCard({ m }: { m: MailItem }) {
               <span
                 key={a}
                 className="chip pl n"
-                style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}
+                style={{ fontFamily: 'var(--mono)', fontSize: 'var(--t-label)' }}
               >
                 📎 {a}
               </span>

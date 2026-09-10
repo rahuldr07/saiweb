@@ -90,7 +90,7 @@ export function Assigned({ onOpenStaff }: { onOpenStaff: () => void }) {
                       const his = mine.filter((a) => a.who === s.id)
                       return (
                         <tr key={s.id} style={his.length ? undefined : { opacity: 0.62 }}>
-                          <td className="gr mono" style={{ fontSize: '11.5px' }}>
+                          <td className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                             {i + 1}
                           </td>
                           <td>
@@ -135,7 +135,7 @@ export function Assigned({ onOpenStaff }: { onOpenStaff: () => void }) {
         )
       })}
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Counts come from the assignment engine, not from a separate tally, so this and the Assignment screen
         can never disagree.
       </p>

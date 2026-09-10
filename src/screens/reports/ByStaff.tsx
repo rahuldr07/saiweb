@@ -129,7 +129,7 @@ export function ByStaff({ initial, onOpenDept }: { initial?: string | undefined;
             </FlexRow>
           ))}
         </FlexTable>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Green is completed, amber still pending. Click anyone for their orders.
         </p>
 
@@ -221,7 +221,7 @@ export function ByStaff({ initial, onOpenDept }: { initial?: string | undefined;
                 gap: 12,
                 alignItems: 'center',
                 padding: '7px 0',
-                fontSize: '12.5px',
+                fontSize: 'var(--t-small)',
               }}
             >
               <span>{stage}</span>
@@ -229,13 +229,13 @@ export function ByStaff({ initial, onOpenDept }: { initial?: string | undefined;
                 <span style={{ width: `${pct}%`, background: 'var(--ok)' }} />
                 <span style={{ width: `${100 - pct}%`, background: 'var(--warn)' }} />
               </span>
-              <span className="mono gr" style={{ textAlign: 'right', fontSize: '11.5px' }}>
+              <span className="mono gr" style={{ textAlign: 'right', fontSize: 'var(--t-label)' }}>
                 <span className="ok">{v.done}</span> / <span className="warn">{v.pend}</span>
               </span>
             </div>
           )
         })}
-        <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 10 }}>
           Completed / pending per stage this person works.
         </p>
       </Card>

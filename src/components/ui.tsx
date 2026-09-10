@@ -126,7 +126,7 @@ export const focusSection = (id: string) => focusElement(document.getElementById
 export function SecHead({ sub, actions }: { sub: ReactNode; actions?: ReactNode }) {
   return (
     <div className="ch" style={{ border: 'none', padding: '2px 0 15px', alignItems: 'flex-start' }}>
-      <div className="gr" style={{ fontSize: '12.5px', maxWidth: '70ch' }}>
+      <div className="gr" style={{ fontSize: 'var(--t-small)', maxWidth: '70ch' }}>
         {sub}
       </div>
       {actions ? <div className="r">{actions}</div> : null}
@@ -146,9 +146,9 @@ export function EmbedHead({
   return (
     <div className="ch" style={{ border: 'none', padding: '2px 0 14px' }}>
       <div>
-        <h2 style={{ margin: 0, fontSize: '17px' }}>{title}</h2>
+        <h2 style={{ margin: 0, fontSize: 'var(--t-h3)' }}>{title}</h2>
         {sub ? (
-          <div className="gr" style={{ fontSize: '12.5px', marginTop: 3 }}>
+          <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 3 }}>
             {sub}
           </div>
         ) : null}
@@ -550,7 +550,7 @@ export function BarRow({
         gap,
         alignItems: 'center',
         padding,
-        fontSize: '12.5px',
+        fontSize: 'var(--t-small)',
       }}
     >
       <span className={labelClass || undefined}>{label}</span>
@@ -640,7 +640,7 @@ export function DetailRow({
         ...(center ? { alignItems: 'center' } : {}),
         ...(gap === undefined ? {} : { gap }),
         padding,
-        fontSize: '13.5px',
+        fontSize: 'var(--t-body)',
         ...(last ? {} : { borderBottom: '1px solid var(--hair)' }),
       }}
     >

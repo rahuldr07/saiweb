@@ -107,7 +107,7 @@ export function DeptForm({
 
       {d ? (
         <Banner kind="b" icon="◔" style={{ margin: '16px 0 0' }}>
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             <b>{people} people</b> belong to {d.n}
             {load ? `, carrying ${load} stage tasks today` : ''}.
           </span>
@@ -116,10 +116,10 @@ export function DeptForm({
         <Banner
           kind="r"
           icon="⚑"
-          title={<span style={{ fontSize: '12.5px' }}>A new department starts with nobody in it</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>A new department starts with nobody in it</span>}
           style={{ margin: '16px 0 0' }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             If you make it part of the pipeline, every order will need it and none of them will find
             an owner until you add staff. Those show up as exceptions, not as silent failures.
           </span>
@@ -162,7 +162,7 @@ export function DeptDelete({
 
   return (
     <>
-      <p style={{ fontSize: '13.5px' }}>
+      <p style={{ fontSize: 'var(--t-body)' }}>
         {people.length
           ? `${people.length} ${people.length === 1 ? 'person' : 'people'} would lose ${d.n} from their departments.`
           : 'Nobody belongs to it.'}
@@ -170,7 +170,7 @@ export function DeptDelete({
       </p>
       {checkedBy.length ? (
         <Banner kind="d" icon="⚑" style={{ marginTop: 14 }}>
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             {checkedBy.join(', ')} check{checkedBy.length === 1 ? 's' : ''} {d.n}. That pairing goes
             with it, and the self-review rule stops applying to those stages.
           </span>

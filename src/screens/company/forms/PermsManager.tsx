@@ -30,7 +30,7 @@ export function PermsManager({
     const held = usage(p.k)
     return (
       <>
-        <p style={{ fontSize: '13.5px' }}>
+        <p style={{ fontSize: 'var(--t-body)' }}>
           {held.length ? (
             <>
               It is ticked on <b>{held.join(', ')}</b> and will come off{' '}
@@ -61,7 +61,7 @@ export function PermsManager({
 
   return (
     <>
-      <p className="gr" style={{ fontSize: '12.5px', marginBottom: 14 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 14 }}>
         The built-in ones are wired to real behaviour — turning one off actually stops the thing
         happening. You can rename any of them, and add your own on top.
       </p>
@@ -155,10 +155,10 @@ function EditPerm({
         <Banner
           kind="r"
           icon="🔒"
-          title={<span style={{ fontSize: '12.5px' }}>This one can never be granted</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>This one can never be granted</span>}
           style={{ margin: '16px 0 0' }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             It sits on the matrix so its absence is visible rather than merely missing.
           </span>
         </Banner>
@@ -166,10 +166,10 @@ function EditPerm({
         <Banner
           kind="b"
           icon="⚙"
-          title={<span style={{ fontSize: '12.5px' }}>Built in</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>Built in</span>}
           style={{ margin: '16px 0 0' }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             Wired to real behaviour, so it can be renamed but not deleted.{' '}
             {held.length ? `Held by ${held.join(', ')}.` : 'Held by nobody.'}
           </span>
@@ -178,10 +178,10 @@ function EditPerm({
         <Banner
           kind="b"
           icon="◔"
-          title={<span style={{ fontSize: '12.5px' }}>Your own permission</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>Your own permission</span>}
           style={{ margin: '16px 0 0' }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             A permission you add is a label you can tick against roles. It records intent — it will
             not gate anything until that behaviour is built.
           </span>

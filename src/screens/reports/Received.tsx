@@ -165,7 +165,7 @@ export function Received() {
                     </div>
                   ))}
                 </Rows>
-                <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
                   A quiet day is not a lost client, but a quiet fortnight usually is. This is the list worth
                   checking against.
                 </p>
@@ -287,7 +287,7 @@ export function Received() {
               </table>
             </div>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             A stage column counts orders <i>currently</i> in that stage, so the stage columns plus Completed
             equal Received. Doc Req is raised by hand when a document is missing, which is why it is usually
             empty.
@@ -359,7 +359,7 @@ export function Received() {
                     label={
                       <>
                         {r.p}{' '}
-                        <span style={{ fontSize: '11.5px' }}>{PRODUCTS.find((x) => x.id === r.p)?.n}</span>
+                        <span style={{ fontSize: 'var(--t-label)' }}>{PRODUCTS.find((x) => x.id === r.p)?.n}</span>
                       </>
                     }
                     value={r.n}

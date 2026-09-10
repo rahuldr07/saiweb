@@ -85,7 +85,7 @@ export function WorkFocus({
               </div>
             )
           })}
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           Every one of these arrived today and found no home. The Assignment screen shows the full decision
           trail for any of them.
         </p>
@@ -137,7 +137,7 @@ export function WorkFocus({
           </FlexTable>
         ) : (
           <Card padded>
-            <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
               Everyone has something in hand.
             </p>
           </Card>
@@ -173,7 +173,7 @@ export function WorkFocus({
               )
             })}
         </FlexTable>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
           "Nobody idle" counts people holding unfinished work. Somebody who cleared their queue is not idle in
           any way worth worrying about — somebody who was never given any is.
         </p>
@@ -230,7 +230,7 @@ export function WorkFocus({
           </div>
         )
       })}
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Ordered by arrival time, because that is the order the engine placed them in.
       </p>
     </>

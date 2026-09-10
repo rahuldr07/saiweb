@@ -31,11 +31,11 @@ export function RosterTab({ list, today }: { list: Person[]; today: Date }) {
                   return (
                     <th key={d.toDateString()} style={{ textAlign: 'center', minWidth: 96 }}>
                       {DAY_NAMES[d.getDay()]}
-                      <div className="gr" style={{ fontWeight: 400, fontSize: '11.5px' }}>
+                      <div className="gr" style={{ fontWeight: 400, fontSize: 'var(--t-label)' }}>
                         {pad(d.getDate())}/{pad(d.getMonth() + 1)}
                       </div>
                       {h ? (
-                        <div className="chip n" style={{ fontSize: '10.5px', marginTop: 3 }}>
+                        <div className="chip n" style={{ fontSize: 'var(--t-eyebrow)', marginTop: 3 }}>
                           {h.n.split(' ')[0]}
                         </div>
                       ) : null}
@@ -51,7 +51,7 @@ export function RosterTab({ list, today }: { list: Person[]; today: Date }) {
                   <tr key={p.id}>
                     <td>
                       <b>{p.n}</b>
-                      <div className="gr" style={{ fontSize: '11.5px' }}>
+                      <div className="gr" style={{ fontSize: 'var(--t-label)' }}>
                         {sh.n} · {sh.from}–{sh.to}
                       </div>
                     </td>
@@ -63,23 +63,23 @@ export function RosterTab({ list, today }: { list: Person[]; today: Date }) {
                       return (
                         <td key={d.toDateString()} style={{ textAlign: 'center' }}>
                           {h && !h.opt ? (
-                            <span className="chip n" style={{ fontSize: '10.5px' }}>
+                            <span className="chip n" style={{ fontSize: 'var(--t-eyebrow)' }}>
                               Holiday
                             </span>
                           ) : off ? (
-                            <span className="chip r" style={{ fontSize: '10.5px' }}>
+                            <span className="chip r" style={{ fontSize: 'var(--t-eyebrow)' }}>
                               Leave
                             </span>
                           ) : rest ? (
-                            <span className="gr" style={{ fontSize: '11.5px' }}>
+                            <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                               rest
                             </span>
                           ) : sw ? (
-                            <span className="chip b" style={{ fontSize: '10.5px' }}>
+                            <span className="chip b" style={{ fontSize: 'var(--t-eyebrow)' }}>
                               Swap
                             </span>
                           ) : (
-                            <span className="mono gr" style={{ fontSize: '11.5px' }}>
+                            <span className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
                               {sh.from}
                             </span>
                           )}
@@ -93,7 +93,7 @@ export function RosterTab({ list, today }: { list: Person[]; today: Date }) {
           </table>
         </div>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         Seven days ahead, with holidays, approved leave and agreed swaps already in it. This is the
         view a person checks before asking for a day — and the one a lead checks before approving one.
       </p>

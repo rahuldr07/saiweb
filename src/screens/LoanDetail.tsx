@@ -161,7 +161,7 @@ export default function LoanDetail() {
               </div>
             </div>
           ) : (
-            <p className="gr" style={{ fontSize: '12.5px', padding: 16, margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', padding: 16, margin: 0 }}>
               No schedule until this request is approved.
             </p>
           )}
@@ -173,7 +173,7 @@ export default function LoanDetail() {
           {timeline.length ? (
             <Timeline entries={timeline} />
           ) : (
-            <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
               Nothing recorded yet.
             </p>
           )}

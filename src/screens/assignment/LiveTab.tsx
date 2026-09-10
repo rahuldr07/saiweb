@@ -43,7 +43,7 @@ export function LiveTab({
       title: `How ${o.id} was assigned`,
       body: (
         <>
-          <p className="gr" style={{ fontSize: '12.5px', marginBottom: 15 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 15 }}>
             {o.cl} · {o.pr} · {o.st} · arrived {o.hr}:00. Each stage was decided independently, in
             order.
           </p>
@@ -54,14 +54,14 @@ export function LiveTab({
             return (
               <Card key={s} style={{ marginBottom: 11 }}>
                 <div className="ch" style={{ padding: '11px 15px' }}>
-                  <h2 style={{ fontSize: '13.5px', margin: 0 }}>{s}</h2>
+                  <h2 style={{ fontSize: 'var(--t-body)', margin: 0 }}>{s}</h2>
                   <div className="r">
                     {a ? (
                       <>
-                        <span className="ava" style={{ width: 22, height: 22, fontSize: '8.5px' }}>
+                        <span className="ava" style={{ width: 22, height: 22, fontSize: 'var(--t-micro)' }}>
                           {initials(whoName(a.who))}
                         </span>
-                        <b style={{ fontSize: '12.5px' }}>{whoName(a.who)}</b>
+                        <b style={{ fontSize: 'var(--t-small)' }}>{whoName(a.who)}</b>
                       </>
                     ) : (
                       <Chip kind="d">Not placed</Chip>
@@ -80,19 +80,19 @@ export function LiveTab({
                           gap: 10,
                           alignItems: 'center',
                           padding: '5px 0',
-                          fontSize: '12.5px',
+                          fontSize: 'var(--t-small)',
                         }}
                       >
                         <span
                           className={`chip ${rule ? RULE_KIND[rule.k][1] : 'n'}`}
-                          style={{ fontSize: '9.5px', padding: '1px 6px' }}
+                          style={{ fontSize: 'var(--t-mini)', padding: '1px 6px' }}
                         >
                           {tr.r}
                         </span>
                         <span>{tr.note}</span>
                         <span
                           className="mono gr"
-                          style={{ textAlign: 'right', fontSize: '11.5px' }}
+                          style={{ textAlign: 'right', fontSize: 'var(--t-label)' }}
                         >
                           {tr.left} left
                         </span>
@@ -102,7 +102,7 @@ export function LiveTab({
                   {e ? (
                     <div
                       className="bnr d"
-                      style={{ margin: '9px 0 0', padding: '9px 12px', fontSize: '12.5px' }}
+                      style={{ margin: '9px 0 0', padding: '9px 12px', fontSize: 'var(--t-small)' }}
                     >
                       <span className="bi">⚑</span>
                       <div>{e.t}</div>
@@ -257,7 +257,7 @@ export function LiveTab({
                   }}
                 >
                   <div className="cell">
-                    <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                    <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                       {oi + 1}
                     </div>
                   </div>
@@ -283,18 +283,18 @@ export function LiveTab({
                             <Avatar
                               name={whoName(who)}
                               title={`Open ${whoName(who)}`}
-                              style={{ width: 21, height: 21, fontSize: '8.5px' }}
+                              style={{ width: 21, height: 21, fontSize: 'var(--t-micro)' }}
                               onClick={(e) => {
                                 e.stopPropagation()
                                 navigate({ to: '/staff/$personId', params: { personId: who } })
                               }}
                             />
-                            <span className="v" style={{ fontSize: '11.5px' }}>
+                            <span className="v" style={{ fontSize: 'var(--t-label)' }}>
                               {whoName(who).split(' ')[0]}
                             </span>
                           </div>
                         ) : (
-                          <span className="chip d" style={{ fontSize: '10.5px' }}>
+                          <span className="chip d" style={{ fontSize: 'var(--t-eyebrow)' }}>
                             unplaced
                           </span>
                         )}
@@ -307,7 +307,7 @@ export function LiveTab({
           </div>
         </div>
       </Card>
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         Every row is one order across all five stages. Click it for the rule-by-rule trace of how each
         name was chosen.
       </p>

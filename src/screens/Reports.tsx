@@ -99,7 +99,7 @@ function Reports() {
 
       {tab === 'Turnaround' ? (
         loading ? (
-          <p className="gr" style={{ fontSize: '13.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-body)' }}>
             Loading the delivery history…
           </p>
         ) : (
@@ -109,7 +109,7 @@ function Reports() {
 
       {tab === 'Quality' ? (
         loading ? (
-          <p className="gr" style={{ fontSize: '13.5px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-body)' }}>
             Loading the delivery history and QC log…
           </p>
         ) : (

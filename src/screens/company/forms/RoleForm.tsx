@@ -98,7 +98,7 @@ export function RoleForm({
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 10,
-                fontSize: '13.5px',
+                fontSize: 'var(--t-body)',
                 padding: '9px 12px',
                 border: `1px solid ${block ? 'var(--flagline)' : 'var(--hair)'}`,
                 borderRadius: 9,
@@ -116,15 +116,15 @@ export function RoleForm({
               <span>
                 <b>{p.n}</b>
                 {block ? (
-                  <div className="sd gr" style={{ fontSize: '11.5px' }}>
+                  <div className="sd gr" style={{ fontSize: 'var(--t-label)' }}>
                     Not available to any role, by design.
                   </div>
                 ) : floor ? (
-                  <div className="sd gr" style={{ fontSize: '11.5px' }}>
+                  <div className="sd gr" style={{ fontSize: 'var(--t-label)' }}>
                     The admin role keeps this — someone has to be able to administer.
                   </div>
                 ) : p.sys ? null : (
-                  <div className="sd gr" style={{ fontSize: '11.5px' }}>
+                  <div className="sd gr" style={{ fontSize: 'var(--t-label)' }}>
                     Your own permission
                   </div>
                 )}
@@ -144,10 +144,10 @@ export function RoleForm({
         <Banner
           kind="b"
           icon="🔒"
-          title={<span style={{ fontSize: '12.5px' }}>This role’s name is fixed</span>}
+          title={<span style={{ fontSize: 'var(--t-small)' }}>This role’s name is fixed</span>}
           style={{ margin: '16px 0 0' }}
         >
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             Staff is the floor and Company admin the ceiling — every workspace needs both. You can
             still adjust what they can do, within reason.
           </span>
@@ -156,7 +156,7 @@ export function RoleForm({
 
       {held ? (
         <Banner kind="r" icon="◔" style={{ margin: '16px 0 0' }}>
-          <span style={{ fontSize: '12.5px' }}>
+          <span style={{ fontSize: 'var(--t-small)' }}>
             <b>
               {held} {held === 1 ? 'person holds' : 'people hold'} this role.
             </b>{' '}
@@ -197,7 +197,7 @@ export function RoleDelete({
 
   return (
     <>
-      <p style={{ fontSize: '13.5px' }}>
+      <p style={{ fontSize: 'var(--t-body)' }}>
         {held.length ? (
           <>
             <b>

@@ -31,7 +31,7 @@ function PillRow({
         <div className="lb" style={{ margin: 0 }}>
           {label}
         </div>
-        <span className="gr" style={{ fontSize: '11.5px' }}>
+        <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
           {count} of {total}
         </span>
         <span style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
@@ -80,7 +80,7 @@ function AddCountyForm({ st, onDone }: { st: string; onDone: (msg: string) => vo
           {err}
         </Banner>
       ) : null}
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
         It is added to the county list with no links on file, so it shows up under <b>Counties</b> as something to
         fill in.{' '}
         {have
@@ -147,13 +147,13 @@ export function LevelsTab() {
                   </b>
                   <div className="sd gr">was {m.before}</div>
                 </span>
-                <span className="gr" style={{ fontSize: '12.5px' }}>
+                <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                   {m.after}
                 </span>
               </div>
             ))}
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14 }}>
             Each person was put on the level nearest their old coverage, which is rarely an exact fit.
             Anyone who now covers <b>less</b> than they did may start seeing work hold as an exception;
             anyone who covers <b>more</b> may be given something they have not done before. Both are
@@ -188,7 +188,7 @@ export function LevelsTab() {
                 </div>
               ))}
             </Rows>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14 }}>
               Nothing will hold for want of somebody qualified. This is the number to watch when you narrow
               someone — it is the first thing that moves.
             </p>
@@ -225,7 +225,7 @@ export function LevelsTab() {
               </div>
             ))}
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14 }}>
             Each of these becomes an exception the moment an order arrives for it. Closing the gap is widening
             somebody's coverage, or hiring for it.
           </p>
@@ -367,14 +367,14 @@ export function LevelsTab() {
             <div className="lb" style={{ margin: 0 }}>
               States
             </div>
-            <span className="gr" style={{ fontSize: '11.5px' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
               {level.states === 'all' ? 'every state' : `${chosenStates.length} of ${EVERYSTATE().length}`}
             </span>
             <span style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
               <select
                 className="inp"
                 aria-label={`Add a state to ${level.n}`}
-                style={{ minWidth: 170, fontSize: '12.5px' }}
+                style={{ minWidth: 170, fontSize: 'var(--t-small)' }}
                 value=""
                 disabled={!rest.length}
                 onChange={(e) => e.target.value && setCov(level.id, 'addstate', e.target.value)}
@@ -409,7 +409,7 @@ export function LevelsTab() {
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {level.states === 'all' ? (
-              <span className="gr" style={{ fontSize: '13.5px' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-body)' }}>
                 Every state in the country — including any you have not taken work in yet.
               </span>
             ) : chosenStates.length ? (
@@ -425,7 +425,7 @@ export function LevelsTab() {
                 </button>
               ))
             ) : (
-              <span className="gr" style={{ fontSize: '13.5px' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-body)' }}>
                 No states yet — add one above.
               </span>
             )}
@@ -438,7 +438,7 @@ export function LevelsTab() {
               <div className="lb" style={{ margin: 0 }}>
                 Counties
               </div>
-              <span className="gr" style={{ fontSize: '11.5px' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                 a state with none unticked means the whole state
               </span>
             </div>
@@ -457,10 +457,10 @@ export function LevelsTab() {
                   }}
                 >
                   <span style={{ width: 126, flex: 'none', paddingTop: 4 }}>
-                    <b className="mono" style={{ fontSize: '12.5px' }}>
+                    <b className="mono" style={{ fontSize: 'var(--t-small)' }}>
                       {st}
                     </b>
-                    <span className="gr" style={{ fontSize: '11.5px' }}>
+                    <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                       {' '}
                       {stateName(st)}
                     </span>
@@ -480,7 +480,7 @@ export function LevelsTab() {
                       )
                     })}
                     {have.length ? null : (
-                      <span className="gr" style={{ fontSize: '12.5px' }}>
+                      <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                         No counties on file — this level covers the whole state.
                       </span>
                     )}
@@ -508,7 +508,7 @@ export function LevelsTab() {
                   </div>
                   <span
                     className="gr"
-                    style={{ fontSize: '11.5px', width: 76, textAlign: 'right', flex: 'none', paddingTop: 4 }}
+                    style={{ fontSize: 'var(--t-label)', width: 76, textAlign: 'right', flex: 'none', paddingTop: 4 }}
                   >
                     {!have.length ? 'whole state' : named.length ? `${named.length} of ${have.length}` : 'all'}
                   </span>
@@ -517,7 +517,7 @@ export function LevelsTab() {
             })}
           </div>
         ) : (
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 16 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 16 }}>
             Add a state above to choose counties within it.
           </p>
         )}
@@ -545,13 +545,13 @@ export function LevelsTab() {
                               <b>{p.n}</b>
                               <div className="sd">{p.dep.join(', ')}</div>
                             </span>
-                            <span className="gr" style={{ fontSize: '12.5px' }}>
+                            <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                               on this level
                             </span>
                           </div>
                         ))}
                       </Rows>
-                      <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+                      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14 }}>
                         Move these people to another level first. Removing a level out from under somebody would
                         silently widen what they can be given, which is the one change nobody would notice.
                       </p>
@@ -579,7 +579,7 @@ export function LevelsTab() {
             Who is on {level.n}
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label className="gr" style={{ fontSize: '11.5px' }} htmlFor="lv-add">
+            <label className="gr" style={{ fontSize: 'var(--t-label)' }} htmlFor="lv-add">
               Add somebody
             </label>
             <select
@@ -621,10 +621,10 @@ export function LevelsTab() {
                 <Avatar
                   name={x.n}
                   title={`Open ${x.n}`}
-                  style={{ width: 24, height: 24, fontSize: '9.5px' }}
+                  style={{ width: 24, height: 24, fontSize: 'var(--t-mini)' }}
                   onClick={() => navigate({ to: '/staff/$personId', params: { personId: x.id } })}
                 />
-                <b style={{ fontSize: '12.5px' }}>{x.n}</b>
+                <b style={{ fontSize: 'var(--t-small)' }}>{x.n}</b>
                 <Btn
                   variant="ghost"
                   small
@@ -637,13 +637,13 @@ export function LevelsTab() {
               </span>
             ))
           ) : (
-            <span className="gr" style={{ fontSize: '13.5px' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-body)' }}>
               Nobody yet — add someone above.
             </span>
           )}
         </div>
         {ungraded.length ? (
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 14 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 14 }}>
             <b>{ungraded.length} not on any level:</b> {ungraded.map((x) => x.n).join(', ')} — they are unrestricted
             until you put them on one.
           </p>
@@ -666,7 +666,7 @@ export function LevelsTab() {
             ))}
           </Rows>
         </div>
-        <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
           Levels govern <b>{COVSTAGES.join(' and ')}</b> only — the stages where local knowledge is what is being
           bought. Typing and RTS work from what the searcher found.
         </p>

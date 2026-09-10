@@ -56,11 +56,11 @@ export function ExceptionsTab({
         title: 'That would be self-review',
         body: (
           <>
-            <p style={{ fontSize: '13.5px' }}>
+            <p style={{ fontSize: 'var(--t-body)' }}>
               <b>{whoName(id)}</b> did the {paired} on this order. Checking their own work is the one
               thing the QC score cannot survive.
             </p>
-            <p className="gr" style={{ fontSize: '12.5px' }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
               Pick someone else, or turn the rule off under Rules if that is genuinely how you work.
             </p>
           </>
@@ -142,7 +142,7 @@ export function ExceptionsTab({
                 </div>
               </div>
               <div className="cb" style={{ paddingBottom: 0 }}>
-                <p className="gr" style={{ fontSize: '12.5px', marginBottom: 13 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginBottom: 13 }}>
                   {list[0].t}. {REMEDY[why as ExclusionReason]}
                 </p>
               </div>
@@ -164,7 +164,7 @@ export function ExceptionsTab({
                       return (
                         <div key={key(e)} className="trow" style={{ gridTemplateColumns: COLS }}>
                           <div className="cell">
-                            <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                            <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                               {ei + 1}
                             </div>
                           </div>
@@ -234,7 +234,7 @@ export function ExceptionsTab({
                     })}
                     {list.length > SHOWN_PER_CAUSE ? (
                       <div className="trow" style={{ gridTemplateColumns: '1fr' }}>
-                        <div className="cell gr" style={{ fontSize: '12.5px', padding: '4px 0' }}>
+                        <div className="cell gr" style={{ fontSize: 'var(--t-small)', padding: '4px 0' }}>
                           + {list.length - SHOWN_PER_CAUSE} more of the same kind — fixing the cause
                           above clears them together.
                         </div>

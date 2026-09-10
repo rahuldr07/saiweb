@@ -59,7 +59,7 @@ export function CountyEdit({
     const held = linkTypes.filter((t) => county.links[t.k]?.u).length
     return (
       <>
-        <p style={{ fontSize: '13.5px' }}>
+        <p style={{ fontSize: 'var(--t-body)' }}>
           Removing <b>{county.n} County, {county.st}</b> takes it off the coverage record.{' '}
           {held
             ? `The ${held} link${held === 1 ? '' : 's'} on file ${held === 1 ? 'goes' : 'go'} with it.`
@@ -154,7 +154,7 @@ export function CountyEdit({
                 {county ? (
                   <span
                     className={`chip ${LSTATE[l.s][1]}`}
-                    style={{ fontSize: '9.5px', padding: '1px 7px', marginLeft: 5 }}
+                    style={{ fontSize: 'var(--t-mini)', padding: '1px 7px', marginLeft: 5 }}
                   >
                     {LSTATE[l.s][0]}
                   </span>
@@ -166,7 +166,7 @@ export function CountyEdit({
                 placeholder="no link on file"
                 autoComplete="off"
                 style={{
-                  fontSize: '12.5px',
+                  fontSize: 'var(--t-small)',
                   ...(flagged
                     ? { borderColor: 'var(--flagline)', background: 'var(--flag)' }
                     : {}),
@@ -185,7 +185,7 @@ export function CountyEdit({
       </div>
 
       <Banner kind="b" icon="◷" style={{ margin: '16px 0 0' }}>
-        <span style={{ fontSize: '12.5px' }}>
+        <span style={{ fontSize: 'var(--t-small)' }}>
           All {linkTypes.length} are checked automatically every {check.every} days. Anything
           that stops working is reported to{' '}
           {check.notify === 'admins' ? 'company admins' : check.notify}.

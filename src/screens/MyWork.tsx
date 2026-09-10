@@ -149,7 +149,7 @@ export default function MyWork() {
     })
 
   const note = (children: React.ReactNode) => (
-    <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+    <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
       {children}
     </p>
   )
@@ -172,7 +172,7 @@ export default function MyWork() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing finished yet today.
             </p>
           )}
@@ -207,7 +207,7 @@ export default function MyWork() {
               ))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing on your desk is past a checkpoint.
             </p>
           )}
@@ -298,7 +298,7 @@ export default function MyWork() {
         <Chip kind={UPDKIND[u.kind] ?? 'n'}>{u.kind}</Chip>
       </span>
       <span>
-        {withName ? <b style={{ fontSize: '13.5px' }}>{whoName(u.who)}</b> : null}
+        {withName ? <b style={{ fontSize: 'var(--t-body)' }}>{whoName(u.who)}</b> : null}
         <div className="sd">{u.b}</div>
         <div className="sd gr">{fmtDate(u.d)}</div>
       </span>
@@ -327,7 +327,7 @@ export default function MyWork() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 220 }}>
             <Label>Today — {fmtDate(now())}</Label>
-            <div style={{ fontSize: '13.5px', marginTop: 6 }}>
+            <div style={{ fontSize: 'var(--t-body)', marginTop: 6 }}>
               <Chip kind={shift.c}>{shift.n}</Chip>{' '}
               <span className="gr">
                 {shift.from} to {shift.to}
@@ -335,7 +335,7 @@ export default function MyWork() {
             </div>
             {mark ? (
               <>
-                <div className="gr" style={{ fontSize: '12.5px', marginTop: 7 }}>
+                <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 7 }}>
                   In at <b className="mono">{mark.in}</b>
                   {mark.out ? (
                     <>
@@ -347,14 +347,14 @@ export default function MyWork() {
                   )}
                   {mark.late ? <span className="warn"> · {mark.late} minutes late</span> : null}
                 </div>
-                <div className="gr" style={{ fontSize: '11.5px', marginTop: 3 }}>
+                <div className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 3 }}>
                   {mark.inside ? <span className="ok">✓</span> : <span className="warn">◷</span>}{' '}
                   {mark.where}
                   {mark.acc ? ` · accurate to ${mark.acc} m` : ''}
                 </div>
               </>
             ) : (
-              <div className="gr" style={{ fontSize: '12.5px', marginTop: 7 }}>
+              <div className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 7 }}>
                 Not marked yet. Checking in asks the browser where you are.
               </div>
             )}
@@ -380,7 +380,7 @@ export default function MyWork() {
               marginTop: 12,
             }}
           >
-            <span className={rest.ok ? 'ok' : 'warn'} style={{ fontSize: '14.5px' }}>
+            <span className={rest.ok ? 'ok' : 'warn'} style={{ fontSize: 'var(--t-lead)' }}>
               {rest.ok ? '✓' : '◷'}
             </span>
             <span>
@@ -392,7 +392,7 @@ export default function MyWork() {
         ) : null}
 
         {mark?.breakMins ? (
-          <div className="gr" style={{ fontSize: '11.5px', marginTop: 8 }}>
+          <div className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 8 }}>
             Break: {mark.breakMins} minutes
             {mark.breakIn && !mark.breakOut ? ' — on a break now' : ''}
           </div>
@@ -446,7 +446,7 @@ export default function MyWork() {
             <DetailRow key={r[0]} label={r[0]} value={<b className="mono">{r[1]}</b>} />
           ))}
           {nextHoliday ? (
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               Next holiday: <b>{nextHoliday.h.n}</b> on {nextHoliday.h.d}
               {nextHoliday.h.opt ? ' — optional' : ''}.
             </p>
@@ -466,7 +466,7 @@ export default function MyWork() {
                   gap: 11,
                   alignItems: 'center',
                   padding: '6px 0',
-                  fontSize: '13.5px',
+                  fontSize: 'var(--t-body)',
                 }}
               >
                 <span>
@@ -520,12 +520,12 @@ export default function MyWork() {
               {myUpdates.map((u) => updateRow(u, false))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing yet. A handover note written today is the thing that saves someone an hour
               tomorrow.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Updates cannot be edited once posted. That is what makes them worth reading back.
           </p>
         </Card>
@@ -537,7 +537,7 @@ export default function MyWork() {
               {teamUpdates.map((u) => updateRow(u, true))}
             </Rows>
           ) : (
-            <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
               Nothing from the rest of {me.dep[0] || 'your department'} recently.
             </p>
           )}
@@ -584,7 +584,7 @@ export default function MyWork() {
                         }}
                       >
                         <div className="cell">
-                          <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                          <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                             {i + 1}
                           </div>
                         </div>
@@ -605,7 +605,7 @@ export default function MyWork() {
                           ) : null}
                         </div>
                         <div className="cell">
-                          <div className="v" style={{ fontSize: '12.5px' }}>
+                          <div className="v" style={{ fontSize: 'var(--t-small)' }}>
                             {o.co ? `${o.co}, ${o.st}` : '—'}
                           </div>
                         </div>
@@ -631,14 +631,14 @@ export default function MyWork() {
               </div>
             </div>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Ordered by when it arrived. Your checkpoint is your department’s slice of the client’s
             promise — not the client deadline itself, which is later.
           </p>
         </>
       ) : (
         <Card padded>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             Everything assigned to you today is done. {wk.done} stage{wk.done === 1 ? '' : 's'}{' '}
             finished.
           </p>
@@ -654,7 +654,7 @@ export default function MyWork() {
                 <div className="rw" key={`${i.o.id}-${i.stage}-${idx}`}>
                   <span className="ok">✓</span>
                   <span>
-                    <b className="mono" style={{ fontSize: '12.5px' }}>
+                    <b className="mono" style={{ fontSize: 'var(--t-small)' }}>
                       {i.o.id}
                     </b>{' '}
                     <span className="gr">{i.stage}</span>
@@ -662,7 +662,7 @@ export default function MyWork() {
                       {i.o.cl} · {i.o.pr}
                     </div>
                   </span>
-                  <span className="gr mono" style={{ fontSize: '11.5px' }}>
+                  <span className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                     {i.hr}:00
                   </span>
                 </div>
@@ -670,7 +670,7 @@ export default function MyWork() {
               {finished.length > 8 && !showAllDone ? (
                 <div className="rw">
                   <span className="gr">·</span>
-                  <span className="gr" style={{ fontSize: '12.5px' }}>
+                  <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                     and {finished.length - 8} more
                   </span>
                   <span>
@@ -690,10 +690,10 @@ export default function MyWork() {
           <Label>Your quality</Label>
           {!showScores ? (
             <>
-              <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                 Scores are not shown to the person rated on this account.
               </p>
-              <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
                 That is a company setting — <b>Quality → How scoring works → “Scores are visible to
                 the person rated”</b>. It is off by default, on the view that ratings used for filing
                 should not be read as a report card.
@@ -704,7 +704,7 @@ export default function MyWork() {
           ) : rated.length && qavg !== null ? (
             <>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '8px 0 10px' }}>
-                <b className="mono" style={{ fontSize: '26px' }}>
+                <b className="mono" style={{ fontSize: 'var(--t-display)' }}>
                   {qavg.toFixed(2)}
                 </b>
                 <span className="gr">
@@ -720,7 +720,7 @@ export default function MyWork() {
                       <div className="rw" key={`${x.order}-${i}`}>
                         <span className="warn">·</span>
                         <span>
-                          <b style={{ fontSize: '12.5px' }}>{x.note}</b>
+                          <b style={{ fontSize: 'var(--t-small)' }}>{x.note}</b>
                           <div className="sd gr">
                             {x.crit} · {x.order} · {x.dk}
                           </div>
@@ -730,7 +730,7 @@ export default function MyWork() {
                     ))}
                 </Rows>
               ) : (
-                <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
                   Nothing has been raised against your work in this range.
                 </p>
               )}
@@ -744,7 +744,7 @@ export default function MyWork() {
               </Btn>
             </>
           ) : (
-            <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
               Nothing of yours has been checked in this range.
             </p>
           )}
@@ -765,7 +765,7 @@ export default function MyWork() {
                     gap: 12,
                     alignItems: 'center',
                     padding: '7px 0',
-                    fontSize: '12.5px',
+                    fontSize: 'var(--t-small)',
                   }}
                 >
                   <span>
@@ -783,11 +783,11 @@ export default function MyWork() {
               )
             })
           ) : (
-            <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
               You are not in a department, so nothing can be assigned to you.
             </p>
           )}
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Your share of what your department handled today.
           </p>
         </Card>

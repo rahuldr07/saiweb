@@ -46,7 +46,7 @@ export function WorkRow({
       }}
     >
       <div className="cell">
-        <div className="gr mono" style={{ fontSize: '11.5px' }}>
+        <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
           {index + 1}
         </div>
       </div>
@@ -60,12 +60,12 @@ export function WorkRow({
             <Avatar
               name={owner}
               title={`Open ${owner}`}
-              style={{ width: 21, height: 21, fontSize: '8.5px' }}
+              style={{ width: 21, height: 21, fontSize: 'var(--t-micro)' }}
               onClick={() =>
                 item.who && navigate({ to: '/staff/$personId', params: { personId: item.who } })
               }
             />
-            <div className="v" style={{ fontSize: '12.5px' }}>
+            <div className="v" style={{ fontSize: 'var(--t-small)' }}>
               {owner}
             </div>
           </div>

@@ -139,7 +139,7 @@ export default function OrderDetail() {
         </Btn>
         <PageHead title="Not one of yours" sub={`${me.n} is not on any stage of ${o.id}.`} />
         <Card padded style={{ maxWidth: 560 }}>
-          <p style={{ fontSize: '13.5px', margin: 0 }}>
+          <p style={{ fontSize: 'var(--t-body)', margin: 0 }}>
             Your account sees the orders you are working. If this one should be yours, whoever runs
             your department can assign it.
           </p>
@@ -180,11 +180,11 @@ export default function OrderDetail() {
         title: 'That would be self-review',
         body: (
           <>
-            <p style={{ fontSize: '13.5px' }}>
+            <p style={{ fontSize: 'var(--t-body)' }}>
               <b>{whoName(value)}</b> did the {paired} on this order. Checking their own work is the
               one thing the QC score cannot survive.
             </p>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Pick someone else, or turn the rule off under Quality → How scoring works if that is
               genuinely how you work.
             </p>
@@ -221,7 +221,7 @@ export default function OrderDetail() {
       title: 'Assign the remaining stages',
       body: (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             {open.length} stage{open.length === 1 ? '' : 's'} on <b className="mono">{o.id}</b>{' '}
             {open.length === 1 ? 'has' : 'have'} nobody on {open.length === 1 ? 'it' : 'them'}.
           </p>
@@ -243,7 +243,7 @@ export default function OrderDetail() {
               </div>
             ))}
           </Rows>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             These names come from the rules the automatic pass runs, as those rules stand right now:{' '}
             {applied.join(' · ')}. One switched off under Assignment → Rules is off here too. The
             daily target is the one this screen does not hold you to — the load beside each name is
@@ -496,7 +496,7 @@ export default function OrderDetail() {
 
           <Card padded style={{ marginTop: 16 }}>
             <Label>Stage checkpoints</Label>
-            <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 14px' }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '6px 0 14px' }}>
               The {plan.slaH}-hour promise divided between the departments. Each row is the latest
               that stage can finish and still leave the rest of the pipeline the time it needs.
             </p>
@@ -533,7 +533,7 @@ export default function OrderDetail() {
                 <div className="rw" key={r.stage}>
                   <span
                     className={r.done ? 'ok' : r.behind ? 'bad' : r.current ? 'warn' : 'gr'}
-                    style={{ fontSize: '14.5px' }}
+                    style={{ fontSize: 'var(--t-lead)' }}
                   >
                     {r.done ? '✓' : r.behind ? '⚑' : r.current ? '◷' : '·'}
                   </span>
@@ -549,7 +549,7 @@ export default function OrderDetail() {
                             : `by ${fmtDT(r.at)} ${TZ}`}
                     </div>
                   </span>
-                  <span className="mono gr" style={{ fontSize: '11.5px' }}>
+                  <span className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
                     {r.pct}% · {hh(r.hours)}
                   </span>
                 </div>
@@ -563,13 +563,13 @@ export default function OrderDetail() {
                     {fmtDT(o.due)} {TZ}
                   </div>
                 </span>
-                <span className="mono gr" style={{ fontSize: '11.5px' }}>
+                <span className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
                   {BUDGET.buffer}%
                 </span>
               </div>
             </Rows>
 
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
               Set under{' '}
               <button
                 type="button"
@@ -702,7 +702,7 @@ export default function OrderDetail() {
             <CardHead
               title="Rate the people on this order"
               actions={
-                <span className="gr" style={{ fontSize: '12.5px' }}>
+                <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                   {worked.length} stage{worked.length === 1 ? '' : 's'} worked
                 </span>
               }
@@ -785,7 +785,7 @@ export default function OrderDetail() {
                 </Btn>
                 <span
                   className="gr"
-                  style={{ fontSize: '12.5px', marginLeft: 'auto', alignSelf: 'center' }}
+                  style={{ fontSize: 'var(--t-small)', marginLeft: 'auto', alignSelf: 'center' }}
                 >
                   A defect attaches to the field and page — that is what feeds the rulebook.
                 </span>
@@ -896,7 +896,7 @@ export default function OrderDetail() {
                             View
                           </Btn>
                         ) : (
-                          <span className="gr" style={{ fontSize: '12.5px' }}>
+                          <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                             no image
                           </span>
                         )}
@@ -907,7 +907,7 @@ export default function OrderDetail() {
                         ) : d.extraction === 'review' ? (
                           <Chip kind="r">Needs review</Chip>
                         ) : (
-                          <span className="gr" style={{ fontSize: '12.5px' }}>
+                          <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                             —
                           </span>
                         )}
@@ -918,7 +918,7 @@ export default function OrderDetail() {
               </div>
             </div>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             An empty row shows <b>no</b> extraction status. A document is only “Verified” once a
             person has confirmed the reading against the image.
           </p>
@@ -971,11 +971,11 @@ export default function OrderDetail() {
             className="cb"
             style={{ borderTop: '1px solid var(--hair)', display: 'flex', gap: 12, flexWrap: 'wrap' }}
           >
-            <span className="gr" style={{ fontSize: '12.5px' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
               Search fee {money(o.fee)} + costs {money(costTotal)} =
             </span>
             <b className="mono">{money(Math.round((o.fee + costTotal) * 100) / 100)}</b>
-            <span className="gr" style={{ fontSize: '12.5px', marginLeft: 'auto' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-small)', marginLeft: 'auto' }}>
               Costs are reimbursed at cost — no margin applied.
             </span>
           </div>
@@ -1013,7 +1013,7 @@ export default function OrderDetail() {
                     <div className="sd">{detail}</div>
                   </span>
                   <span style={{ textAlign: 'right' }}>
-                    <div className="mono gr" style={{ fontSize: '11.5px' }}>
+                    <div className="mono gr" style={{ fontSize: 'var(--t-label)' }}>
                       {at}
                     </div>
                     <div className="sd">{by}</div>
@@ -1022,7 +1022,7 @@ export default function OrderDetail() {
               ))}
             </Rows>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             Every create, status change, assignment, field edit, QC rating and delivery is recorded
             with who and when. This is the record that answers an insurer.
           </p>
@@ -1057,7 +1057,7 @@ export default function OrderDetail() {
                   <b>{n.by}</b>
                   <div className={`sd${n.defect ? ' bad' : ''}`}>{n.text}</div>
                 </span>
-                <span className="gr mono" style={{ fontSize: '11.5px' }}>
+                <span className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                   {fmtDT(n.at)}
                 </span>
               </div>
@@ -1072,7 +1072,7 @@ export default function OrderDetail() {
                   Doc req raised — deed referenced in the mortgage isn’t imaged in the package.
                 </div>
               </span>
-              <span className="gr mono" style={{ fontSize: '11.5px' }}>
+              <span className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                 {fmtDT(hrs(-11))}
               </span>
             </div>
@@ -1113,7 +1113,7 @@ export default function OrderDetail() {
                       {l?.u ? (
                         <div
                           className={`ro${BADSTATES.includes(status) ? ' warn' : ''}`}
-                          style={{ fontSize: '11.5px', overflowWrap: 'anywhere' }}
+                          style={{ fontSize: 'var(--t-label)', overflowWrap: 'anywhere' }}
                         >
                           {l.u}
                         </div>
@@ -1144,7 +1144,7 @@ export default function OrderDetail() {
                   {days(LINKCHECK.last) === 0 ? 'today' : `${days(LINKCHECK.last)} days ago`}.
                 </Banner>
               ) : (
-                <p className="ok" style={{ fontSize: '12.5px', marginTop: 12 }}>
+                <p className="ok" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
                   All {LINKTYPES.length} links working as of the last check.
                 </p>
               )}

@@ -73,7 +73,7 @@ function ClientPromise() {
       title: 'Remove this rule?',
       body: (
         <>
-          <p style={{ fontSize: '13.5px' }}>
+          <p style={{ fontSize: 'var(--t-body)' }}>
             <b>
               {r.cl} · {r.pr}
             </b>{' '}
@@ -141,7 +141,7 @@ function ClientPromise() {
         <CardHead
           title="Turnaround by client and product"
           actions={
-            <span className="gr" style={{ fontSize: '12.5px' }}>
+            <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
               most specific rule wins
             </span>
           }
@@ -176,12 +176,12 @@ function ClientPromise() {
                       key={`h-${i}-${s.h}`}
                       onBlur={(e) => setSlaHours(i, e.target.value)}
                     />{' '}
-                    <span className="gr" style={{ fontSize: '11.5px' }}>
+                    <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                       hours
                     </span>
                   </div>
                   <div className="cell">
-                    <div className="v gr" style={{ fontSize: '12.5px' }}>
+                    <div className="v gr" style={{ fontSize: 'var(--t-small)' }}>
                       {isDefaultRule(s)
                         ? 'anything without a specific rule'
                         : `${s.cl} orders for ${s.pr}`}
@@ -189,7 +189,7 @@ function ClientPromise() {
                   </div>
                   <div className="cell">
                     {isDefaultRule(s) ? (
-                      <span className="gr" style={{ fontSize: '11.5px' }}>
+                      <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                         the fallback
                       </span>
                     ) : (
@@ -205,7 +205,7 @@ function ClientPromise() {
         </div>
       </Card>
 
-      <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+      <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
         The last row is the fallback and cannot be removed — every order needs a turnaround, even
         one from a client you have no rule for.
       </p>
@@ -367,7 +367,7 @@ function StageBudgets() {
                 padding: '7px 0',
               }}
             >
-              <span style={{ fontSize: '12.5px', fontWeight: 600 }}>{st}</span>
+              <span style={{ fontSize: 'var(--t-small)', fontWeight: 600 }}>{st}</span>
               <input
                 type="range"
                 min={0}
@@ -388,11 +388,11 @@ function StageBudgets() {
                   value={sh[st] ?? 0}
                   onChange={(e) => setShare(pr, st, e.target.value)}
                 />
-                <span className="gr" style={{ fontSize: '11.5px' }}>
+                <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                   %
                 </span>
               </div>
-              <span className="mono gr" style={{ fontSize: '11.5px', textAlign: 'right' }}>
+              <span className="mono gr" style={{ fontSize: 'var(--t-label)', textAlign: 'right' }}>
                 {hh((win * (sh[st] ?? 0)) / 100)}
               </span>
             </div>
@@ -407,7 +407,7 @@ function StageBudgets() {
               padding: '11px 13px',
             }}
           >
-            <span className={ok ? 'ok' : 'warn'} style={{ fontSize: '14.5px' }}>
+            <span className={ok ? 'ok' : 'warn'} style={{ fontSize: 'var(--t-lead)' }}>
               {ok ? '✓' : '⚠'}
             </span>
             <span>
@@ -445,7 +445,7 @@ function StageBudgets() {
                 key={`buf-${budget.buffer}`}
                 onBlur={(e) => setBuffer(e.target.value)}
               />
-              <span className="gr" style={{ fontSize: '12.5px' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-small)' }}>
                 % · on a 24h order that is {hh((24 * budget.buffer) / 100)} of slack before the
                 client is let down
               </span>
@@ -484,7 +484,7 @@ function StageBudgets() {
               >
                 Remove this override
               </Btn>
-              <span className="gr" style={{ fontSize: '11.5px', alignSelf: 'center' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-label)', alignSelf: 'center' }}>
                 {pr} orders would fall back to the default split
               </span>
             </div>
@@ -493,7 +493,7 @@ function StageBudgets() {
 
         <Card padded>
           <Label>What each department must hit</Label>
-          <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 12px' }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: '6px 0 12px' }}>
             Cumulative, measured from when the order arrived. Shown for a 24-hour promise
             {pr === 'base' ? '' : ` on a ${pr}`}.
           </p>
@@ -552,7 +552,7 @@ function StageBudgets() {
                       <td>
                         <b>{H}h</b>
                         {H === 4 ? (
-                          <span className="gr" style={{ fontSize: '10.5px' }}>
+                          <span className="gr" style={{ fontSize: 'var(--t-eyebrow)' }}>
                             {' '}
                             rush
                           </span>
@@ -569,7 +569,7 @@ function StageBudgets() {
               </tbody>
             </table>
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Because the split is a percentage, a 4-hour rush is governed by the same setting as a
             72-hour full search. Watch the rush row: {ASSIGN_STAGES[1]} gets{' '}
             {hh((4 * (1 - budget.buffer / 100) * (sh[ASSIGN_STAGES[1]] ?? 0)) / 100)}. If that is
@@ -609,7 +609,7 @@ function StageBudgets() {
                       style={{ gridTemplateColumns: RCOLS }}
                     >
                       <div className="cell">
-                        <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                        <div className="gr mono" style={{ fontSize: 'var(--t-label)' }}>
                           {ri + 1}
                         </div>
                       </div>
@@ -624,7 +624,7 @@ function StageBudgets() {
                         <div className="v">{curStageOf(o) ?? '—'}</div>
                       </div>
                       <div className="cell">
-                        <div className={`v ${p.doomed ? 'bad' : 'warn'}`} style={{ fontSize: '12.5px' }}>
+                        <div className={`v ${p.doomed ? 'bad' : 'warn'}`} style={{ fontSize: 'var(--t-small)' }}>
                           {p.doomed
                             ? `The stages still to run need ${hh(p.needs)} and only ${
                                 p.remaining > 0 ? hh(p.remaining) : '0h'
@@ -641,14 +641,14 @@ function StageBudgets() {
               </div>
             </div>
           </Card>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
             Every one of these was knowable hours ago. Without stage budgets none of them is visible
             until the client deadline itself passes.
           </p>
         </>
       ) : (
         <Card padded>
-          <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
             No open order has missed a departmental checkpoint. Raise a share above and this list
             will fill — it is computed, not stored.
           </p>
@@ -733,7 +733,7 @@ function ClockRuns() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  fontSize: '13.5px',
+                  fontSize: 'var(--t-body)',
                   padding: '9px 12px',
                   border: '1px solid var(--hair)',
                   borderRadius: 9,
@@ -742,13 +742,13 @@ function ClockRuns() {
               >
                 <input type="checkbox" checked={v} onChange={(e) => setPause(k, e.target.checked)} />{' '}
                 <b>{k}</b>
-                <span className="gr" style={{ marginLeft: 'auto', fontSize: '11.5px' }}>
+                <span className="gr" style={{ marginLeft: 'auto', fontSize: 'var(--t-label)' }}>
                   {v ? 'time here is not counted' : 'counts against the SLA'}
                 </span>
               </label>
             ))}
           </div>
-          <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
+          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
             A paused order still shows on the board — it just stops burning the promise.{' '}
             {paused === 0 ? (
               <b className="warn">

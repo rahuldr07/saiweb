@@ -332,7 +332,7 @@ function NewOrder() {
                 />
               </div>
             </Form>
-            <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
               Each name is indexed separately for the judgment and lien search. Put one name per box.
             </p>
           </Card>
@@ -352,16 +352,16 @@ function NewOrder() {
         <aside>
           <Card padded style={{ position: 'sticky', top: 76 }}>
             <Label>Due</Label>
-            <div className="mono" style={{ fontSize: '17px', fontWeight: 600 }}>
+            <div className="mono" style={{ fontSize: 'var(--t-h3)', fontWeight: 600 }}>
               {fmtDT(due.at)}{' '}
-              <span className="gr" style={{ fontSize: '11.5px' }}>
+              <span className="gr" style={{ fontSize: 'var(--t-label)' }}>
                 {TZ}
               </span>
             </div>
-            <div className="gr mono" style={{ fontSize: '11.5px', marginTop: 3 }}>
+            <div className="gr mono" style={{ fontSize: 'var(--t-label)', marginTop: 3 }}>
               {fmtDT(new Date(due.at.getTime() + LOCAL_OFFSET_H * 3600000))} {TZ2}
             </div>
-            <p className="gr" style={{ fontSize: '11.5px', marginTop: 8 }}>
+            <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 8 }}>
               {due.h}h from now —{' '}
               {isDefaultRule(sla)
                 ? `the ${due.base}h default for ${product.id}`
@@ -371,7 +371,7 @@ function NewOrder() {
 
             <AsideLabel>Coverage</AsideLabel>
             {!f.county ? (
-              <p className="gr" style={{ fontSize: '12.5px' }}>
+              <p className="gr" style={{ fontSize: 'var(--t-small)' }}>
                 Enter a county to check.
               </p>
             ) : county ? (
@@ -388,7 +388,7 @@ function NewOrder() {
                     <p
                       key={t.k}
                       className={l.s === 'none' ? 'warn' : 'bad'}
-                      style={{ fontSize: '11.5px', marginTop: 6 }}
+                      style={{ fontSize: 'var(--t-label)', marginTop: 6 }}
                     >
                       {t.n}: {LSTATE[l.s][0].toLowerCase()}
                       {l.err ? ` — ${l.err}` : ''}
@@ -396,7 +396,7 @@ function NewOrder() {
                   )
                 })}
                 {LINKTYPES.every((t) => (county.links[t.k] ?? NO_LINK).s === 'ok') ? (
-                  <p className="ok" style={{ fontSize: '11.5px', marginTop: 6 }}>
+                  <p className="ok" style={{ fontSize: 'var(--t-label)', marginTop: 6 }}>
                     All four links working.
                   </p>
                 ) : (
@@ -415,7 +415,7 @@ function NewOrder() {
                 <div>
                   <Chip kind="d">Not on file</Chip>
                 </div>
-                <p className="gr" style={{ fontSize: '11.5px', marginTop: 7 }}>
+                <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 7 }}>
                   {f.county}, {f.st} is not in your county record. You can still place the order — the
                   searcher will be working without the links.
                 </p>
@@ -442,7 +442,7 @@ function NewOrder() {
                     alignItems: 'center',
                     gap: 8,
                     padding: '5px 0',
-                    fontSize: '12.5px',
+                    fontSize: 'var(--t-small)',
                   }}
                 >
                   <span className="gr" style={{ width: 82, flex: 'none' }}>
@@ -453,7 +453,7 @@ function NewOrder() {
                       <button
                         type="button"
                         className="ava"
-                        style={{ width: 21, height: 21, fontSize: '8.5px' }}
+                        style={{ width: 21, height: 21, fontSize: 'var(--t-micro)' }}
                         title="Open profile"
                         onClick={() => openPerson(who)}
                       >
@@ -470,17 +470,17 @@ function NewOrder() {
               )
             })}
             {unplaced ? (
-              <p className="warn" style={{ fontSize: '11.5px', marginTop: 7 }}>
+              <p className="warn" style={{ fontSize: 'var(--t-label)', marginTop: 7 }}>
                 {unplaced} stage{unplaced === 1 ? '' : 's'} would land in the exception queue.
               </p>
             ) : (
-              <p className="gr" style={{ fontSize: '11.5px', marginTop: 7 }}>
+              <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 7 }}>
                 Applying today’s rules and current load. It commits when you create the order.
               </p>
             )}
 
             <AsideLabel>Price</AsideLabel>
-            <dl className="kv" style={{ fontSize: '12.5px' }}>
+            <dl className="kv" style={{ fontSize: 'var(--t-small)' }}>
               <dt>{product.id}</dt>
               <dd className="mono">{money(product.fee)}</dd>
               {tier.up ? (
