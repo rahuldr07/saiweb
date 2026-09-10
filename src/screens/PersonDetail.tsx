@@ -695,16 +695,17 @@ export default function PersonDetail() {
       <SectionHead>Today, stage by stage</SectionHead>
       {dayItems.length ? (
         <FlexTable
-          cols="105px 160px 150px 150px 1fr"
-          min={760}
-          head={['Arrived', 'Order', 'Client', 'Stage', 'Status']}
+          cols="40px 105px 160px 150px 150px 1fr"
+          min={800}
+          head={['#', 'Arrived', 'Order', 'Client', 'Stage', 'Status']}
         >
           {dayItems.map((i, idx) => (
             <FlexRow
               key={`${i.o.id}-${i.stage}-${idx}`}
-              cols="105px 160px 150px 150px 1fr"
+              cols="40px 105px 160px 150px 150px 1fr"
               onClick={() => navigate({ to: '/orders/$orderId', params: { orderId: i.o.id } })}
             >
+              <Cell v={idx + 1} mono tone="gr" />
               <Cell v={`${i.hr}:00`} mono />
               <Cell v={i.o.id} s={i.o.pr} mono />
               <Cell v={i.o.cl} />
@@ -821,7 +822,7 @@ export default function PersonDetail() {
           )}
 
           <SectionHead>Every rating — {range.label}</SectionHead>
-          <RatingsTable rows={rated} cols="105px 150px 130px 110px 1fr 140px" min={880} />
+          <RatingsTable rows={rated} cols="40px 105px 150px 130px 110px 1fr 140px" min={920} />
         </>
       ) : (
         <Card padded style={{ marginTop: 16 }}>

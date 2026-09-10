@@ -52,6 +52,7 @@ export interface DataTableProps {
   min?: number
   emptyText?: string
   emptyAction?: ReactNode
+  numbered?: boolean
 }
 
 const cellText = (c: Cell): string =>
@@ -70,6 +71,7 @@ export function DataTable({
   min = 860,
   emptyText = 'No rows match this filter.',
   emptyAction,
+  numbered,
 }: DataTableProps) {
   const [innerPill, setInnerPill] = useState('all')
   const [query, setQuery] = useState('')
@@ -96,7 +98,8 @@ export function DataTable({
   const den =
     active === 'all' ? (total ?? rows.length) : (pills?.find((p) => p.key === active)?.count ?? byPill.length)
 
-  const tm = cols.map((x) => `minmax(${x.w ?? 100}px,${x.f ?? 1}fr)`).join(' ')
+  const tm =
+    (numbered ? '40px ' : '') + cols.map((x) => `minmax(${x.w ?? 100}px,${x.f ?? 1}fr)`).join(' ')
   const hasBar = !!(pills?.length || search || filters?.length)
 
   return (
@@ -147,13 +150,14 @@ export function DataTable({
         <div className="tsc">
           <div style={{ minWidth: min }}>
             <div className="trow h" style={{ gridTemplateColumns: tm }}>
+              {numbered ? <span>#</span> : null}
               {cols.map((c) => (
                 <span key={c.l}>{c.l}</span>
               ))}
             </div>
             <div className="tb">
               {visible.length ? (
-                visible.map((r) => (
+                visible.map((r, ri) => (
                   <div
                     key={r.id}
                     className="trow"
@@ -172,6 +176,13 @@ export function DataTable({
                         }
                       : {})}
                   >
+                    {numbered ? (
+                      <div className="cell">
+                        <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                          {ri + 1}
+                        </div>
+                      </div>
+                    ) : null}
                     {r.c.map((x, i) => (
                       <div className="cell" key={i}>
                         {x.raw ? (

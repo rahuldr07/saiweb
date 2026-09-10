@@ -68,12 +68,13 @@ export function WorkFocus({
                   {c[1]}
                 </Banner>
                 <FlexTable
-                  cols="160px 140px 150px 1fr"
-                  min={760}
-                  head={['Order', 'Stage', 'Client', 'What happened']}
+                  cols="40px 160px 140px 150px 1fr"
+                  min={800}
+                  head={['#', 'Order', 'Stage', 'Client', 'What happened']}
                 >
                   {list.map((e, i) => (
-                    <FlexRow cols="160px 140px 150px 1fr" key={`${e.o.id}-${e.stage}-${i}`}>
+                    <FlexRow cols="40px 160px 140px 150px 1fr" key={`${e.o.id}-${e.stage}-${i}`}>
+                      <Cell v={i + 1} mono tone="gr" />
                       <Cell v={e.o.id} mono s={e.o.pr} />
                       <Cell v={e.stage} />
                       <Cell v={e.o.cl} />
@@ -209,12 +210,13 @@ export function WorkFocus({
               {mode === 'dept' ? g : whoName(g)} — {mine.length}
             </SectionHead>
             <FlexTable
-              cols="105px 150px 140px 160px 1fr"
-              min={800}
-              head={['Arrived', 'Order', 'Client', mode === 'dept' ? 'Who has it' : 'Stage', 'Status']}
+              cols="40px 105px 150px 140px 160px 1fr"
+              min={840}
+              head={['#', 'Arrived', 'Order', 'Client', mode === 'dept' ? 'Who has it' : 'Stage', 'Status']}
             >
               {mine.map((a, i) => (
-                <FlexRow cols="105px 150px 140px 160px 1fr" key={`${a.o.id}-${a.stage}-${i}`}>
+                <FlexRow cols="40px 105px 150px 140px 160px 1fr" key={`${a.o.id}-${a.stage}-${i}`}>
+                  <Cell v={i + 1} mono tone="gr" />
                   <Cell v={`${a.hr}:00`} mono />
                   <Cell v={a.o.id} mono s={a.o.pr} />
                   <Cell v={a.o.cl} />

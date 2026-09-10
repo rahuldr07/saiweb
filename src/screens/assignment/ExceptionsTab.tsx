@@ -20,7 +20,7 @@ const REMEDY: Record<ExclusionReason, string> = {
 
 const SHOWN_PER_CAUSE = 5
 
-const COLS = '150px 120px 130px 1fr'
+const COLS = '40px 150px 120px 130px 1fr'
 
 const key = (e: Exception) => `${e.o.id}|${e.stage}`
 
@@ -149,19 +149,25 @@ export function ExceptionsTab({
               <div className="tsc">
                 <div style={{ minWidth: 700 }}>
                   <div className="trow h" style={{ gridTemplateColumns: COLS }}>
+                    <span>#</span>
                     <span>Order</span>
                     <span>Stage</span>
                     <span>Product</span>
                     <span>What you can do</span>
                   </div>
                   <div className="tb">
-                    {list.slice(0, SHOWN_PER_CAUSE).map((e) => {
+                    {list.slice(0, SHOWN_PER_CAUSE).map((e, ei) => {
                       const chosen = placed[key(e)]
                       const options = STAFF.filter(
                         (s) => s.dep.includes(e.stage) && s.active !== false,
                       ).sort((a, b) => Number(covOK(b.id, e)) - Number(covOK(a.id, e)))
                       return (
                         <div key={key(e)} className="trow" style={{ gridTemplateColumns: COLS }}>
+                          <div className="cell">
+                            <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                              {ei + 1}
+                            </div>
+                          </div>
                           <div className="cell">
                             <div className="v mono">{e.o.id}</div>
                             <div className="s">

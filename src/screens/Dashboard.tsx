@@ -19,7 +19,7 @@ import { TeamWishes } from '@/components/Wishes'
 const st = (k: string) => STATUS[k]?.[0] ?? k
 const stColor = (k: string) => STATUS[k]?.[1] ?? '#94A3B8'
 
-const COLS = '130px 110px 1.4fr 150px 190px 130px'
+const COLS = '40px 130px 110px 1.4fr 150px 190px 130px'
 
 function Dashboard() {
   const { tenant } = useSession()
@@ -139,6 +139,7 @@ function Dashboard() {
           <div className="tsc">
             <div style={{ minWidth: 900 }}>
               <div className="trow h" style={{ gridTemplateColumns: COLS }}>
+                <span>#</span>
                 <span>Order</span>
                 <span>Product</span>
                 <span>Property</span>
@@ -147,7 +148,7 @@ function Dashboard() {
                 <span>Age in stage</span>
               </div>
               <div className="tb">
-                {shown.map((o) => (
+                {shown.map((o, oi) => (
                   <div
                     key={o.id}
                     className="trow"
@@ -160,6 +161,11 @@ function Dashboard() {
                         navigate({ to: '/orders/$orderId', params: { orderId: o.id } })
                     }}
                   >
+                    <div className="cell">
+                      <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                        {oi + 1}
+                      </div>
+                    </div>
                     <div className="cell">
                       <div className="v mono">{o.id}</div>
                       <div className="s">{o.cl}</div>

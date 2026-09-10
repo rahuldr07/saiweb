@@ -42,7 +42,7 @@ import { fmtDT, fmtDate, parseUsDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 import type { Update } from '@/data/types'
 
-const QCOLS = '150px 150px 140px 1fr 150px 110px'
+const QCOLS = '40px 150px 150px 140px 1fr 150px 110px'
 
 const greeting = (h: number) => (h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening')
 
@@ -554,6 +554,7 @@ export default function MyWork() {
             <div className="tsc">
               <div style={{ minWidth: 880 }}>
                 <div className="trow h" style={{ gridTemplateColumns: QCOLS }}>
+                  <span>#</span>
                   <span>Order</span>
                   <span>Client</span>
                   <span>Your stage</span>
@@ -582,6 +583,11 @@ export default function MyWork() {
                           }
                         }}
                       >
+                        <div className="cell">
+                          <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                            {i + 1}
+                          </div>
+                        </div>
                         <div className="cell">
                           <div className="v mono">{o.id}</div>
                           <div className="s">arrived {hr}:00</div>

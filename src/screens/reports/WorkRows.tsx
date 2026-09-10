@@ -13,17 +13,19 @@ export interface WorkItem {
 }
 
 export const WORKCOLS = {
-  who: '150px 170px 100px 90px 120px 1fr',
-  stage: '150px 140px 100px 90px 130px 1fr',
+  who: '40px 150px 170px 100px 90px 120px 1fr',
+  stage: '40px 150px 140px 100px 90px 130px 1fr',
 } as const
 
 export function WorkRow({
   item,
   mode,
+  index,
   onOpen,
 }: {
   item: WorkItem
   mode: keyof typeof WORKCOLS
+  index: number
   onOpen: (orderId: string) => void
 }) {
   const navigate = useGo()
@@ -43,6 +45,11 @@ export function WorkRow({
         }
       }}
     >
+      <div className="cell">
+        <div className="gr mono" style={{ fontSize: '11.5px' }}>
+          {index + 1}
+        </div>
+      </div>
       <div className="cell">
         <div className="v mono">{item.o.id}</div>
         <div className="s">{item.o.cl}</div>

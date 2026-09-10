@@ -309,8 +309,8 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
       />
       <WorkTable
         cols={WORKCOLS.who}
-        min={800}
-        head={['Order', 'Owner', 'Product', 'State', 'Arrived', 'Status']}
+        min={840}
+        head={['#', 'Order', 'Owner', 'Product', 'State', 'Arrived', 'Status']}
         empty={
           items.length
             ? null
@@ -323,7 +323,7 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
         }
       >
         {items.map((i, idx) => (
-          <WorkRow key={`${i.o.id}-${idx}`} item={i} mode="who" onOpen={openOrder} />
+          <WorkRow key={`${i.o.id}-${idx}`} item={i} mode="who" index={idx} onOpen={openOrder} />
         ))}
       </WorkTable>
     </>

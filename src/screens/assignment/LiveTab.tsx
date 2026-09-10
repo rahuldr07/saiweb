@@ -9,7 +9,7 @@ import { RULE_KIND } from '@/lib/ruleText'
 import type { AssignmentBoard, Arrival } from '@/lib/engine'
 import type { Rule } from '@/data/types'
 
-const COLS = '130px 80px 90px 80px repeat(5, minmax(96px, 1fr))'
+const COLS = '40px 130px 80px 90px 80px repeat(5, minmax(96px, 1fr))'
 
 const ARRIVALS = 'as-arrivals'
 const focusArrivals = () => focusSection(ARRIVALS)
@@ -234,6 +234,7 @@ export function LiveTab({
         <div className="tsc">
           <div style={{ minWidth: 980 }}>
             <div className="trow h" style={{ gridTemplateColumns: COLS }}>
+              <span>#</span>
               <span>Order</span>
               <span>Arrived</span>
               <span>Product</span>
@@ -243,7 +244,7 @@ export function LiveTab({
               ))}
             </div>
             <div className="tb">
-              {shown.map((o) => (
+              {shown.map((o, oi) => (
                 <div
                   key={o.id}
                   className="trow"
@@ -255,6 +256,11 @@ export function LiveTab({
                     if (e.key === 'Enter') showTrace(o)
                   }}
                 >
+                  <div className="cell">
+                    <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                      {oi + 1}
+                    </div>
+                  </div>
                   <div className="cell">
                     <div className="v mono">{o.id}</div>
                     <div className="s">{o.cl}</div>

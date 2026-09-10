@@ -2,7 +2,7 @@ import { Cell, FlexRow, FlexTable } from './FlexTable'
 import { markTone } from '@/lib/quality'
 import type { QcEntry } from '@/data/quality'
 
-const HEAD = ['Date', 'Order', 'Stage', 'Marks', 'What the rater said', 'Rated by']
+const HEAD = ['#', 'Date', 'Order', 'Stage', 'Marks', 'What the rater said', 'Rated by']
 
 export function RatingMarks({ x, legend }: { x: QcEntry; legend?: boolean | undefined }) {
   const sep = legend ? ' · ' : '·'
@@ -40,6 +40,7 @@ export function RatingsTable({
     <FlexTable cols={cols} min={min} head={HEAD}>
       {list.map((x, i) => (
         <FlexRow cols={cols} key={`${x.order}-${x.stage}-${i}`}>
+          <Cell v={i + 1} mono tone="gr" />
           <Cell v={x.dk} mono />
           <Cell v={x.order} mono s={`${x.cl} · ${x.pr}`} />
           <Cell v={x.stage} />

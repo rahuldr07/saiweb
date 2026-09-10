@@ -312,7 +312,7 @@ function StageBudgets() {
     .map((o) => ({ o, p: orderPlan(o) }))
     .filter((x) => x.p.behind || x.p.doomed)
 
-  const RCOLS = '150px 130px 150px 1fr 150px'
+  const RCOLS = '40px 150px 130px 150px 1fr 150px'
 
   return (
     <>
@@ -585,6 +585,7 @@ function StageBudgets() {
             <div className="tsc">
               <div style={{ minWidth: 820 }}>
                 <div className="trow h" style={{ gridTemplateColumns: RCOLS }}>
+                  <span>#</span>
                   <span>Order</span>
                   <span>Client</span>
                   <span>Stage</span>
@@ -592,7 +593,7 @@ function StageBudgets() {
                   <span>Deadline</span>
                 </div>
                 <div className="tb">
-                  {risky.map(({ o, p }) => (
+                  {risky.map(({ o, p }, ri) => (
                     <div
                       className="trow"
                       key={o.id}
@@ -607,6 +608,11 @@ function StageBudgets() {
                       }}
                       style={{ gridTemplateColumns: RCOLS }}
                     >
+                      <div className="cell">
+                        <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                          {ri + 1}
+                        </div>
+                      </div>
                       <div className="cell">
                         <div className="v mono">{o.id}</div>
                       </div>

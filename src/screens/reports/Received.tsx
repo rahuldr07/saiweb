@@ -32,13 +32,18 @@ export function Received() {
   const products = PRODUCTS.map((p) => p.id).filter((id) => os.some((o) => o.pr === id))
   const cell = (c: string, st: string) => os.filter((o) => o.cl === c && stageOf(o) === st).length
 
-  const COLS = '110px 150px 130px 150px 1fr 130px'
+  const COLS = '40px 110px 150px 130px 150px 1fr 130px'
   const orderRows = (list: Arrival[]) => (
-    <FlexTable cols={COLS} min={880} head={['Arrived', 'Order', 'Client', 'Product', 'Where it is now', 'County']}>
-      {list.map((o) => {
+    <FlexTable
+      cols={COLS}
+      min={920}
+      head={['#', 'Arrived', 'Order', 'Client', 'Product', 'Where it is now', 'County']}
+    >
+      {list.map((o, oi) => {
         const st = stageOf(o)
         return (
           <FlexRow cols={COLS} key={o.id}>
+            <Cell v={oi + 1} mono tone="gr" />
             <Cell v={`${o.hr}:00`} s={o.dk} mono />
             <Cell v={o.id} mono />
             <Cell v={o.cl} />

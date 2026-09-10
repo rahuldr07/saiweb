@@ -374,15 +374,16 @@ export function QcStaffDetail({
             <>
               <SectionHead>Late deliveries where their stage overran</SectionHead>
               <FlexTable
-                cols="120px 140px 130px 130px 1fr"
-                min={760}
-                head={['Delivered', 'Order', 'Stage', 'Took', 'Against a budget of']}
+                cols="40px 120px 140px 130px 130px 1fr"
+                min={800}
+                head={['#', 'Delivered', 'Order', 'Stage', 'Took', 'Against a budget of']}
               >
                 {t.items
                   .filter((x) => x.over && x.d.late)
                   .slice(0, 10)
                   .map((x, i) => (
-                    <FlexRow cols="120px 140px 130px 130px 1fr" key={`${x.d.id}-${x.st}-${i}`}>
+                    <FlexRow cols="40px 120px 140px 130px 130px 1fr" key={`${x.d.id}-${x.st}-${i}`}>
+                      <Cell v={i + 1} mono tone="gr" />
                       <Cell v={x.d.dk} mono />
                       <Cell v={x.d.id} mono s={`${x.d.cl} · ${x.d.pr}`} />
                       <Cell v={x.st} />
@@ -408,8 +409,8 @@ export function QcStaffDetail({
       <SectionHead>Every rating in range</SectionHead>
       <RatingsTable
         rows={mine}
-        cols="110px 140px 130px 120px 1fr 150px"
-        min={960}
+        cols="40px 110px 140px 130px 120px 1fr 150px"
+        min={1000}
         legend
         highlightDefectsOnly
       />

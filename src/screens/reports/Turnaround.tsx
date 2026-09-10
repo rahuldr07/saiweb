@@ -13,7 +13,7 @@ import { ASSIGN_STAGES } from '@/data/org'
 import { fmtDate } from '@/lib/format'
 import type { Delivery } from '@/data/deliveries'
 
-const DEL_COLS = '105px 150px 130px 110px 105px 110px 1fr'
+const DEL_COLS = '40px 105px 150px 130px 110px 105px 110px 1fr'
 
 const budgetFor = (x: Delivery, stage: string) =>
   checkpoints(x.slaH, x.pr).find((y) => y.stage === stage)?.hours ?? 0
@@ -91,14 +91,15 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
     <FlexTable
       cols={DEL_COLS}
       min={940}
-      head={['Delivered', 'Order', 'Client', 'Promise', 'Took', 'Outcome', 'Where the time went']}
+      head={['#', 'Delivered', 'Order', 'Client', 'Promise', 'Took', 'Outcome', 'Where the time went']}
     >
-      {list.map((x) => {
+      {list.map((x, xi) => {
         const over = ASSIGN_STAGES.map((st) => ({ st, h: x.st[st], c: budgetFor(x, st) }))
           .filter((y) => y.h > y.c)
           .sort((a, b) => b.h - b.c - (a.h - a.c))
         return (
           <FlexRow cols={DEL_COLS} key={x.id}>
+            <Cell v={xi + 1} mono tone="gr" />
             <Cell v={x.dk} mono />
             <Cell v={x.id} mono s={x.pr} />
             <Cell v={x.cl} />
@@ -306,12 +307,13 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
               </Card>
               <SectionHead>Every {worst.st} overrun, worst first</SectionHead>
               <FlexTable
-                cols="105px 150px 130px 105px 105px 130px 1fr"
-                min={880}
-                head={['Delivered', 'Order', 'Client', 'Took', 'Budget', 'Over by', 'Outcome']}
+                cols="40px 105px 150px 130px 105px 105px 130px 1fr"
+                min={920}
+                head={['#', 'Delivered', 'Order', 'Client', 'Took', 'Budget', 'Over by', 'Outcome']}
               >
-                {items.map((i) => (
-                  <FlexRow cols="105px 150px 130px 105px 105px 130px 1fr" key={i.x.id}>
+                {items.map((i, ii) => (
+                  <FlexRow cols="40px 105px 150px 130px 105px 105px 130px 1fr" key={i.x.id}>
+                    <Cell v={ii + 1} mono tone="gr" />
                     <Cell v={i.x.dk} mono />
                     <Cell v={i.x.id} mono s={i.x.pr} />
                     <Cell v={i.x.cl} />
@@ -484,19 +486,20 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
             <>
               <SectionHead>The {Math.min(late.length, 12)} worst overruns</SectionHead>
               <FlexTable
-                cols="130px 130px 110px 120px 130px 1fr"
-                min={820}
-                head={['Delivered', 'Order', 'Promise', 'Took', 'Over by', 'Where it went']}
+                cols="40px 130px 130px 110px 120px 130px 1fr"
+                min={860}
+                head={['#', 'Delivered', 'Order', 'Promise', 'Took', 'Over by', 'Where it went']}
               >
                 {[...late]
                   .sort((a, b) => b.hrs - b.slaH - (a.hrs - a.slaH))
                   .slice(0, 12)
-                  .map((x) => {
+                  .map((x, xi) => {
                     const bad = ASSIGN_STAGES.map((st) => ({ st, h: x.st[st], c: budgetFor(x, st) }))
                       .filter((y) => y.h > y.c)
                       .sort((a, b) => b.h - b.c - (a.h - a.c))
                     return (
-                      <FlexRow cols="130px 130px 110px 120px 130px 1fr" key={x.id}>
+                      <FlexRow cols="40px 130px 130px 110px 120px 130px 1fr" key={x.id}>
+                        <Cell v={xi + 1} mono tone="gr" />
                         <Cell v={x.dk} mono />
                         <Cell v={x.id} mono s={`${x.cl} · ${x.pr}`} />
                         <Cell v={`${x.slaH}h`} mono />

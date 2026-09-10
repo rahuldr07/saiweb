@@ -63,17 +63,18 @@ export function QcTeamFocus({
           Delivered — {dels.length}, of which {late.length} late
         </SectionHead>
         <FlexTable
-          cols="110px 150px 150px 110px 110px 130px 1fr"
-          min={900}
-          head={['Date', 'Order', 'Client', 'Promise', 'Took', 'Outcome', 'Rated']}
+          cols="40px 110px 150px 150px 110px 110px 130px 1fr"
+          min={940}
+          head={['#', 'Date', 'Order', 'Client', 'Promise', 'Took', 'Outcome', 'Rated']}
         >
           {dels
             .slice()
             .sort((a, b) => +b.d - +a.d)
-            .map((x) => {
+            .map((x, xi) => {
               const rated = rows.filter((y) => y.order === x.id)
               return (
-                <FlexRow cols="110px 150px 150px 110px 110px 130px 1fr" key={x.id}>
+                <FlexRow cols="40px 110px 150px 150px 110px 110px 130px 1fr" key={x.id}>
+                  <Cell v={xi + 1} mono tone="gr" />
                   <Cell v={x.dk} mono />
                   <Cell v={x.id} mono s={x.pr} />
                   <Cell v={x.cl} />
@@ -154,14 +155,15 @@ export function QcTeamFocus({
         </Card>
         <SectionHead>Every unrated check</SectionHead>
         <FlexTable
-          cols="110px 160px 150px 130px 1fr"
-          min={760}
-          head={['Delivered', 'Order', 'Client', 'Stage', 'Whose work']}
+          cols="40px 110px 160px 150px 130px 1fr"
+          min={800}
+          head={['#', 'Delivered', 'Order', 'Client', 'Stage', 'Whose work']}
         >
           {gaps
             .sort((a, b) => +b.d.d - +a.d.d)
             .map((g, i) => (
-              <FlexRow cols="110px 160px 150px 130px 1fr" key={`${g.d.id}-${g.st}-${i}`}>
+              <FlexRow cols="40px 110px 160px 150px 130px 1fr" key={`${g.d.id}-${g.st}-${i}`}>
+                <Cell v={i + 1} mono tone="gr" />
                 <Cell v={g.d.dk} mono />
                 <Cell v={g.d.id} mono s={g.d.pr} />
                 <Cell v={g.d.cl} />
@@ -283,12 +285,13 @@ export function QcTeamFocus({
         </Card>
       ) : null}
       <FlexTable
-        cols="105px 150px 140px 120px 110px 1fr"
-        min={900}
-        head={['Date', 'Order', 'Who', 'Stage', 'Marks', 'What the rater said']}
+        cols="40px 105px 150px 140px 120px 110px 1fr"
+        min={940}
+        head={['#', 'Date', 'Order', 'Who', 'Stage', 'Marks', 'What the rater said']}
       >
         {list.map((x, i) => (
-          <FlexRow cols="105px 150px 140px 120px 110px 1fr" key={`${x.order}-${i}`}>
+          <FlexRow cols="40px 105px 150px 140px 120px 110px 1fr" key={`${x.order}-${i}`}>
+            <Cell v={i + 1} mono tone="gr" />
             <Cell v={x.dk} mono />
             <Cell v={x.order} mono s={`${x.cl} · ${x.pr}`} />
             <Cell>

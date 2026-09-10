@@ -254,6 +254,7 @@ export default function Orders() {
           { l: 'Search · SQ · Typ · TQC · Doc · RTS', w: 190 },
         ]}
         rows={rows}
+        numbered
         emptyText="No orders match this filter."
         emptyAction={
           active.length ? (

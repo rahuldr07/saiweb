@@ -116,7 +116,7 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
   )
 }
 
-const OVER_COLS = '120px 165px 130px 105px 105px 1fr'
+const OVER_COLS = '40px 120px 165px 130px 105px 105px 1fr'
 
 export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: boolean }) {
   const items = work.items
@@ -136,6 +136,7 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
         <div className="tsc">
           <div style={{ minWidth: 860 }}>
             <div className="trow h" style={{ gridTemplateColumns: OVER_COLS }}>
+              <span>#</span>
               <span>Delivered</span>
               <span>Order</span>
               <span>Stage</span>
@@ -150,6 +151,11 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
                   key={`${x.d.id}-${x.st}-${i}`}
                   style={{ gridTemplateColumns: OVER_COLS }}
                 >
+                  <div className="cell">
+                    <div className="gr mono" style={{ fontSize: '11.5px' }}>
+                      {i + 1}
+                    </div>
+                  </div>
                   <div className="cell">
                     <div className="v mono" style={{ fontSize: '12.5px' }}>
                       {x.d.dk}
