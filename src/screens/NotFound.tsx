@@ -1,10 +1,10 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Empty, PageHead } from '@/components/ui'
 import { useSession } from '@/state/session'
 
 /** The design's "that thing is not here" page, reused for any unmatched path. */
 export function NotFound() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { can } = useSession()
   const home = can('all') ? 'dash' : 'mywork'
   const homeLabel = can('all') ? 'dashboard' : 'my work'

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Kpi, Kpis, PageHead, SectionHead, focusSection } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
@@ -24,7 +24,7 @@ const COLS = '150px 140px 140px 140px 1fr'
 export default function MyPayslips() {
   const { me, tenant } = useSession()
   const { toast } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
 
   /* Published state is set by the pay run, so it is read rather than stored —
      publishing a month on the Payroll screen makes it appear here. */

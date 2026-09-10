@@ -117,7 +117,7 @@ export function LevelsProvider({ children }: { children: ReactNode }) {
         /* Every pill is drawn on when no counties are named, so clicking a lit one
            has to turn that one off and leave the rest — expand to the full list first. */
         const all = countiesOf(st)
-        const cur = l.counties[st]?.length ? l.counties[st]! : all
+        const cur = l.counties[st]?.length ? l.counties[st] : all
         const next = cur.includes(co) ? cur.filter((x) => x !== co) : [...cur, co]
         if (!next.length || next.length === all.length) delete l.counties[st]
         else l.counties[st] = next

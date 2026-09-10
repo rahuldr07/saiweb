@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Banner, Btn, SecHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useNotBuilt } from '@/components/notBuilt'
@@ -18,7 +18,7 @@ import { csvName, downloadCSV } from '@/lib/csv'
  * anyone is close to it.
  */
 export function StaffTab({ tenantName, onOpenRoles }: { tenantName: string; onOpenRoles: () => void }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const notBuilt = useNotBuilt()
   const { editStaff } = useStaffEditor()
   const { run } = board()

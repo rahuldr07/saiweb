@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Chip, Label } from '@/components/ui'
 import { AVAIL, STAFF } from '@/data/people'
 import type { AssignmentBoard } from '@/lib/engine'
@@ -18,7 +18,7 @@ const RED = 90
 const tone = (pct: number) => (pct > RED ? 'var(--bad)' : pct > AMBER ? 'var(--warn)' : 'var(--ok)')
 
 export function CapacityTab({ board }: { board: AssignmentBoard }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { run } = board
   const load = run.load
   const plan = run.assigns.filter((a) => a.today)

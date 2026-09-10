@@ -43,8 +43,16 @@ export const openCount = () => openOrders().length
 
 /* ── leads ──────────────────────────────────────────────────────────────── */
 
+/**
+ * The date of the most recent note.
+ *
+ * Every lead is created with its first note already attached, so the reduce has
+ * something to start from. One that somehow has none has never been touched, and
+ * the epoch is what makes it read as the most overdue thing on the register
+ * rather than the freshest.
+ */
 export const lastTouch = (l: Lead) =>
-  l.notes.reduce((a, n) => (n.at > a ? n.at : a), l.notes[0].at)
+  l.notes.reduce((a, n) => (n.at > a ? n.at : a), l.notes[0]?.at ?? new Date(0))
 
 export const leadAge = (l: Lead) => days(lastTouch(l))
 
@@ -91,9 +99,10 @@ export interface FlatLink {
 
 export const allLinks = (): FlatLink[] =>
   COUNTIES_OF().flatMap((c) =>
-    LINKTYPES_OF()
-      .filter((t) => c.links[t.k])
-      .map((t) => ({ c, k: t.k, lbl: t.n, l: c.links[t.k] })),
+    LINKTYPES_OF().flatMap((t) => {
+      const l = c.links[t.k]
+      return l ? [{ c, k: t.k, lbl: t.n, l }] : []
+    }),
   )
 
 export const brokenLinks = () => allLinks().filter((x) => BADSTATES.includes(x.l.s))

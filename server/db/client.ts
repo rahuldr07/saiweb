@@ -34,8 +34,8 @@ export const isConfigured = () => Boolean(process.env.APP_DATABASE_URL)
 /* A proxy so every existing `db.select(…)` call site is unchanged: the drizzle
    instance is built on the first property access rather than at import. */
 export const db: Db = new Proxy({} as Db, {
-  get: (_t, prop, receiver) => Reflect.get(connect().db as object, prop, receiver) as unknown,
-  has: (_t, prop) => Reflect.has(connect().db as object, prop),
+  get: (_t, prop, receiver) => Reflect.get(connect().db, prop, receiver) as unknown,
+  has: (_t, prop) => Reflect.has(connect().db, prop),
 })
 
 export const queryClient = new Proxy({} as ReturnType<typeof createDb>['queryClient'], {

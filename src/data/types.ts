@@ -40,7 +40,7 @@ export interface Role {
   n: string
   desc: string
   /** Built-in roles that cannot be deleted. */
-  lock?: boolean
+  lock?: boolean | undefined
   p: string[]
 }
 
@@ -81,7 +81,7 @@ export interface Person {
   avail: Availability
   active: boolean
   /** Annual cost to company, in INR. Absent for people who are not on payroll. */
-  ctc?: number
+  ctc?: number | undefined
   shift: string
   mob: string
   addr: string

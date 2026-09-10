@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, SecHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useUi } from '@/state/ui'
@@ -16,7 +16,7 @@ import { csvName, downloadCSV } from '@/lib/csv'
  * list and a client page come to disagree about the same number.
  */
 export function ClientsTab() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { toast } = useUi()
   const { editClient } = useClientEditor()
   const CLIENTS = useClients()

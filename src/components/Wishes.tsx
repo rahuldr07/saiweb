@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Banner, Card, Label } from './ui'
 import {
   aboutOther,
@@ -63,7 +63,7 @@ export function TeamWishes({
   title?: string
   empty?: string
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const today = celebrations.filter((c) => c.inDays === 0)
   const soon = celebrations.filter((c) => c.inDays > 0)
 

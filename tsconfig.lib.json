@@ -1,0 +1,21 @@
+{
+  /* `src/lib` under `noUncheckedIndexedAccess`, which the app project does not
+     set yet.
+
+     The flag makes `arr[i]` and `rec[key]` read as `T | undefined`, which is the
+     truth — and the NaN that reached a payslip came from exactly that: a
+     five-key record indexed by an arbitrary month. It is on here first because
+     this is where the money and the assignments are computed, and off in
+     `tsconfig.app.json` only because the screens are mid-rewrite. When they
+     land, move `noUncheckedIndexedAccess` there and delete this file.
+
+     `src/lib` is the root set; the files it imports (`src/data`, and the two
+     `src/state` modules the payroll and coverage helpers read) are pulled into
+     the program and checked under the flag too. */
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.lib.tsbuildinfo"
+  },
+  "include": ["src/lib", "src/vite-env.d.ts"]
+}

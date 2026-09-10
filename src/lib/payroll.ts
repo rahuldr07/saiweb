@@ -93,7 +93,13 @@ export function taxUnder(regime: 'new' | 'old', gross12: number, declared = 0): 
 
 export const monthOf = (mmddyyyy: string) => {
   const [m, , y] = mmddyyyy.split('/').map(Number)
-  return `${MON[m - 1]} ${y}`
+  const mon = m === undefined ? undefined : MON[m - 1]
+  /* A date that is not MM/DD/YYYY belongs to no month. Every caller compares the
+     answer against a real month label, and '' matches none of them — where the
+     interpolated `undefined` this used to produce made "undefined 2026", a label
+     that looks like a month and silently is not. */
+  if (mon === undefined || y === undefined) return ''
+  return `${mon} ${y}`
 }
 
 export const otMinsFor = (id: string, mn: string) =>
@@ -114,11 +120,14 @@ export function payableDays(p: Person, mn: string, working: number): number {
   if (!p.doj) return working
   const [m, d, y] = p.doj.split('/').map(Number)
   const [mon, yr] = mn.split(' ')
-  const mi = MON.indexOf(mon) + 1
+  const mi = mon === undefined ? 0 : MON.indexOf(mon) + 1
   const year = Number(yr)
   /* Nothing to prorate against if the month is not a month, and a full month is
-     already what this function answers when it cannot prorate. */
+     already what this function answers when it cannot prorate. A joining date
+     that is not MM/DD/YYYY is the same kind of nothing: it used to reach the
+     arithmetic below and put NaN days on the payslip. */
   if (!mi || !year) return working
+  if (m === undefined || d === undefined || y === undefined) return working
   if (y > year || (y === year && m > mi)) return 0 // had not joined yet
   if (y < year || (y === year && m < mi)) return working // here for the whole month
   /* Asked of the calendar rather than looked up in a table of the months the
@@ -211,7 +220,8 @@ export function payslipOf(p: Person, mn: string): Payslip {
   const pt = gross > 0 ? currentPayCfg().ptAmount : 0
   const tds = Math.round(taxUnder(currentPayCfg().regime, st.gross * 12) / 12)
 
-  const arr = arrearsFor(p.id, mn).reduce((acc, x) => acc + x.amt, 0)
+  const arrRows = arrearsFor(p.id, mn)
+  const arr = arrRows.reduce((acc, x) => acc + x.amt, 0)
   const cl = claimsFor(p.id, mn).reduce((acc, x) => acc + x.amt, 0)
   const ln = loanFor(p.id)
   const emi = ln ? Math.min(ln.emi, ln.amt - ln.paid) : 0
@@ -226,7 +236,10 @@ export function payslipOf(p: Person, mn: string): Payslip {
     ['Special allowance', special],
   ]
   if (ot) earn.push([`Overtime — ${Math.floor(otm / 60)}h ${pad(otm % 60)}m approved`, ot])
-  if (arr) earn.push([`Arrears — ${arrearsFor(p.id, mn)[0].what}`, arr])
+  /* The line is named after the first arrear, so it needs the row and not just
+     the total — a total can only be non-zero if there is a row behind it. */
+  const firstArr = arrRows[0]
+  if (arr && firstArr) earn.push([`Arrears — ${firstArr.what}`, arr])
 
   const dedRows: [string, number][] = [
     ['Provident fund (employee)', epf],
@@ -321,26 +334,35 @@ export function leaveBalance(pid: string): Record<string, Balance> {
 export function yearsServed(p: Person): number | null {
   if (!p.doj) return null
   const [m, d, y] = p.doj.split('/').map(Number)
+  /* A joining date that will not parse is no joining date, and the settlement
+     already has a reading for that: it says so on the gratuity line rather than
+     computing a length of service from NaN. */
+  if (m === undefined || d === undefined || y === undefined) return null
   return (now().getTime() - new Date(y, m - 1, d).getTime()) / (365.25 * 24 * 3600 * 1000)
 }
 
 /** Fifteen days of last-drawn basic per completed year, after five. */
 export function settlement(p: Person, lastDay?: Date) {
   const st = structureOf(p)
-  const a = ATT[PAYMONTHS[PAYMONTHS.length - 1]]?.[p.id]
+  const lastMn = PAYMONTHS[PAYMONTHS.length - 1]
+  const a = lastMn === undefined ? undefined : ATT[lastMn]?.[p.id]
   const yrs = yearsServed(p)
   const perDay = st.gross / Math.max(1, a?.working ?? 26)
   const dayOfMonth = lastDay ? lastDay.getDate() : now().getDate()
   const salary = Math.round(perDay * Math.round(((a?.working ?? 26) * dayOfMonth) / 30))
   const bal = leaveBalance(p.id)
-  const encash = Math.round((bal.pl.left * st.basic) / 26)
+  /* Encashment is of paid leave specifically, and `leaveBalance` is keyed by
+     whatever leave types the workspace has configured. A workspace with no paid
+     leave has none to encash — which is nought, not a payslip line of NaN. */
+  const plLeft = bal.pl?.left ?? 0
+  const encash = Math.round((plLeft * st.basic) / 26)
   const grat = yrs !== null && yrs >= 5 ? Math.round(((st.basic * 15) / 26) * Math.floor(yrs)) : 0
   const ln = loanFor(p.id)
   const advance = ln ? -(ln.amt - ln.paid) : 0
 
   const lines: [string, number][] = [
     ['Salary to the last working day', salary],
-    [`Leave encashment — ${bal.pl.left} day${bal.pl.left === 1 ? '' : 's'} of paid leave`, encash],
+    [`Leave encashment — ${plLeft} day${plLeft === 1 ? '' : 's'} of paid leave`, encash],
     [
       yrs === null
         ? 'Gratuity — no joining date on record'
@@ -433,10 +455,14 @@ export function words(n: number): string {
     'Eighteen', 'Nineteen',
   ]
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+  /* The tables cover every index a non-negative group can produce. Nothing else
+     has a word, and '' is the only honest one — a negative net used to print the
+     literal "undefined Crore" on the slip. */
+  const word = (table: string[], i: number) => table[i] ?? ''
   const two = (x: number): string =>
-    x < 20 ? ones[x] : tens[Math.floor(x / 10)] + (x % 10 ? ` ${ones[x % 10]}` : '')
+    x < 20 ? word(ones, x) : word(tens, Math.floor(x / 10)) + (x % 10 ? ` ${word(ones, x % 10)}` : '')
   const three = (x: number): string =>
-    x > 99 ? `${ones[Math.floor(x / 100)]} Hundred${x % 100 ? ` ${two(x % 100)}` : ''}` : two(x)
+    x > 99 ? `${word(ones, Math.floor(x / 100))} Hundred${x % 100 ? ` ${two(x % 100)}` : ''}` : two(x)
 
   const v = Math.round(n)
   if (!v) return 'Zero'

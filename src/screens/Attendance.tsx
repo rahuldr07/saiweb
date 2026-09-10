@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Assumption,
   Avatar,
@@ -48,7 +48,7 @@ const onLeaveOn = (id: string, d: Date) =>
   LEAVE.some((l) => l.who === id && l.st === 'approved' && l.from <= d && l.to >= d)
 
 function Attendance() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { toast } = useUi()
   const clock = useTimeclock()
 

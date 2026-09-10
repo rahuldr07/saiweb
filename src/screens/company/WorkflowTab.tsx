@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Banner, Btn, Card, CardHead, Label, SecHead, Tabs } from '@/components/ui'
 import { useUi } from '@/state/ui'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { StatusForm, StatusDelete } from './forms/StatusForm'
 import { ORDERS } from '@/data/production'
 import { csvName, downloadCSV } from '@/lib/csv'
@@ -23,7 +23,7 @@ const MAIN_LINE = 7
 
 export function WorkflowTab() {
   const { openModal, closeModal, toast } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const statuses = useStatuses()
   const naming = useNaming()
   const [tab, setTab] = useState<WTab>('Stages')

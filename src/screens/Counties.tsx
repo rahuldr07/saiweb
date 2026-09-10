@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Banner, Btn, Chip, Kpi, Kpis, PageHead } from '@/components/ui'
 import { ErrorBoundary } from '@/components/async'
 import { useNotBuilt } from '@/components/notBuilt'
@@ -12,7 +13,7 @@ import { useCoverage } from '@/state/coverage'
 import { CountyEdit } from './counties/CountyEdit'
 import { FixLink } from './counties/FixLink'
 import { LinkTypes, type LtView } from './counties/LinkTypes'
-import type { County } from '@/data/types'
+import type { County, LinkStatus } from '@/data/types'
 
 /**
  * County coverage.
@@ -29,7 +30,7 @@ import type { County } from '@/data/types'
 type Filter = 'all' | 'bad' | 'gap' | 'ok'
 
 function Counties() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal, closeModal, toast } = useUi()
   const { can } = useSession()
   const notBuilt = useNotBuilt()
@@ -50,10 +51,11 @@ function Counties() {
   /* The four filters, each counted over the whole record so a pill says how much
      it would show rather than how much is showing. */
   const counts = useMemo(() => {
-    const has = (c: County, p: (s: string) => boolean) => linkTypes.some((t) => p(linkOf(c, t.k).s))
+    const has = (c: County, p: (s: LinkStatus) => boolean) =>
+      linkTypes.some((t) => p(linkOf(c, t.k).s))
     return {
       all: counties.length,
-      bad: counties.filter((c) => has(c, (s) => BADSTATES.includes(s as never))).length,
+      bad: counties.filter((c) => has(c, (s) => BADSTATES.includes(s))).length,
       gap: counties.filter((c) => has(c, (s) => s === 'none')).length,
       ok: counties.filter((c) => linkTypes.every((t) => linkOf(c, t.k).s === 'ok')).length,
     }
@@ -67,7 +69,7 @@ function Counties() {
         filter === 'all'
           ? true
           : filter === 'bad'
-            ? states.some((s) => BADSTATES.includes(s as never))
+            ? states.some((s) => BADSTATES.includes(s))
             : filter === 'gap'
               ? states.some((s) => s === 'none')
               : states.every((s) => s === 'ok')

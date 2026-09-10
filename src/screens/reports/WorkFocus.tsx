@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Banner, Card, Chip, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead } from '@/components/FocusKpis'
@@ -45,7 +45,7 @@ export function WorkFocus({
   onBack: () => void
 }) {
   const { run, work } = board()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const all = run.assigns.filter((a) => a.today).map((a) => ({ ...a, fin: isDone(a.o, a.stage) }))
   const exc = run.exc.filter((e) => e.today)
 

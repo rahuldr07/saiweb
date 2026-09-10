@@ -52,13 +52,16 @@ export const slaHours = (o: Pick<Order, 'cl' | 'pr'>): number => slaRuleFor(o.cl
  * so the promise and the price move together — a shorter deadline that cost the
  * same would just be a worse version of the standard one.
  */
+const STANDARD: Tier = { id: 'standard', n: 'Standard', mult: 1, up: 0 }
+
 export const TIERS: Tier[] = [
-  { id: 'standard', n: 'Standard', mult: 1, up: 0 },
+  STANDARD,
   { id: 'priority', n: 'Priority', mult: 0.5, up: 4 },
   { id: 'rush', n: 'Rush', mult: 0.25, up: 9 },
 ]
 
-export const tierOf = (id: string): Tier => TIERS.find((t) => t.id === id) ?? TIERS[0]
+/** An unrecognised tier is the standard one: the full SLA, at no uplift. */
+export const tierOf = (id: string): Tier => TIERS.find((t) => t.id === id) ?? STANDARD
 
 export interface Due {
   /** Hours from now, after the tier is applied. */
@@ -143,7 +146,9 @@ export function curIdx(o: Plannable): number {
 
 export const curStageOf = (o: Plannable): string | null => {
   const i = curIdx(o)
-  return i < 0 ? ASSIGN_STAGES[0] : i >= ASSIGN_STAGES.length ? null : ASSIGN_STAGES[i]
+  /* A pipeline with no stages in it has no current stage, which is what the null
+     this already returns past the last stage means. */
+  return i < 0 ? (ASSIGN_STAGES[0] ?? null) : i >= ASSIGN_STAGES.length ? null : (ASSIGN_STAGES[i] ?? null)
 }
 
 
@@ -183,10 +188,10 @@ export function orderPlan(o: Plannable): OrderPlan {
   }))
 
   const at = Math.max(0, i)
-  const left =
-    at >= cps.length
-      ? 0
-      : Math.max(0, cps[at].by - elapsed) + cps.slice(at + 1).reduce((a, c) => a + c.hours, 0)
+  /* No checkpoint at the current position means the pipeline is past its last
+     one, and there is nothing left to budget for. */
+  const cur = cps[at]
+  const left = cur ? Math.max(0, cur.by - elapsed) + cps.slice(at + 1).reduce((a, c) => a + c.hours, 0) : 0
   const remaining = h - elapsed
 
   return {

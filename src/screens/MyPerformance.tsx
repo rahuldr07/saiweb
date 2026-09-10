@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Banner,
   Btn,
@@ -62,7 +62,7 @@ const byReason = (rows: QcEntry[]): [reason: string, count: number][] =>
 export default function MyPerformance() {
   const { me, can } = useSession()
   const { openModal } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const budgetHelp = useBudgetHelp()
   const qcLog = useQcLog()
   const history = useDeliveries()

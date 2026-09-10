@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
 import { turnaroundCsv } from '@/lib/report-csv'
 import { useReportExport } from './useReportExport'
@@ -21,7 +21,7 @@ const budgetFor = (x: Delivery, stage: string) =>
 
 /** Measured against the promise, not against a feeling. */
 export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [range, setRange] = useState<RangeState>(DEFAULT_RANGE)
   const [focus, setFocus] = useState('all')
 

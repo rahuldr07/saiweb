@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Banner, Btn, Card, Chip, Empty, Label } from '@/components/ui'
 import { qualityCsv } from '@/lib/report-csv'
 import { useReportExport } from './useReportExport'
@@ -47,7 +47,7 @@ function Scores({
   log: QcEntry[]
   onOpenRules: () => void
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [range, setRange] = useState<RangeState>(DEFAULT_RANGE)
   const [focus, setFocus] = useState('all')
   const [person, setPerson] = useState<string | null>(null)

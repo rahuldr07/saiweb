@@ -50,6 +50,10 @@ export const fmtDate = (d: Date) =>
  */
 export const parseUsDate = (v: string): Date => {
   const [m, d, y] = v.split('/').map(Number)
+  /* A string with a part missing carries no date. An Invalid Date says exactly
+     that, where filling the gaps with zeroes would give a real day in 1899 that
+     every screen would then render as if it meant something. */
+  if (m === undefined || d === undefined || y === undefined) return new Date(NaN)
   return new Date(y, m - 1, d)
 }
 
@@ -59,6 +63,7 @@ export const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${p
 /** The inverse, and local for the same reason `parseUsDate` is. */
 export const parseIso = (v: string): Date => {
   const [y, m, d] = v.split('-').map(Number)
+  if (y === undefined || m === undefined || d === undefined) return new Date(NaN)
   return new Date(y, m - 1, d)
 }
 

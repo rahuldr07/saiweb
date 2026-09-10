@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Btn, Card, Chip, Kpi, Kpis, SectionHead, focusSection } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { ASSIGN_STAGES } from '@/data/org'
@@ -32,7 +32,7 @@ export function LiveTab({
   rules: Rule[]
   onTab: (t: 'Exceptions' | 'Rules') => void
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal, closeModal } = useUi()
   const [hour, setHour] = useState<number | null>(null)
 

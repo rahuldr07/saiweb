@@ -20,12 +20,28 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.browser, ...globals.node },
+      /* Type-aware linting. The three project files between them cover every
+         `.ts`/`.tsx` in the repo, so the service resolves each one without a
+         per-file `project` list to keep in step. */
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
     plugins: {
       'react-hooks': reactHooks,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      /* A click handler has nothing to wait with, and TanStack's `navigate` is
+         async — `useGo` in `src/lib/nav.ts` is where that promise ends. */
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+      /* Off until `noUncheckedIndexedAccess` is on. Without it TypeScript
+         believes `record[key]` and `array[i]` always hold a value, so the rule
+         reads the guards around them as dead code: 201 warnings here against 29
+         with the flag set, and most of the difference is a guard that stops a
+         real crash. Setting the flag is 587 type errors — its own change, and
+         the one that has to land first. */
+      '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },

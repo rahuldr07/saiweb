@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Bar,
   Banner,
@@ -99,7 +100,7 @@ const TINT: Record<string, string> = {
  */
 export default function PersonDetail() {
   const { personId } = useParams({ from: '/staff/$personId' })
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { me, can } = useSession()
   const { openModal } = useUi()
   const budgetHelp = useBudgetHelp()

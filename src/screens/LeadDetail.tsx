@@ -1,5 +1,6 @@
 import { useReducer, useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Btn,
   Card,
@@ -153,7 +154,7 @@ function LeadDetailFields({
 
 function LeadDetail() {
   const { leadId } = useParams({ from: '/leads/$leadId' })
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { me } = useSession()
   const { toast, openModal, closeModal } = useUi()
 

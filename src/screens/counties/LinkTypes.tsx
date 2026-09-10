@@ -149,7 +149,7 @@ export function LinkTypes({
   )
 }
 
-function EditType({ k, onView }: { k?: string; onView: (v: LtView) => void }) {
+function EditType({ k, onView }: { k?: string | undefined; onView: (v: LtView) => void }) {
   const { linkTypes, counties } = useCoverage()
   const existing = linkTypes.find((x) => x.k === k)
   const [name, setName] = useState(existing?.n ?? '')

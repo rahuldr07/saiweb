@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Chip, Empty } from '@/components/ui'
 import { whoName } from '@/lib/permissions'
 import type { Arrival } from '@/lib/engine'
@@ -37,7 +37,7 @@ export function WorkRow({
   mode: keyof typeof WORKCOLS
   onOpen: (orderId: string) => void
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const owner = whoName(item.who ?? '')
 
   return (

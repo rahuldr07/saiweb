@@ -9,8 +9,17 @@ import { STAFF } from '@/data/people'
 import type { Person, Role } from '@/data/types'
 import { NAV, type NavGroup } from '@/app/nav'
 
+/**
+ * Stands in for a workspace with no roles configured at all.
+ *
+ * It carries no capabilities, so every `can` against it is false: with nothing
+ * saying who may do what, hiding everything is the only safe reading — and the
+ * one that matches "anything a person lacks is hidden".
+ */
+const NO_ROLE: Role = { id: '', n: '—', desc: '', p: [] }
+
 export const roleOf = (roleId: string): Role =>
-  ROLELIST.find((r) => r.id === roleId) ?? ROLELIST[0]
+  ROLELIST.find((r) => r.id === roleId) ?? ROLELIST[0] ?? NO_ROLE
 
 export const roleName = (roleId: string) => roleOf(roleId).n
 

@@ -18,7 +18,7 @@ export function RoleForm({
   onManagePerms,
   isAdmin,
 }: {
-  id?: string
+  id?: string | undefined
   onCancel: () => void
   onDone: (message: string, roleId: string) => void
   onRemove: (id: string) => void

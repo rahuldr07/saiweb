@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Assumption, Banner, Btn, Card, CardHead, Label, SecHead, Seg } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { ASSIGN_STAGES } from '@/data/org'
@@ -304,7 +304,7 @@ function AddSla({ onCancel, onDone }: { onCancel: () => void; onDone: (m: string
 function StageBudgets() {
   const budget = useBudget()
   const { toast } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [pr, setPr] = useState('base')
 
   const ov = pr === 'base' ? null : budget.over.find((x) => x.pr === pr)

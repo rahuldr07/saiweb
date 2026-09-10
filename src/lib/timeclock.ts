@@ -12,16 +12,27 @@ import { TIMECFG } from '@/data/hrms'
 import { pad } from './format'
 import type { DayMark, Person, Shift } from '@/data/types'
 
-export const shiftOf = (p: Pick<Person, 'shift'>): Shift =>
-  SHIFTS.find((x) => x.k === (p.shift || 'day')) ?? SHIFTS[0]
+/**
+ * Stands in for a shift the roster does not carry.
+ *
+ * A workspace with no shifts configured still has to render a timesheet, and a
+ * nameless nine-to-five is a visibly unset shift — where the alternative was
+ * reading `.from` off `undefined`.
+ */
+const NO_SHIFT: Shift = { k: '', n: '—', from: '09:00', to: '18:00', c: 'n', d: '' }
+
+/** The shift with this key, whatever the roster carries. */
+export const shiftByKey = (k: string): Shift => SHIFTS.find((x) => x.k === k) ?? SHIFTS[0] ?? NO_SHIFT
+
+export const shiftOf = (p: Pick<Person, 'shift'>): Shift => shiftByKey(p.shift || 'day')
 
 /** A Date as the HH:MM a punch is stored in. */
 export const hhmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
 
-/** HH:MM to minutes past midnight. */
+/** HH:MM to minutes past midnight. A component that is not there counts as none. */
 export const mins = (t: string) => {
   const [h, m] = t.split(':').map(Number)
-  return h * 60 + m
+  return (h ?? 0) * 60 + (m ?? 0)
 }
 
 export const hm = (v: number) => `${Math.floor(v / 60)}h ${pad(v % 60)}m`

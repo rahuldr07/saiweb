@@ -94,7 +94,7 @@ export interface DayBucket {
 }
 
 export function makeDay(): DayBucket[] {
-  const states = ['PA', 'GA', 'CT', 'KY', 'TN', 'AK']
+  const states = ['PA', 'GA', 'CT', 'KY', 'TN', 'AK'] as const
   /* An order without a county cannot be judged against a county rule, and every
      real order has one — the property sits somewhere. */
   const cosIn: Record<string, string[]> = {}
@@ -114,11 +114,16 @@ export function makeDay(): DayBucket[] {
   for (let di = 0; di < DAYCOUNT; di++) {
     const date = dayDate(di)
     const arrivals: DayBucket['arrivals'] = []
+    /* The table sizes the arrivals; DAYCOUNT decides how many days there are.
+       An hour the table does not reach is an hour nothing arrived in — the day
+       itself still has to exist, because the strip renders five of them. */
+    const row = perDay[di] ?? []
     hours.forEach((h, hi) => {
       const list: Arrival[] = []
-      for (let i = 0; i < perDay[di][hi]; i++, n++) {
-        const st = states[n % states.length]
-        const pool = cosIn[st]?.length ? cosIn[st] : ['—']
+      for (let i = 0; i < (row[hi] ?? 0); i++, n++) {
+        const st = states[n % states.length] ?? states[0]
+        const inState = cosIn[st] ?? []
+        const pool = inState.length ? inState : ['—']
         list.push({
           id: `4193${String(101 + n).padStart(3, '0')}-1`,
           hr: h,
@@ -126,10 +131,12 @@ export function makeDay(): DayBucket[] {
           dk: fmtDate(date),
           today: di === DAYCOUNT - 1,
           recv: new Date(date.getFullYear(), date.getMonth(), date.getDate(), h, 0),
-          pr: PRODMIX[n % PRODMIX.length],
+          pr: PRODMIX[n % PRODMIX.length] ?? '',
           st,
-          cl: CLIENTMIX[n % CLIENTMIX.length],
-          co: pool[n % pool.length],
+          cl: CLIENTMIX[n % CLIENTMIX.length] ?? '',
+          /* The em dash the county pool already falls back to when a state
+             carries no counties at all. */
+          co: pool[n % pool.length] ?? '—',
         })
       }
       arrivals.push({ hr: h, orders: list })
@@ -226,10 +233,9 @@ export interface NarrowStop {
   rule: string
 }
 
-export interface NarrowResult {
+interface NarrowBase {
   /** Everyone still eligible, emptiest desk first. Empty when `stop` is set. */
   pool: Person[]
-  stop?: NarrowStop
   /** Every rule consulted, in order — what the rule counters are built from. */
   steps: NarrowStep[]
   /** The subset a person should read: a rule that removed nobody says nothing. */
@@ -237,6 +243,18 @@ export interface NarrowResult {
   /** The stage this one reviews, when it is a QC stage. */
   paired?: string
 }
+
+/**
+ * A narrowing either stops or picks somebody — never both, and never neither.
+ *
+ * A union rather than two optional fields because every caller reads the head of
+ * the pool the moment it has seen no `stop`, and nothing else states that an
+ * un-stopped narrowing has anybody in it.
+ */
+export type NarrowResult =
+  | (NarrowBase & { stop: NarrowStop; pick?: undefined })
+  /** `pick` is the head of `pool`: the emptiest desk, and who the caller places. */
+  | (NarrowBase & { stop?: undefined; pick: Person })
 
 export interface NarrowOptions {
   /** Defaults to the seed roster and the live rules. */
@@ -271,7 +289,7 @@ export function narrowPool(o: Candidate, stage: string, opts: NarrowOptions = {}
   const { load = {}, taken = {}, target = true } = opts
   const at = (id: string) => load[id] ?? 0
   const whoName = (id: string | null | undefined) => cx.staff.find((s) => s.id === id)?.n ?? '—'
-  const paired: string | undefined = cx.pairs[stage]
+  const paired = cx.pairs[stage]
 
   const steps: NarrowStep[] = []
   const trace: TraceStep[] = []
@@ -284,7 +302,7 @@ export function narrowPool(o: Candidate, stage: string, opts: NarrowOptions = {}
     stop: { why, rule },
     steps,
     trace,
-    paired,
+    ...(paired ? { paired } : {}),
   })
 
   let pool = cx.staff.filter((s) => s.dep.includes(stage))
@@ -340,15 +358,18 @@ export function narrowPool(o: Candidate, stage: string, opts: NarrowOptions = {}
     pool = pool.filter((s) => taken[paired] !== s.id)
     step('r4', before, pool.length, `self-review — skipped ${whoName(taken[paired])}`)
   }
-  if (!pool.length) return stop('self', 'r4')
 
+  /* Sorting an empty pool is a no-op, so the emptiness check that used to sit
+     above this is the same check as "is there a head to place". */
   pool.sort((a, b) => at(a.id) / a.cap - at(b.id) / b.cap)
   const p = pool[0]
+  if (!p) return stop('self', 'r4')
+
   const note = `emptiest — ${p.n} at ${at(p.id)}/${p.cap}`
   steps.push({ r: 'r8', before: pool.length, after: pool.length, note })
   trace.push({ r: 'r8', left: 1, note })
 
-  return { pool, steps, trace, paired }
+  return { pool, pick: p, steps, trace, ...(paired ? { paired } : {}) }
 }
 
 /** What an exception says, and who came closest to qualifying. */
@@ -424,7 +445,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
     const dayHourly: RunResult['hourly'] = []
 
     for (const slot of day.arrivals) {
-      const hStart = Object.fromEntries(STAFF.map((s) => [s.id, load[s.id]]))
+      const hStart = Object.fromEntries(STAFF.map((s) => [s.id, load[s.id] ?? 0]))
 
       for (const o of slot.orders) {
         const onOrder: Record<string, string> = {}
@@ -463,8 +484,8 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
             continue
           }
 
-          const p = nar.pool[0]
-          load[p.id]++
+          const p = nar.pick
+          load[p.id] = (load[p.id] ?? 0) + 1
           onOrder[stage] = p.id
           assigns.push({ o, stage, who: p.id, hr: slot.hr, dk: day.dk, today: o.today, trace: trace.slice(from) })
         }
@@ -476,7 +497,7 @@ export function runDay(days: DayBucket[], overrides: Partial<RunContext> = {}): 
       dayHourly.push({
         hr: slot.hr,
         n: slot.orders.length,
-        used: Object.fromEntries(STAFF.map((s) => [s.id, load[s.id] - hStart[s.id]])),
+        used: Object.fromEntries(STAFF.map((s) => [s.id, (load[s.id] ?? 0) - (hStart[s.id] ?? 0)])),
         load: { ...load },
       })
     }
@@ -536,7 +557,7 @@ export function previewAssign(
       out[stage] = { err: previewErr(o, nar.stop) }
       continue
     }
-    const p = nar.pool[0]
+    const p = nar.pick
     at[p.id] = (at[p.id] ?? 0) + 1
     onOrder[stage] = p.id
     out[stage] = { who: p.id }
@@ -604,13 +625,13 @@ export function staffWork(run: RunResult): Record<string, WorkRow> {
       const r = m[a.who]
       if (!r) return
       const fin = isDone(a.o, a.stage)
-      r.stages[a.stage] = r.stages[a.stage] ?? { done: 0, pend: 0 }
+      const cell = (r.stages[a.stage] ??= { done: 0, pend: 0 })
       if (fin) {
         r.done++
-        r.stages[a.stage].done++
+        cell.done++
       } else {
         r.pend++
-        r.stages[a.stage].pend++
+        cell.pend++
       }
       r.items.push({ o: a.o, stage: a.stage, fin, hr: a.hr })
     })
@@ -664,20 +685,21 @@ export function deptWork(run: RunResult): Record<string, DeptRow> {
       const r = m[a.stage]
       if (!r) return
       const fin = isDone(a.o, a.stage)
-      r.people[a.who] = r.people[a.who] ?? { done: 0, pend: 0 }
+      const cell = (r.people[a.who] ??= { done: 0, pend: 0 })
       if (fin) {
         r.done++
-        r.people[a.who].done++
+        cell.done++
       } else {
         r.pend++
-        r.people[a.who].pend++
+        cell.pend++
       }
       r.items.push({ o: a.o, who: a.who, fin, hr: a.hr })
     })
   run.exc
     .filter((e) => e.today)
     .forEach((e) => {
-      if (m[e.stage]) m[e.stage].unplaced++
+      const r = m[e.stage]
+      if (r) r.unplaced++
     })
   Object.values(m).forEach((r) => {
     r.tot = r.done + r.pend
@@ -729,7 +751,10 @@ export function computeBoard(overrides: Partial<RunContext> = {}): AssignmentBoa
     totDone: worked.reduce((a, r) => a + r.done, 0),
     totPend: worked.reduce((a, r) => a + r.pend, 0),
     dwork,
-    depts: run.ctx.stages.map((d) => dwork[d]),
+    /* `deptWork` keys its result by these same stages, so this maps one to one.
+       `flatMap` leaves a stage it somehow lacks out of the list rather than
+       putting a hole in the middle of it. */
+    depts: run.ctx.stages.flatMap((d) => dwork[d] ?? []),
   }
 }
 

@@ -52,7 +52,7 @@ export function saveCounty(
     ...coverage,
     counties: was
       ? coverage.counties.map((c) => (sameCounty(c, was.n, was.st) ? { ...c, ...next } : c))
-      : [...coverage.counties, next as County],
+      : [...coverage.counties, next],
   }))
 }
 
@@ -147,11 +147,15 @@ export function removeLinkType(k: string): void {
 
 export function moveLinkType(k: string, dir: -1 | 1): void {
   const coverage = store.get()
-  const i = coverage.linkTypes.findIndex((x) => x.k === k)
-  const j = i + dir
-  if (i < 0 || j < 0 || j >= coverage.linkTypes.length) return
   const linkTypes = [...coverage.linkTypes]
-  ;[linkTypes[i], linkTypes[j]] = [linkTypes[j], linkTypes[i]]
+  const i = linkTypes.findIndex((x) => x.k === k)
+  const a = linkTypes[i]
+  const b = linkTypes[i + dir]
+  /* Both ends have to exist. An unknown key, or either end of the list, is a
+     move with nowhere to go. */
+  if (!a || !b) return
+  linkTypes[i] = b
+  linkTypes[i + dir] = a
   store.set({ ...coverage, linkTypes })
 }
 
@@ -210,7 +214,12 @@ const FAILING = ['broken', 'moved', 'auth', 'slow']
 const brokenCount = () => {
   const { counties, linkTypes } = store.get()
   return counties.reduce(
-    (n, c) => n + linkTypes.filter((t) => c.links[t.k] && FAILING.includes(c.links[t.k].s)).length,
+    (n, c) =>
+      n +
+      linkTypes.filter((t) => {
+        const l = c.links[t.k]
+        return !!l && FAILING.includes(l.s)
+      }).length,
     0,
   )
 }

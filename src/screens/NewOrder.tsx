@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Chip, Form, Label, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useUi } from '@/state/ui'
@@ -70,7 +70,7 @@ function AsideLabel({ children }: { children: string }) {
 }
 
 function NewOrder() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { toast } = useUi()
   const [f, setF] = useState<Draft>(blankDraft)
   const [err, setErr] = useState<string | null>(null)

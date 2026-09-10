@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Banner,
   Btn,
@@ -56,7 +56,7 @@ const CAUSES: [LinkStatus, string][] = [
 ]
 
 function LinkMonitor() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal, closeModal, toast } = useUi()
   const { counties, check } = useCoverage()
   const broken = useRef<HTMLHeadingElement>(null)

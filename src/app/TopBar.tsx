@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { fmtTime, initials, LOCAL_OFFSET_H, TZ, TZ2 } from '@/lib/format'
@@ -13,7 +13,7 @@ export function TopBar({ current }: { current: string }) {
   const { me, tenant, theme, toggleTheme, navOpen, setNavOpen, roleLabel, can } = useSession()
   const { openModal, closeModal } = useUi()
   const { check } = useCoverage()
-  const navigate = useNavigate()
+  const navigate = useGo()
 
   const list = alerts()
   const worst = list.some((a) => a.sev === 'bad') ? 'var(--bad)' : 'var(--warn)'

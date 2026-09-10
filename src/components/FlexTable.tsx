@@ -84,7 +84,7 @@ export function Cell({
   v?: ReactNode
   s?: ReactNode
   mono?: boolean
-  tone?: 'ok' | 'warn' | 'bad' | 'gr'
+  tone?: 'ok' | 'warn' | 'bad' | 'gr' | undefined
   children?: ReactNode
 }) {
   return (

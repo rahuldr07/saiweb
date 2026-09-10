@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Banner, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
 import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
 import { workloadCsv } from '@/lib/report-csv'
@@ -19,10 +19,10 @@ const capTextTone = (pct: number) => (pct >= 95 ? 'bad' : pct >= 80 ? 'warn' : '
 const PEOPLE_COLS = '190px 1fr 85px 85px 130px'
 
 /** Departmental workload: the whole floor, then one department at a time. */
-export function ByDepartment({ initial, onOpenStaff }: { initial?: string; onOpenStaff: (id: string) => void }) {
+export function ByDepartment({ initial, onOpenStaff }: { initial?: string | undefined; onOpenStaff: (id: string) => void }) {
   const { run, depts, dwork } = board()
   useReportExport(() => workloadCsv(depts, true))
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [sel, setSel] = useState(initial ?? 'all')
   const [focus, setFocus] = useState('all')
   const { filter, setFilter, query, setQuery, match } = useWorkFilter()

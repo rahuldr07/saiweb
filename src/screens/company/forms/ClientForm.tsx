@@ -19,7 +19,7 @@ export function ClientForm({
   onDone,
   onRemove,
 }: {
-  name?: string
+  name?: string | undefined
   onCancel: () => void
   onDone: (message: string) => void
   onRemove: (name: string) => void
@@ -56,7 +56,7 @@ export function ClientForm({
       p: phone.trim(),
       terms,
       active,
-    } as Client
+    }
     saveClient(next, name)
     onDone(name ? `${client} saved` : `${client} added`)
   }

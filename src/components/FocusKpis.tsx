@@ -17,7 +17,7 @@ export interface FocusCard {
   detail: ReactNode
   /** Governs whether the tile is pressable — a zero is shown, not hidden. */
   count?: number
-  tone?: 'alert' | 'warn'
+  tone?: 'alert' | 'warn' | undefined
 }
 
 export function FocusKpis({

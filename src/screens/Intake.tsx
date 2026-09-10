@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, CardBody, CardHead, Chip, Empty, KeyValues, Label, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -22,7 +22,7 @@ const mailboxAddress = (tenantName: string) =>
   `orders@${tenantName.toLowerCase().replace(/[^a-z]/g, '')}.titlecrm.com`
 
 function MailCard({ m }: { m: MailItem }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { toast } = useUi()
   const [label, kind] = MAIL_STATE[m.st]
 
@@ -104,7 +104,7 @@ function MailCard({ m }: { m: MailItem }) {
 
 function Intake() {
   const { tenant } = useSession()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const mails = useMemo(() => MAILBOX(), [])
 
   return (

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { dueMeta, initials } from '@/lib/format'
 import type { ChipKind } from '@/data/types'
 
@@ -58,10 +58,10 @@ export function Parent({
 }: {
   to: string
   /** For a parent that is one tab of a screen rather than the screen itself. */
-  search?: Record<string, string>
+  search?: Record<string, string> | undefined
   children: ReactNode
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   return (
     <button type="button" className="eyebrow" onClick={() => navigate({ to, search })}>
       <i>←</i>
@@ -84,7 +84,7 @@ export function NotFoundRecord({
   backTo: string
   backLabel: string
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   return (
     <>
       <PageHead
@@ -277,7 +277,7 @@ export function Kpi({
   title: string
   value: ReactNode
   /** Colours the figure itself — the design's `vc`. */
-  valueTone?: 'ok' | 'warn' | 'bad'
+  valueTone?: 'ok' | 'warn' | 'bad' | undefined
   /**
    * Overrides the figure's size — the design's `vs`, used wherever the value is
    * money. `₹1,23,456` at the default 26px overruns a 168px tile; every money
@@ -287,11 +287,12 @@ export function Kpi({
   detail?: ReactNode
   /** Colours the detail line, replacing its default grey — the design's `dc`. */
   detailTone?: 'ok' | 'warn' | 'bad'
-  tone?: 'alert' | 'warn'
+  tone?: 'alert' | 'warn' | undefined
   icon?: string
   /** Tooltip for a clickable tile, saying what opening it will do. */
   hint?: string
-  onClick?: () => void
+  /** Absent leaves the tile inert: a tile with nothing behind it is not pressable. */
+  onClick?: (() => void) | undefined
   selected?: boolean
   /** Drop the card treatment — the design's `stat` variant, for a bare run of figures. */
   flat?: boolean
@@ -369,9 +370,9 @@ export function Avatar({
 }: {
   name?: string | null
   self?: boolean
-  title?: string
+  title?: string | undefined
   /** Takes the event so a strip inside a clickable row can stop the bubble. */
-  onClick?: (e: React.MouseEvent) => void
+  onClick?: ((e: React.MouseEvent) => void) | undefined
   style?: CSSProperties
 }) {
   const cls = `ava${name ? '' : ' none'}${self ? ' self' : ''}`
@@ -534,7 +535,7 @@ export function Tabs<T extends string>({
   return (
     <div className="tabs" role="tablist">
       {tabs.map((t) => {
-        const [name, badge] = (Array.isArray(t) ? t : [t, null]) as [T, number | null]
+        const [name, badge] = Array.isArray(t) ? t : [t, null]
         return (
           <button
             key={name}

@@ -26,9 +26,9 @@ export function StaffForm({
   onRemove,
   onNewRole,
 }: {
-  id?: string
+  id?: string | undefined
   /** What was typed before stepping out to create a role, put back on return. */
-  draft?: Partial<Person> | null
+  draft?: Partial<Person> | null | undefined
   onCancel: () => void
   onDone: (message: string) => void
   onRemove: (id: string) => void
@@ -70,7 +70,7 @@ export function StaffForm({
     e: email,
     r: role,
     cap: Math.max(0, parseInt(cap, 10) || 0),
-    avail: avail as Person['avail'],
+    avail,
     active,
     dep,
   })
@@ -92,7 +92,7 @@ export function StaffForm({
         e: mail,
         r: role,
         cap: Math.max(0, parseInt(cap, 10) || 0),
-        avail: avail as Person['avail'],
+        avail,
         active,
         dep,
         mob: mob.trim(),

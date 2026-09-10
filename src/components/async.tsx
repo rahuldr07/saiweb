@@ -64,7 +64,7 @@ export function LoadFailed({
 }: {
   what: string
   error?: unknown
-  onRetry?: () => void
+  onRetry?: (() => void) | undefined
 }) {
   /* The message is a developer's sentence — "Cannot read properties of undefined"
      — and in front of somebody trying to get through their day it is noise at

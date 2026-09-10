@@ -82,9 +82,11 @@ const FIRST = TENANTS[0]
 
 const SEED: CompanyState = {
   pay: PAYCFG,
-  profile: { name: FIRST.name, state: FIRST.state, tz: 'India Standard Time' },
+  /* An unnamed workspace when there is no tenant to name it after — the profile
+     form is where that gets filled in either way. */
+  profile: { name: FIRST?.name ?? '', state: FIRST?.state ?? '', tz: 'India Standard Time' },
   depts: DEPTLIST,
-  statuses: Object.entries(STATUS) as [string, [string, string]][],
+  statuses: Object.entries(STATUS),
   naming: NAMING,
   sla: SLA,
   budget: BUDGET,
@@ -147,21 +149,27 @@ export const useNaming = (): NamingRow[] => useStoreSlice(store, (c) => c.naming
 
 /** Swaps a department with its neighbour. The order of this list is the pipeline. */
 export function moveDept(id: string, dir: -1 | 1): void {
-  const i = store.get().depts.findIndex((d) => d.id === id)
-  const j = i + dir
-  if (i < 0 || j < 0 || j >= store.get().depts.length) return
   const depts = [...store.get().depts]
-  ;[depts[i], depts[j]] = [depts[j], depts[i]]
+  const i = depts.findIndex((d) => d.id === id)
+  const a = depts[i]
+  const b = depts[i + dir]
+  /* Both ends have to exist. An unknown id, or either end of the list, is a move
+     with nowhere to go. */
+  if (!a || !b) return
+  depts[i] = b
+  depts[i + dir] = a
   store.update((prev) => ({ ...prev, depts }))
 }
 
 /** Same, for the status list — position in it is what "main line" means. */
 export function moveStatus(key: string, dir: -1 | 1): void {
-  const i = store.get().statuses.findIndex(([k]) => k === key)
-  const j = i + dir
-  if (i < 0 || j < 0 || j >= store.get().statuses.length) return
   const statuses = [...store.get().statuses]
-  ;[statuses[i], statuses[j]] = [statuses[j], statuses[i]]
+  const i = statuses.findIndex(([k]) => k === key)
+  const a = statuses[i]
+  const b = statuses[i + dir]
+  if (!a || !b) return
+  statuses[i] = b
+  statuses[i + dir] = a
   store.update((prev) => ({ ...prev, statuses }))
 }
 

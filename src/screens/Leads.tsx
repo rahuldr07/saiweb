@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Chip, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { DataTable, type DataRow } from '@/components/DataTable'
@@ -37,7 +37,7 @@ const COLS = [
 ]
 
 function Leads() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const notBuilt = useNotBuilt()
   const [pill, setPill] = useState('all')
 

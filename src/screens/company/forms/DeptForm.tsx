@@ -16,7 +16,7 @@ export function DeptForm({
   onDone,
   onRemove,
 }: {
-  id?: string
+  id?: string | undefined
   onCancel: () => void
   onDone: (message: string) => void
   onRemove: (id: string) => void

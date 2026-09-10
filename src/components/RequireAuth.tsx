@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
-import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { useRouterState } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { useSession } from '@/state/session'
 
 /**
@@ -12,7 +13,7 @@ import { useSession } from '@/state/session'
  */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { authState } = useSession()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isPublic = pathname === '/signin'
 

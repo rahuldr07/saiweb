@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
@@ -40,7 +40,7 @@ export function QcStaffDetail({
 }) {
   /* Which of the four figures is being looked into. */
   const [focus, setFocus] = useState('all')
-  const navigate = useNavigate()
+  const navigate = useGo()
   const mine = rows.filter((x) => x.onName === name).sort((a, b) => +b.d - +a.d)
   const me = people.find((p) => p.n === name)
   const staff = STAFF.find((x) => x.n === name)

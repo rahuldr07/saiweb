@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { useSession } from '@/state/session'
 import { Btn, Card, Empty, PageHead } from './ui'
 import { roleName } from '@/lib/permissions'
@@ -11,7 +11,7 @@ import { roleName } from '@/lib/permissions'
  */
 export function RequireCap({ cap, children }: { cap: string; children: ReactNode }) {
   const { me, can } = useSession()
-  const navigate = useNavigate()
+  const navigate = useGo()
   if (can(cap)) return <>{children}</>
 
   const home = can('all') ? 'dash' : 'mywork'

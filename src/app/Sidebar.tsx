@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { visibleNav } from '@/lib/permissions'
@@ -24,7 +24,7 @@ function badgeFor(route: string) {
 export function Sidebar({ current }: { current: string }) {
   const { me, tenant, switchTenant, roleLabel, setNavOpen, memberships } = useSession()
   const { openModal, closeModal } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
 
   const groups = visibleNav(me)
 

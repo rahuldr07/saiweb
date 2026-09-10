@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Banner,
   Btn,
@@ -28,7 +29,6 @@ import { removePrefix, usePrefixes } from './clients/prefixes'
 import { INVOICES, ISTATUS } from '@/data/business'
 import { balance, outstandingOf } from '@/lib/invoices'
 import { money, r2 } from '@/lib/format'
-import type { ChipKind } from '@/data/types'
 
 const TABS = ['Overview', 'Turnaround', 'Invoices', 'Order prefixes'] as const
 type Tab = (typeof TABS)[number]
@@ -52,7 +52,7 @@ const CLOCK_RUN: Record<string, string> = {
  */
 function ClientDetail() {
   const { clientCode } = useParams({ from: '/clients/$clientCode' })
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal, closeModal, toast } = useUi()
   const notBuilt = useNotBuilt()
   const { editClient } = useClientEditor()
@@ -309,7 +309,7 @@ function ClientDetail() {
 
   const invoiceRows: DataRow[] = mine.map((x) => {
     const bal = balance(x)
-    const [label, kind] = (ISTATUS[x.st] ?? [x.st, 'n']) as [string, ChipKind]
+    const [label, kind] = ISTATUS[x.st] ?? [x.st, 'n']
     return {
       id: x.id,
       k: [bal > 0 ? 'owing' : 'paid', ...(x.st === 'overdue' ? ['overdue'] : [])],

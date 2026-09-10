@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
 import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
 import { workloadCsv } from '@/lib/report-csv'
@@ -14,10 +14,10 @@ import { AVAIL, STAFF } from '@/data/people'
 const COLS = '180px 150px 1fr 90px 90px 90px'
 
 /** Staff workload: the whole roster, then one person at a time. */
-export function ByStaff({ initial, onOpenDept }: { initial?: string; onOpenDept: (d: string) => void }) {
+export function ByStaff({ initial, onOpenDept }: { initial?: string | undefined; onOpenDept: (d: string) => void }) {
   const { run, work, worked, totDone, totPend } = board()
   useReportExport(() => workloadCsv(worked, false))
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [sel, setSel] = useState(initial ?? 'all')
   const [focus, setFocus] = useState('all')
   const { filter, setFilter, query, setQuery, match } = useWorkFilter()

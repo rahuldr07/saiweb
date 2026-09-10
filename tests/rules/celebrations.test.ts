@@ -19,7 +19,7 @@ import type { Person } from '@/data/types'
  */
 
 const person = (over: Partial<Person>): Person =>
-  ({ ...STAFF[0], id: 'x', n: 'Test Person', active: true, ...over }) as Person
+  ({ ...STAFF[0], id: 'x', n: 'Test Person', active: true, ...over })
 
 const on = (y: number, m: number, d: number) => new Date(y, m - 1, d)
 

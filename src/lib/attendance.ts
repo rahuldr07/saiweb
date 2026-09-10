@@ -7,10 +7,11 @@
  * generator is seeded, so the figures are the same on every load and a screenshot
  * still matches the screen.
  */
-import { HOLIDAYS, SHIFTS, STAFF } from '@/data/people'
+import { HOLIDAYS, STAFF } from '@/data/people'
 import { ATT, LEAVE, PAYMONTHS, TIMECFG } from '@/data/hrms'
 import { now } from './clock'
 import { fmtDate, pad } from './format'
+import { mins, shiftByKey } from './timeclock'
 import type { LateMark, Regularisation } from '@/data/types'
 
 /** A linear congruential generator — small, and identical run to run. */
@@ -29,8 +30,6 @@ const dAgo = (n: number) => {
 
 const rostered = () => STAFF.filter((p) => p.dep.length && p.active !== false)
 
-const shiftFor = (k: string) => SHIFTS.find((s) => s.k === k) ?? SHIFTS[0]
-
 /* ── corrections ────────────────────────────────────────────────────────── */
 
 const WAS = [
@@ -38,13 +37,13 @@ const WAS = [
   'Checked in at 10:40',
   'No punch at all',
   'Checked out at 13:10',
-]
+] as const
 const ASK = [
   'Worked 09:30 to 18:30',
   'Was at the sub-registrar office',
   'App would not open',
   'Power cut, worked on mobile',
-]
+] as const
 
 /**
  * A correction is a claim about a day the clock got wrong. Approving one moves
@@ -62,8 +61,8 @@ export function makeRegularisations(): Regularisation[] {
         id: `R${id++}`,
         who: p.id,
         d: dAgo(1 + Math.floor(r() * 12)),
-        was: WAS[Math.floor(r() * WAS.length)],
-        ask: ASK[Math.floor(r() * ASK.length)],
+        was: WAS[Math.floor(r() * WAS.length)] ?? WAS[0],
+        ask: ASK[Math.floor(r() * ASK.length)] ?? ASK[0],
         st: 'pending',
       })
     })
@@ -106,11 +105,10 @@ export function makeLateLog(): LateMark[] {
 
     list.forEach((p) => {
       if (r() > 0.11) return
-      const sh = shiftFor(p.shift)
+      const sh = shiftByKey(p.shift)
       const late = 3 + Math.floor(r() * 74)
       if (late <= TIMECFG.lateGraceMins) return
-      const [h, m] = sh.from.split(':').map(Number)
-      const at = h * 60 + m + late
+      const at = mins(sh.from) + late
       out.push({
         id: `LT${out.length}`,
         who: p.id,
@@ -120,7 +118,9 @@ export function makeLateLog(): LateMark[] {
         due: sh.from,
         at: `${pad(Math.floor(at / 60) % 24)}:${pad(at % 60)}`,
         mins: late,
-        why: LATEREASONS[Math.floor(r() * LATEREASONS.length)],
+        /* Four of the ten entries are already null, so "no reason given" is the
+           reading an absent one has too. */
+        why: LATEREASONS[Math.floor(r() * LATEREASONS.length)] ?? null,
         waived: false,
       })
     })

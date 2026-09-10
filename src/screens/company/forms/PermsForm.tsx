@@ -108,7 +108,7 @@ function EditPerm({
   onView,
   onDone,
 }: {
-  k?: string
+  k?: string | undefined
   onView: (v: PermView) => void
   onDone: (message: string) => void
 }) {

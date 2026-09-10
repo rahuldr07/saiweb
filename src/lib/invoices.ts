@@ -30,7 +30,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
  */
 export function monthBounds(month: string): [string, string] {
   const [mon, year] = month.split(' ')
-  const m = MONTHS.indexOf(mon)
+  const m = MONTHS.indexOf(mon ?? '')
   const y = Number(year)
   if (m < 0 || !Number.isFinite(y)) return ['', '']
   return [iso(new Date(y, m, 1)), iso(new Date(y, m + 1, 0))]
@@ -89,22 +89,25 @@ export function normalise(range: DateRange): DateRange {
   return from && to && from > to ? { from: to, to: from } : range
 }
 
+/* A register with no invoices in it has no months to bound a preset by, and an
+   unrecognised label bounds to nothing — which is the same range "all time"
+   gives, and the right answer for every preset when there is nothing to scope. */
+const monthAt = (i: number) => INVOICE_MONTHS[i] ?? ''
+const LAST_MONTH = INVOICE_MONTHS.length - 1
+
 export const RANGE_PRESETS: [label: string, range: DateRange][] = [
   ['All time', EMPTY_RANGE],
-  ['This month', rangeForMonth(INVOICE_MONTHS[INVOICE_MONTHS.length - 1])],
+  ['This month', rangeForMonth(monthAt(LAST_MONTH))],
   [
     'Last 3 months',
     {
-      from: monthBounds(INVOICE_MONTHS[Math.max(0, INVOICE_MONTHS.length - 3)])[0],
-      to: monthBounds(INVOICE_MONTHS[INVOICE_MONTHS.length - 1])[1],
+      from: monthBounds(monthAt(Math.max(0, INVOICE_MONTHS.length - 3)))[0],
+      to: monthBounds(monthAt(LAST_MONTH))[1],
     },
   ],
   [
     'Year to date',
-    {
-      from: monthBounds(INVOICE_MONTHS[0])[0],
-      to: monthBounds(INVOICE_MONTHS[INVOICE_MONTHS.length - 1])[1],
-    },
+    { from: monthBounds(monthAt(0))[0], to: monthBounds(monthAt(LAST_MONTH))[1] },
   ],
 ]
 

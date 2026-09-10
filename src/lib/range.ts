@@ -40,7 +40,10 @@ export function resolveRange(state: RangeState): Range {
   if (state.preset === 'mtd') {
     return { from: new Date(t.getFullYear(), t.getMonth(), 1), to: t, label: 'this month', preset: 'mtd' }
   }
-  const days = (QC_PRESETS.find((x) => x[0] === state.preset) ?? QC_PRESETS[1])[2] ?? 30
+  /* 30 twice over: the preset an unknown key falls back to, and the span to use
+     if the preset list itself has been emptied. */
+  const preset = QC_PRESETS.find((x) => x[0] === state.preset) ?? QC_PRESETS[1]
+  const days = preset?.[2] ?? 30
   return {
     from: new Date(t.getFullYear(), t.getMonth(), t.getDate() - (days - 1)),
     to: t,

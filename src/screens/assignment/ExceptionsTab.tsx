@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Chip, Empty } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { AVAIL, STAFF } from '@/data/people'
@@ -42,7 +42,7 @@ export function ExceptionsTab({
   board: AssignmentBoard
   onTab: (t: 'Rules') => void
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { toast, openModal, closeModal } = useUi()
   /* Placed by hand, this session. Held here rather than written into the run:
      the board is what the rules produced, and overriding it is a different fact. */

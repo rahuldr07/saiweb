@@ -13,7 +13,7 @@ export function StatusForm({
   onCancel,
   onDone,
 }: {
-  statusKey?: string
+  statusKey?: string | undefined
   onCancel: () => void
   onDone: (message: string) => void
 }) {

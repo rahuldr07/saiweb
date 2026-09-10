@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Banner, Btn, Card, Chip, SectionHead } from '@/components/ui'
 import { DayPicker } from './DayPicker'
 import { assignedCsv } from '@/lib/report-csv'
@@ -16,7 +16,7 @@ const val = (n: number) => (n ? <b className="mono">{n}</b> : <span className="g
 /** Who got what, by department, broken down by product. */
 export function Assigned({ onOpenStaff }: { onOpenStaff: () => void }) {
   const { run } = board()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [day, setDay] = useState(() => fmtDate(now()))
   const [dept, setDept] = useState('all')
 

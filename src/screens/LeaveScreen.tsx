@@ -1,5 +1,5 @@
 import { useReducer, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Btn, Card, Chip, Kpi, Kpis, Label, PageHead, Seg } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
@@ -34,7 +34,7 @@ const PAGE = 40
 
 
 function LeaveScreen() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { me, can } = useSession()
   const { toast, openModal, closeModal } = useUi()
 

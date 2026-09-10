@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Avatar,
   Btn,
@@ -84,7 +85,7 @@ function ThisMonth({
   setMonth: (m: string) => void
   totals: ReturnType<typeof payTotals>
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal, closeModal } = useUi()
   const download = useDownloads()
   const [only, setOnly] = useState<'all' | 'lop'>('all')
@@ -376,7 +377,7 @@ function OnePerson({
   people: Person[]
   onPick: (id: string) => void
 }) {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal } = useUi()
   const download = useDownloads()
 
@@ -614,7 +615,7 @@ function OnePerson({
 /* ── the screen ─────────────────────────────────────────────────────────── */
 
 function Payslips() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const download = useDownloads()
   const search = useSearch({ from: '/payslips' })
 

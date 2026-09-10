@@ -56,7 +56,11 @@ export function stageWorkOf(dels: Delivery[]): StageWorkResult {
       if (!name) return
       const c = plan.find((y) => y.stage === st)
       if (!c?.hours) return
+      /* Somebody is recorded for the stage but no hours are: there is nothing to
+         measure against the budget, and the NaN ratio it used to produce spread
+         through the person's median rather than staying on this one row. */
       const h = d.st[st]
+      if (h === undefined) return
       m[name] ??= {
         n: name,
         items: [],
@@ -85,13 +89,13 @@ export function stageWorkOf(dels: Delivery[]): StageWorkResult {
   const dept: Record<string, { n: number; over: number; rate: number }> = {}
   Object.values(m).forEach((p) =>
     p.items.forEach((x) => {
-      dept[x.st] ??= { n: 0, over: 0, rate: 0 }
-      dept[x.st].n++
-      if (x.over) dept[x.st].over++
+      const cell = (dept[x.st] ??= { n: 0, over: 0, rate: 0 })
+      cell.n++
+      if (x.over) cell.over++
     }),
   )
-  Object.keys(dept).forEach((k) => {
-    dept[k].rate = Math.round(((dept[k].n - dept[k].over) / dept[k].n) * 100)
+  Object.values(dept).forEach((d) => {
+    d.rate = Math.round(((d.n - d.over) / d.n) * 100)
   })
 
   Object.values(m).forEach((p) => {
@@ -151,8 +155,7 @@ export interface RatedPerson {
 export function ratedPeople(rows: QcEntry[], tw: StageWorkResult): RatedPerson[] {
   const by: Record<string, { n: string; c: number; acc: number; comp: number; fmt: number; def: number }> = {}
   rows.forEach((x) => {
-    by[x.onName] ??= { n: x.onName, c: 0, acc: 0, comp: 0, fmt: 0, def: 0 }
-    const p = by[x.onName]
+    const p = (by[x.onName] ??= { n: x.onName, c: 0, acc: 0, comp: 0, fmt: 0, def: 0 })
     p.c++
     p.acc += x.acc
     p.comp += x.comp

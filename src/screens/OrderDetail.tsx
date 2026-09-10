@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Avatar,
   Banner,
@@ -87,7 +88,7 @@ const DOC_KINDS = ['Deed', 'Mortgage', 'Assignment', 'Judgment', 'Tax', 'Plat']
 
 export default function OrderDetail() {
   const { orderId } = useParams({ from: '/orders/$orderId' })
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { me, can } = useSession()
   const { toast, openModal, closeModal } = useUi()
   const notBuilt = useNotBuilt()

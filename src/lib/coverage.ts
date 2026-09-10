@@ -28,7 +28,7 @@ export function covWord(c: Coverage): string {
   const st = c.states === 'all' ? 'every state' : `${c.states.length} state${c.states.length === 1 ? '' : 's'}`
   const narrowed = Object.entries(c.counties ?? {}).filter(([, v]) => v?.length)
   const co = narrowed.length
-    ? ` (${narrowed.map(([k, v]) => `${k}: ${v!.length} count${v!.length === 1 ? 'y' : 'ies'}`).join(', ')})`
+    ? ` (${narrowed.map(([k, v]) => `${k}: ${v.length} count${v.length === 1 ? 'y' : 'ies'}`).join(', ')})`
     : ''
   const pr =
     c.products === 'all' ? 'every product' : `${c.products.length} product${c.products.length === 1 ? '' : 's'}`

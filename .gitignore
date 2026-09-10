@@ -42,3 +42,6 @@ shots/
 coverage/
 
 .vercel
+
+# Worktrees used for isolated review runs
+.claude/worktrees/

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useSearch } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Avatar, Banner, Btn, Due, PageHead } from '@/components/ui'
 import { DataTable, type DataRow } from '@/components/DataTable'
 import { useSession } from '@/state/session'
@@ -25,7 +26,7 @@ const allFirst = (allLabel: string, values: string[]): [string, string][] => [
 export default function Orders() {
   const { me, tenant, can } = useSession()
   const { toast } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
 
   /* The dashboard tiles deep-link into a filter, so the pill lives in the URL. */
   const { pill: pillParam } = useSearch({ from: '/orders' })
@@ -154,7 +155,7 @@ export default function Orders() {
         fmtDT(o.due),
         fmtDT(o.recv),
         o.fee,
-        ...STAGES.map((s) => (o.a[s] ? whoName(o.a[s]!) : '')),
+        ...STAGES.map((s) => (o.a[s] ? whoName(o.a[s]) : '')),
       ]),
     ])
     toast(`${out.name} — ${out.rows.length - 1} rows`)

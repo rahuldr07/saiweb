@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Chip, Due, Empty, Kpi, Kpis, PageHead, SectionHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -23,7 +23,7 @@ const COLS = '130px 110px 1.4fr 150px 190px 130px'
 
 function Dashboard() {
   const { tenant } = useSession()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [pipe, setPipe] = useState<string | null>(null)
 
   /* The tile's figure and the table's rows are the same list read twice, so the

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Chip, Form, Label, PageHead } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useUi } from '@/state/ui'
@@ -76,7 +76,7 @@ function Check({ ok, warn, children }: { ok: boolean; warn?: boolean; children: 
 }
 
 function NewLead() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { toast } = useUi()
   const [f, setF] = useState<Draft>(blank)
   const [err, setErr] = useState<string | null>(null)

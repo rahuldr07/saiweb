@@ -1,5 +1,5 @@
 import { useReducer, useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Assumption,
   Avatar,
@@ -51,7 +51,7 @@ type Tab = 'The run' | 'Register' | 'Cost and statutory' | 'Leavers'
 const REGISTER_COLS = '180px 100px 90px 120px 100px 90px 90px 110px 120px'
 
 function Payroll() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { me } = useSession()
   const { toast, openModal, closeModal } = useUi()
 

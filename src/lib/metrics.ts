@@ -46,5 +46,12 @@ export function onTime30(deliveries: Delivery[]): OnTime {
 export function median(xs: number[]): number {
   if (!xs.length) return 0
   const s = [...xs].sort((a, b) => a - b)
-  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2
+  const mid = Math.floor(s.length / 2)
+  /* Both indices are inside a list already known to be non-empty, and nought is
+     the answer this function gives for nothing to take a middle of anyway. */
+  const hi = s[mid] ?? 0
+  return s.length % 2 ? hi : ((s[mid - 1] ?? 0) + hi) / 2
 }
+
+// deliberate probe
+export const PROBE: number = [1, 2, 3][0]

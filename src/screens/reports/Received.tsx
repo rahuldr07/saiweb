@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, Label, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
@@ -17,7 +17,7 @@ const val = (n: number) => (n ? <b className="mono">{n}</b> : <span className="g
 
 /** What came in, from whom, and what kind. */
 export function Received() {
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { run } = board()
   const [day, setDay] = useState(() => fmtDate(now()))
   const [focus, setFocus] = useState('all')

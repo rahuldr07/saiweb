@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { useRouterState } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { useQueryClient } from '@tanstack/react-query'
 import { Banner, Btn, Card } from '@/components/ui'
 import { useSession } from '@/state/session'
@@ -10,6 +11,20 @@ import { can as capabilityOf, mayVisit, roleName } from '@/lib/permissions'
 import { DEMO_IDENTITY } from '@/lib/demo'
 import { ADMIN_EMAIL, checkCredentials } from '@/lib/credentials'
 import { ApiError, startSession } from '@/lib/api'
+
+/**
+ * An async handler still has to hand the DOM a function that returns nothing.
+ * Both handlers below report the failures they expect — a refused password, an
+ * unreachable service — so anything that gets past them is a bug, and this is
+ * where it becomes visible rather than an unhandled rejection.
+ */
+const handled =
+  <A extends unknown[]>(fn: (...args: A) => Promise<void>) =>
+  (...args: A): void => {
+    fn(...args).catch((error: unknown) => {
+      console.error('Sign-in:', error)
+    })
+  }
 
 /**
  * The one public screen: a mark, an email, a password.
@@ -28,7 +43,7 @@ import { ApiError, startSession } from '@/lib/api'
 export default function SignIn() {
   const { me, authState, signInAs, signOut, can } = useSession()
   const { toast } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const queryClient = useQueryClient()
   const next = useRouterState({
     select: (s) => (s.location.search as { next?: string }).next,
@@ -125,7 +140,7 @@ export default function SignIn() {
 
   const form = (
     <Card padded>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+      <form onSubmit={handled(submit)} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
         <div className="fld">
           <label htmlFor="si-email">Email</label>
           <input
@@ -189,12 +204,12 @@ export default function SignIn() {
           <div style={{ marginTop: 16 }}>
             <Btn
               variant="ghost"
-              onClick={async () => {
+              onClick={handled(async () => {
                 await signOut()
                 setEmail('')
                 setPassword('')
                 navigate({ to: '/signin', replace: true })
-              }}
+              })}
             >
               Sign out
             </Btn>

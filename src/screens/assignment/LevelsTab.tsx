@@ -13,7 +13,7 @@ import { PRIOR_COVERAGE } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { board } from '@/lib/engine'
 import type { Gap } from '@/lib/coverage'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 
 /** A ticked/unticked run of pills with All and None beside the count. */
 function PillRow({
@@ -110,7 +110,7 @@ function AddCountyForm({ st, onDone }: { st: string; onDone: (msg: string) => vo
 
 export function LevelsTab() {
   const lv = useLevels()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { openModal, closeModal, toast } = useUi()
   const {
     levels,

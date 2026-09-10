@@ -1,4 +1,5 @@
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
+import { useParams, useSearch } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Assumption, Btn, Card, Label, PageHead } from '@/components/ui'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
@@ -68,7 +69,7 @@ function Why({ head, detail }: { head: string; detail: string }) {
 export default function PayslipDetail() {
   const { personId } = useParams({ from: '/payslips/$personId' })
   const { m } = useSearch({ from: '/payslips/$personId' })
-  const navigate = useNavigate()
+  const navigate = useGo()
   const { me, tenant, can } = useSession()
   const { toast } = useUi()
 

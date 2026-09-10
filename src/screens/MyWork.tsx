@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import {
   Banner,
   Bar,
@@ -62,7 +62,7 @@ export default function MyWork() {
   const { me } = useSession()
   const { openModal, closeModal, toast } = useUi()
   const clock = useTimeclock()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const qcLog = useQcLog()
   const updates = useUpdates()
   const [showAllDone, setShowAllDone] = useState(false)

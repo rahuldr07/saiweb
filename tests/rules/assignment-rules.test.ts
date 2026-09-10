@@ -123,7 +123,7 @@ describe('which rules may be removed', () => {
   })
 
   it('allows one that was added by hand', () => {
-    expect(canRemove({ id: 'ru9mine', n: 'Mine', k: 'route', on: true } as Rule)).toBe(true)
+    expect(canRemove({ id: 'ru9mine', n: 'Mine', k: 'route', on: true })).toBe(true)
   })
 })
 

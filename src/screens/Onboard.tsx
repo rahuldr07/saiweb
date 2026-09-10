@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+import { useGo } from '@/lib/nav'
 import { Btn, Card, CardHead, Field, Form, PageHead, Rows } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useUi } from '@/state/ui'
@@ -15,7 +15,7 @@ const STEPS: [string, string][] = [
 /** Setting up a new workspace. Nothing is shared with the companies already here. */
 function Onboard() {
   const { toast } = useUi()
-  const navigate = useNavigate()
+  const navigate = useGo()
   const [name, setName] = useState('')
   const [state, setState] = useState('PA')
   const [plan, setPlan] = useState('Starter · 4 seats')

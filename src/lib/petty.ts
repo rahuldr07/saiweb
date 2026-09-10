@@ -34,13 +34,13 @@ export function pettyLedger(entries: PettyEntry[]): LedgerRow[] {
 /** What the box should hold, on paper. */
 export const pettyBalance = (entries: PettyEntry[]): number => {
   const l = pettyLedger(entries)
-  return l.length ? l[l.length - 1].after : 0
+  return l[l.length - 1]?.after ?? 0
 }
 
 /** What the ledger said at a given moment — what a count on that day should have found. */
 export function expectedAt(entries: PettyEntry[], at: Date): number {
   const upto = pettyLedger(entries).filter((e) => e.d <= at)
-  return upto.length ? upto[upto.length - 1].after : 0
+  return upto[upto.length - 1]?.after ?? 0
 }
 
 /** The most recent count, or null if nobody has ever counted it. */

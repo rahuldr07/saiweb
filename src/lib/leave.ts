@@ -75,8 +75,10 @@ export interface Cover {
 /** How many of a department would still be working across these dates. */
 export function deptCover(pid: string, from: Date, to: Date): Cover | null {
   const p = STAFF.find((x) => x.id === pid)
-  if (!p || !p.dep.length) return null
-  const dep = p.dep[0]
+  /* Cover is a department's question, so somebody who is in none has no answer
+     to give — which is what an absent first department means. */
+  const dep = p?.dep[0]
+  if (!p || !dep) return null
   const team = STAFF.filter((x) => x.dep.includes(dep) && x.active !== false)
   const off = team.filter(
     (x) =>
