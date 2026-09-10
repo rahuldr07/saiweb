@@ -508,6 +508,50 @@ export const pettyCash = pgTable(
   (t) => [index('petty_cash_tenant_at').on(t.tenantId, t.at)],
 )
 
+export const loans = pgTable(
+  'loans',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    personId: uuid('person_id')
+      .notNull()
+      .references(() => people.id, { onDelete: 'cascade' }),
+    /** loan · advance */
+    kind: text('kind').notNull(),
+    amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
+    emi: numeric('emi', { precision: 12, scale: 2 }).notNull(),
+    paid: numeric('paid', { precision: 12, scale: 2 }).notNull().default('0'),
+    /** requested · active · paused · closed · rejected */
+    status: text('status').notNull().default('requested'),
+    note: text('note').notNull().default(''),
+    requestedAt: timestamp('requested_at').notNull().defaultNow(),
+    decidedById: uuid('decided_by_id').references(() => people.id, { onDelete: 'set null' }),
+    decidedAt: timestamp('decided_at'),
+    takenOn: date('taken_on'),
+  },
+  (t) => [index('loans_tenant_person').on(t.tenantId, t.personId)],
+)
+
+/** One month's instalment as it was actually recovered through a payroll run. */
+export const loanPayments = pgTable(
+  'loan_payments',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => tenants.id, { onDelete: 'cascade' }),
+    loanId: uuid('loan_id')
+      .notNull()
+      .references(() => loans.id, { onDelete: 'cascade' }),
+    period: text('period').notNull(),
+    amount: numeric('amount', { precision: 12, scale: 2 }).notNull(),
+    recordedAt: timestamp('recorded_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('loan_payments_loan_period').on(t.loanId, t.period)],
+)
+
 export const openings = pgTable('openings', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')

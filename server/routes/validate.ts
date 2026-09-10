@@ -43,6 +43,37 @@ export function readDecision(body: unknown): Read<Decision> {
   return { ok: true, value: status }
 }
 
+/* ── requesting a loan or advance ───────────────────────────────────────── */
+
+export interface LoanRequestInput {
+  kind: 'loan' | 'advance'
+  amount: number
+  emi: number
+  note: string
+}
+
+export function readLoanRequest(body: unknown): Read<LoanRequestInput> {
+  const b = asObject(body)
+  if (!b) return { ok: false, error: 'Expected an object' }
+  if (b.kind !== 'loan' && b.kind !== 'advance') {
+    return { ok: false, error: 'kind must be loan or advance' }
+  }
+  const amount = Number(b.amount)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { ok: false, error: 'amount must be a positive number' }
+  }
+  const emi = Number(b.emi)
+  if (!Number.isFinite(emi) || emi <= 0) {
+    return { ok: false, error: 'emi must be a positive number' }
+  }
+  if (emi > amount) {
+    return { ok: false, error: 'emi cannot be more than the amount itself' }
+  }
+  const note = typeof b.note === 'string' ? b.note.trim() : ''
+  if (!note) return { ok: false, error: 'Say what it is for' }
+  return { ok: true, value: { kind: b.kind, amount, emi, note } }
+}
+
 /* ── toggling a rule ────────────────────────────────────────────────────── */
 
 export function readEnabled(body: unknown): Read<boolean> {

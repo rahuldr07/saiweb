@@ -61,7 +61,7 @@ DECLARE
     'roles', 'people', 'departments', 'products', 'clients', 'counties',
     'county_links', 'levels', 'orders', 'order_stages', 'order_events',
     'invoices', 'leads', 'lead_notes', 'leave_requests', 'attendance',
-    'pay_runs', 'payslips', 'petty_cash', 'openings', 'candidates',
+    'pay_runs', 'payslips', 'petty_cash', 'loans', 'loan_payments', 'openings', 'candidates',
     'assignment_rules', 'sla_rules', 'stage_budgets', 'tenant_settings'
   ];
 BEGIN

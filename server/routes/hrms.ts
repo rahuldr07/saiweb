@@ -5,6 +5,7 @@ import {
   attendance,
   candidates,
   leaveRequests,
+  loans,
   openings,
   payRuns,
   payslips,
@@ -12,7 +13,7 @@ import {
   pettyCash,
 } from '../db/schema'
 import { needs, type Ctx } from '../context'
-import { readDecision } from './validate'
+import { readDecision, readLoanRequest } from './validate'
 
 export const hrmsRoutes = new Hono<Ctx>()
 
@@ -156,6 +157,122 @@ hrmsRoutes.get('/petty-cash', needs('pricing'), async (c) => {
       .orderBy(desc(pettyCash.at)),
   )
   return c.json(rows)
+})
+
+/**
+ * Loans & advances — not called by the screen yet, which still runs on
+ * bundled seed data like the rest of HRMS. Built to the same shape as
+ * `/leave` so the swap is a data-source change, not a redesign, whenever
+ * this group migrates together.
+ */
+
+/** Everyone's loans for pricing; your own otherwise. */
+hrmsRoutes.get('/loans', async (c) => {
+  const mine = !c.get('capabilities').has('pricing')
+  const personId = c.get('personId')
+
+  const rows = await withTenant(c.get('tenantId'), (tx) => {
+    const q = tx
+      .select({
+        id: loans.id,
+        personId: loans.personId,
+        person: people.name,
+        kind: loans.kind,
+        amount: loans.amount,
+        emi: loans.emi,
+        paid: loans.paid,
+        status: loans.status,
+        note: loans.note,
+        requestedAt: loans.requestedAt,
+        decidedAt: loans.decidedAt,
+        takenOn: loans.takenOn,
+      })
+      .from(loans)
+      .innerJoin(people, eq(people.id, loans.personId))
+      .orderBy(desc(loans.requestedAt))
+    return mine ? q.where(eq(loans.personId, personId)) : q
+  })
+  return c.json(rows)
+})
+
+/** Self-service, like applying for leave — no capability needed to ask. */
+hrmsRoutes.post('/loans', async (c) => {
+  const read = readLoanRequest(await c.req.json().catch(() => null))
+  if (!read.ok) return c.json({ error: read.error }, 400)
+
+  const [row] = await withTenant(c.get('tenantId'), (tx) =>
+    tx
+      .insert(loans)
+      .values({
+        tenantId: c.get('tenantId'),
+        personId: c.get('personId'),
+        kind: read.value.kind,
+        amount: String(read.value.amount),
+        emi: String(read.value.emi),
+        note: read.value.note,
+      })
+      .returning(),
+  )
+  return c.json(row, 201)
+})
+
+hrmsRoutes.post('/loans/:id/decision', needs('pricing'), async (c) => {
+  const id = c.req.param('id')
+  const read = readDecision(await c.req.json().catch(() => null))
+  if (!read.ok) return c.json({ error: read.error }, 400)
+
+  const result = await withTenant(c.get('tenantId'), async (tx) => {
+    const [row] = await tx.select().from(loans).where(eq(loans.id, id)).limit(1)
+    if (!row) return { error: 'Not found' as const }
+    if (row.status !== 'requested') {
+      return { error: `Cannot decide a loan that is ${row.status}` as const }
+    }
+    /* Same shape of problem as deciding your own leave — the check is not a
+       check if the person it is about performs it. */
+    if (row.personId === c.get('personId')) {
+      return { error: 'You cannot decide your own request' as const }
+    }
+
+    await tx
+      .update(loans)
+      .set({
+        status: read.value === 'approved' ? 'active' : 'rejected',
+        decidedById: c.get('personId'),
+        decidedAt: new Date(),
+        ...(read.value === 'approved' ? { takenOn: new Date().toISOString().slice(0, 10) } : {}),
+      })
+      .where(eq(loans.id, id))
+    return { ok: true as const }
+  })
+
+  if ('error' in result) return c.json(result, result.error === 'Not found' ? 404 : 409)
+  return c.json(result)
+})
+
+hrmsRoutes.post('/loans/:id/pause', needs('pricing'), async (c) => {
+  const id = c.req.param('id')
+  const result = await withTenant(c.get('tenantId'), async (tx) => {
+    const [row] = await tx.select().from(loans).where(eq(loans.id, id)).limit(1)
+    if (!row) return { error: 'Not found' as const }
+    if (row.status !== 'active') return { error: `Cannot pause a loan that is ${row.status}` as const }
+    await tx.update(loans).set({ status: 'paused' }).where(eq(loans.id, id))
+    return { ok: true as const }
+  })
+  if ('error' in result) return c.json(result, result.error === 'Not found' ? 404 : 409)
+  return c.json(result)
+})
+
+hrmsRoutes.post('/loans/:id/resume', needs('pricing'), async (c) => {
+  const id = c.req.param('id')
+  const result = await withTenant(c.get('tenantId'), async (tx) => {
+    const [row] = await tx.select().from(loans).where(eq(loans.id, id)).limit(1)
+    if (!row) return { error: 'Not found' as const }
+    if (row.status !== 'paused') return { error: `Cannot resume a loan that is ${row.status}` as const }
+    await tx.update(loans).set({ status: 'active' }).where(eq(loans.id, id))
+    return { ok: true as const }
+  })
+  if ('error' in result) return c.json(result, result.error === 'Not found' ? 404 : 409)
+  return c.json(result)
 })
 
 hrmsRoutes.get('/openings', needs('people'), async (c) => {
