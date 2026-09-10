@@ -29,10 +29,15 @@ export const shiftOf = (p: Pick<Person, 'shift'>): Shift => shiftByKey(p.shift |
 /** A Date as the HH:MM a punch is stored in. */
 export const hhmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
 
-/** HH:MM to minutes past midnight. A component that is not there counts as none. */
+/* A component that is missing or unreadable is worth none of them — the two are
+   the same thing to a timesheet, which can no more carry NaN minutes than a
+   payslip can carry NaN rupees. */
+const part = (v: number | undefined) => (v !== undefined && Number.isFinite(v) ? v : 0)
+
+/** HH:MM to minutes past midnight. */
 export const mins = (t: string) => {
   const [h, m] = t.split(':').map(Number)
-  return (h ?? 0) * 60 + (m ?? 0)
+  return part(h) * 60 + part(m)
 }
 
 export const hm = (v: number) => `${Math.floor(v / 60)}h ${pad(v % 60)}m`

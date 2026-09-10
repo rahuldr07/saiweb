@@ -14,6 +14,7 @@ import {
   Label,
   PageHead,
   ReadOnly,
+  Rows,
   Tabs,
 } from '@/components/ui'
 import { useNotBuilt } from '@/components/notBuilt'
@@ -43,7 +44,17 @@ import { PRODUCTS, COUNTIES, LINKTYPES, LINKCHECK, BADSTATES } from '@/data/cata
 import { ASSIGN_STAGES, PAIRS, STAGES, STATUS } from '@/data/org'
 import { AVAIL, STAFF } from '@/data/people'
 import { BUDGET } from '@/data/budget'
-import { TZ, TZ2, fmtDT, fmtDate, hrs, money, orderChipKind, orderState } from '@/lib/format'
+import {
+  LOCAL_OFFSET_H,
+  TZ,
+  TZ2,
+  fmtDT,
+  fmtDate,
+  hrs,
+  money,
+  orderChipKind,
+  orderState,
+} from '@/lib/format'
 import { now } from '@/lib/clock'
 import { whoName } from '@/lib/permissions'
 import { LSTATE, days } from '@/lib/derived'
@@ -265,7 +276,7 @@ export default function OrderDetail() {
             {open.length} stage{open.length === 1 ? '' : 's'} on <b className="mono">{o.id}</b>{' '}
             {open.length === 1 ? 'has' : 'have'} nobody on {open.length === 1 ? 'it' : 'them'}.
           </p>
-          <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+          <Rows bare>
             {preview.map(({ stage, person }) => (
               <div className="rw" key={stage}>
                 <span className="gr">·</span>
@@ -282,7 +293,7 @@ export default function OrderDetail() {
                 <span />
               </div>
             ))}
-          </div>
+          </Rows>
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
             These names come from the rules the automatic pass runs, as those rules stand right now:{' '}
             {applied.join(' · ')}. One switched off under Assignment → Rules is off here too. The
@@ -528,7 +539,7 @@ export default function OrderDetail() {
               <Field label="Local time">
                 <ReadOnly>
                   <span className="mono">
-                    {fmtDT(new Date(o.due.getTime() + 9.5 * 3600000))} {TZ2}
+                    {fmtDT(new Date(o.due.getTime() + LOCAL_OFFSET_H * 3600000))} {TZ2}
                   </span>
                 </ReadOnly>
               </Field>
@@ -575,7 +586,7 @@ export default function OrderDetail() {
               </Banner>
             ) : null}
 
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {plan.rows.map((r) => (
                 <div className="rw" key={r.stage}>
                   <span
@@ -614,7 +625,7 @@ export default function OrderDetail() {
                   {BUDGET.buffer}%
                 </span>
               </div>
-            </div>
+            </Rows>
 
             <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
               Set under{' '}
@@ -648,7 +659,7 @@ export default function OrderDetail() {
                 </Btn>
               }
             />
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {STAGES.map((s) => {
                 const a = assign[s]
                 const person = a ? STAFF.find((x) => x.id === a) : undefined
@@ -715,7 +726,7 @@ export default function OrderDetail() {
                   </div>
                 )
               })}
-            </div>
+            </Rows>
           </Card>
 
           <Banner kind="b" icon="⚑" title="Self-review is blocked" style={{ marginTop: 16 }}>
@@ -757,7 +768,7 @@ export default function OrderDetail() {
               }
             />
             {worked.length ? (
-              <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+              <Rows bare>
                 {worked.map((s) => (
                   <div className="rw" style={{ gridTemplateColumns: '1fr', gap: 11 }} key={s}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 11, flexWrap: 'wrap' }}>
@@ -772,7 +783,7 @@ export default function OrderDetail() {
                     </div>
                     {rated ? null : (
                       <Form style={{ gap: 11 }}>
-                        {QC_CRITERIA.map(([name, question]) => (
+                        {QC_CRITERIA.map(([name, , question]) => (
                           <Field key={name} label={name} hint={question}>
                             <select className="inp" aria-label={`${name} for ${whoName(assign[s]!)}`}>
                               <option>— score —</option>
@@ -796,7 +807,7 @@ export default function OrderDetail() {
                     )}
                   </div>
                 ))}
-              </div>
+              </Rows>
             ) : (
               <Empty
                 icon="◔"
@@ -1038,7 +1049,7 @@ export default function OrderDetail() {
         <>
           <Card>
             <CardHead title="Activity log" actions={<Chip kind="v">Append-only</Chip>} />
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {(
                 [
                   [fmtDT(o.recv), 'Order created from email', 'system', `${o.cl} · Search Order.pdf`],
@@ -1072,7 +1083,7 @@ export default function OrderDetail() {
                   </span>
                 </div>
               ))}
-            </div>
+            </Rows>
           </Card>
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
             Every create, status change, assignment, field edit, QC rating and delivery is recorded
@@ -1100,7 +1111,7 @@ export default function OrderDetail() {
               </Btn>
             </div>
           </div>
-          <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+          <Rows bare>
             {w.notes.map((n) => (
               <div className="rw" key={n.id}>
                 <span>
@@ -1129,7 +1140,7 @@ export default function OrderDetail() {
                 {fmtDT(hrs(-11))}
               </span>
             </div>
-          </div>
+          </Rows>
         </Card>
       ) : null}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn } from '@/components/ui'
+import { Banner, Btn, FormActions } from '@/components/ui'
 import { DEPTLIST } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { useBoard } from './store'
@@ -162,7 +162,7 @@ export function NewOpening({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         {onCancel ? (
           <Btn variant="ghost" onClick={onCancel}>
             Cancel
@@ -171,7 +171,7 @@ export function NewOpening({
         <Btn onClick={submit} disabled={!title.trim() || !why.trim()}>
           Open the role
         </Btn>
-      </div>
+      </FormActions>
 
       <p className="gr" style={{ fontSize: '11.5px', marginTop: 12 }}>
         Opens {fmtDate(now())} under {raisedBy}, with no candidates against it yet.

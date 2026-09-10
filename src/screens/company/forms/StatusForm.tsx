@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Banner, Btn } from '@/components/ui'
+import { Banner, Btn, FormActions } from '@/components/ui'
+import { isDuplicateName } from '@/lib/forms'
 import { removeStatus, saveStatus, useStatuses } from '@/state/company'
 
 /**
@@ -26,7 +27,7 @@ export function StatusForm({
   const submit = () => {
     const n = name.trim()
     if (!n) return setError('A status needs a name.')
-    if (statuses.some(([k, v]) => k !== statusKey && v[0].toLowerCase() === n.toLowerCase()))
+    if (isDuplicateName(statuses, n, ([, v]) => v[0], ([k]) => k === statusKey))
       return setError(
         `${n} already exists. Two statuses with the same name is how an order ends up in neither.`,
       )
@@ -73,12 +74,12 @@ export function StatusForm({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>{statusKey ? 'Save' : 'Add status'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
@@ -117,12 +118,12 @@ export function StatusDelete({
           Deleting it would leave {used === 1 ? 'that order' : 'those orders'} pointing at nothing.
           Move {used === 1 ? 'it' : 'them'} first, then delete the status.
         </p>
-        <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+        <FormActions>
           <Btn variant="ghost" onClick={onCancel}>
             Close
           </Btn>
           <Btn onClick={onSee}>See {used === 1 ? 'it' : 'them'}</Btn>
-        </div>
+        </FormActions>
       </>
     )
   }
@@ -130,7 +131,7 @@ export function StatusDelete({
   return (
     <>
       <p style={{ fontSize: '13.5px' }}>Nothing is using it, so nothing breaks.</p>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Keep it
         </Btn>
@@ -143,7 +144,7 @@ export function StatusDelete({
         >
           Delete
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Field } from '@/components/ui'
+import { Banner, Btn, Field, FormActions } from '@/components/ui'
 import { UPDKIND } from '@/data/production'
 import type { Update } from '@/data/types'
 
@@ -81,12 +81,12 @@ export function UpdateForm({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Post it</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

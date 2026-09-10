@@ -27,5 +27,5 @@ export function setQcRule(key: string, on: boolean): void {
   store.update((rules) => rules.map((r) => (r.k === key ? { ...r, on } : r)))
 }
 
-/** Puts the seed back. For tests, which must not inherit each other's settings. */
+/** @see Store.reset in @/lib/store */
 export const resetQcRules = store.reset

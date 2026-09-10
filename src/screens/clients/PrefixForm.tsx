@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Field } from '@/components/ui'
+import { Banner, Btn, Field, FormActions } from '@/components/ui'
 import { addPrefix, clashOf } from './prefixes'
 import type { Client } from '@/data/types'
 
@@ -72,12 +72,12 @@ export function PrefixForm({
         />
       </Field>
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Add</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

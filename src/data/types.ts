@@ -592,13 +592,6 @@ export interface Arrear {
   amt: number
 }
 
-export interface DeclType {
-  k: string
-  n: string
-  cap: number
-  d: string
-}
-
 export interface PettyEntry {
   id: string
   d: Date

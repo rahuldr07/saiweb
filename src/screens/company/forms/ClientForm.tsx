@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Banner, Btn } from '@/components/ui'
+import { Banner, Btn, FormActions } from '@/components/ui'
 import { money } from '@/lib/format'
 import { removeClient, saveClient, useClients } from '@/state/company'
 import type { Client } from '@/data/types'
-import { EMAIL_ERROR, isEmail } from '@/lib/forms'
+import { EMAIL_ERROR, isDuplicateName, isEmail } from '@/lib/forms'
 
 const TERMS = ['Net 15', 'Net 30', 'Net 45', 'Per order', 'Prepaid']
 /**
@@ -42,7 +42,7 @@ export function ClientForm({
     if (!code) return setError('A short code is required — it is what appears on orders.')
     if (!/^[A-Z0-9]{2,6}$/.test(code))
       return setError('The code should be 2–6 letters or numbers, no spaces.')
-    if (clients.some((x) => x.n !== name && x.n.toLowerCase() === client.toLowerCase()))
+    if (isDuplicateName(clients, client, (x) => x.n, (x) => x.n === name))
       return setError(`There is already a client called ${client}.`)
     const clash = clients.find((x) => x.n !== name && x.dn === code)
     if (clash) return setError(`${code} is already used by ${clash.n}.`)
@@ -170,7 +170,7 @@ export function ClientForm({
         </Banner>
       )}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -180,7 +180,7 @@ export function ClientForm({
           </Btn>
         ) : null}
         <Btn onClick={submit}>{name ? 'Save changes' : 'Add client'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
@@ -217,7 +217,7 @@ export function ClientDelete({
           when the record should never have existed.
         </span>
       </Banner>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -230,7 +230,7 @@ export function ClientDelete({
         >
           Remove {name}
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

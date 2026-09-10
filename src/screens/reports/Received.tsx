@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGo } from '@/lib/nav'
-import { Btn, Card, Label, SectionHead } from '@/components/ui'
+import { BarRow, Btn, Card, Label, Rows, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
 import { DayPicker } from './DayPicker'
@@ -136,7 +136,7 @@ export function Received() {
             <>
               <SectionHead>On the books, but nothing {scope}</SectionHead>
               <Card padded>
-                <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+                <Rows bare>
                   {quiet.map((c) => (
                     <div className="rw" key={c.n}>
                       <span className="gr">·</span>
@@ -160,7 +160,7 @@ export function Received() {
                       </span>
                     </div>
                   ))}
-                </div>
+                </Rows>
                 <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
                   A quiet day is not a lost client, but a quiet fortnight usually is. This is the list worth
                   checking against.
@@ -348,32 +348,25 @@ export function Received() {
                 .map((p) => ({ p, n: os.filter((o) => o.pr === p).length }))
                 .sort((a, b) => b.n - a.n)
                 .map((r) => (
-                  <div
+                  <BarRow
                     key={r.p}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '170px 1fr 74px',
-                      gap: 12,
-                      alignItems: 'center',
-                      padding: '5px 0',
-                      fontSize: '12.5px',
-                    }}
-                  >
-                    <span className="gr">
-                      {r.p} <span style={{ fontSize: '11.5px' }}>{PRODUCTS.find((x) => x.id === r.p)?.n}</span>
-                    </span>
-                    <span className="bar">
-                      <i
-                        style={{
-                          width: `${os.length ? Math.round((r.n / os.length) * 100) : 0}%`,
-                          background: 'var(--brand2)',
-                        }}
-                      />
-                    </span>
-                    <span className="mono" style={{ textAlign: 'right' }}>
-                      {r.n} · {os.length ? Math.round((r.n / os.length) * 100) : 0}%
-                    </span>
-                  </div>
+                    cols="170px 1fr 74px"
+                    padding="5px 0"
+                    label={
+                      <>
+                        {r.p}{' '}
+                        <span style={{ fontSize: '11.5px' }}>{PRODUCTS.find((x) => x.id === r.p)?.n}</span>
+                      </>
+                    }
+                    value={r.n}
+                    max={os.length}
+                    color="var(--brand2)"
+                    right={
+                      <>
+                        {r.n} · {os.length ? Math.round((r.n / os.length) * 100) : 0}%
+                      </>
+                    }
+                  />
                 ))}
             </Card>
           ) : null}

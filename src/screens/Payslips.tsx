@@ -17,17 +17,10 @@ import {
 import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
 import { useUi } from '@/state/ui'
-import { useSession } from '@/state/session'
 import { PAYMONTHS, PAYRUNS, RUNSTATE } from '@/data/hrms'
 import type { Person } from '@/data/types'
-import { inr, paidStaff, payTotals, payslipOf, type Payslip } from '@/lib/payroll'
-import { csvName, downloadCSV } from '@/lib/csv'
-import {
-  payslipFileStem,
-  payslipRows,
-  registerFileStem,
-  registerRows,
-} from '@/lib/payroll-csv'
+import { inr, paidStaff, payTotals, payslipOf } from '@/lib/payroll'
+import { usePayslipDownloads } from './payslips/usePayslipDownloads'
 
 /**
  * The payslips register.
@@ -51,29 +44,6 @@ function latestPublished(): string {
   return published.length ? published[published.length - 1] : PAYMONTHS[PAYMONTHS.length - 1]
 }
 
-/** Downloads, shared by both tabs and named the way the design names them. */
-function useDownloads() {
-  const { toast } = useUi()
-  const { tenant } = useSession()
-
-  return useMemo(
-    () => ({
-      payslip: (person: Person, month: string) => {
-        const out = downloadCSV(
-          csvName(payslipFileStem(person, month)),
-          payslipRows(person, month, tenant.name),
-        )
-        toast(out.name)
-      },
-      register: (month: string, list: Payslip[]) => {
-        const out = downloadCSV(csvName(registerFileStem(month)), registerRows(list))
-        toast(`${out.name} — ${out.rows.length - 1} people`)
-      },
-    }),
-    [toast, tenant.name],
-  )
-}
-
 /* ── this month ─────────────────────────────────────────────────────────── */
 
 function ThisMonth({
@@ -87,7 +57,7 @@ function ThisMonth({
 }) {
   const navigate = useGo()
   const { openModal, closeModal } = useUi()
-  const download = useDownloads()
+  const download = usePayslipDownloads()
   const [only, setOnly] = useState<'all' | 'lop'>('all')
   const [query, setQuery] = useState('')
   const list = useRef<HTMLDivElement>(null)
@@ -379,7 +349,7 @@ function OnePerson({
 }) {
   const navigate = useGo()
   const { openModal } = useUi()
-  const download = useDownloads()
+  const download = usePayslipDownloads()
 
   const months = useMemo(() => PAYMONTHS.filter((m) => PAYRUNS[m]?.published), [])
   const rows = useMemo(
@@ -616,7 +586,7 @@ function OnePerson({
 
 function Payslips() {
   const navigate = useGo()
-  const download = useDownloads()
+  const download = usePayslipDownloads()
   const search = useSearch({ from: '/payslips' })
 
   const people = useMemo(() => paidStaff(), [])

@@ -1,4 +1,4 @@
-import { Assumption, Banner, Card, Label } from '@/components/ui'
+import { Assumption, Banner, Card, DetailRow, Label } from '@/components/ui'
 import { PAYMONTHS } from '@/data/hrms'
 import { inr, payTotals } from '@/lib/payroll'
 import { setPayCfg, useCompany } from '@/state/company'
@@ -237,19 +237,7 @@ export function PayrollTab() {
         <Card padded>
           <Label>What the current settings produce</Label>
           {produced.map(([label, value]) => (
-            <div
-              key={label}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '7px 0',
-                fontSize: '13.5px',
-                borderBottom: '1px solid var(--hair)',
-              }}
-            >
-              <span className="gr">{label}</span>
-              <b className="mono">{inr(value)}</b>
-            </div>
+            <DetailRow key={label} label={label} value={<b className="mono">{inr(value)}</b>} />
           ))}
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
             Recomputed as you change the settings above, across all {t.list.length} people. If a

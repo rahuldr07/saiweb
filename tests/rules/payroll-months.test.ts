@@ -78,3 +78,34 @@ describe('a month outside the five', () => {
     expect(payableDays(joining('03/16/2026'), '', 26)).toBe(26)
   })
 })
+
+describe('a joining date that is not a joining date', () => {
+  /*
+   * The other route to the same NaN. Proration reads the month's length from the
+   * calendar and the day of joining out of a MM/DD/YYYY string — and a string
+   * with no slashes in it carries no day, which would make `days - undefined + 1`
+   * the figure on the payslip.
+   *
+   * A full month is what this function answers whenever it cannot prorate, so
+   * that is what an unreadable date gets too.
+   */
+  const UNREADABLE = ['2026-08-16', '16 August 2026', 'tomorrow', '08/16']
+
+  it('pays a full month rather than NaN days', () => {
+    for (const doj of UNREADABLE) {
+      const days = payableDays(joining(doj), INSIDE, 26)
+      expect(Number.isFinite(days), `${doj} produced ${days}`).toBe(true)
+      expect(days, `${doj} should prorate to nothing`).toBe(26)
+    }
+  })
+
+  it('is the same answer as carrying no joining date at all', () => {
+    expect(payableDays(joining('2026-08-16'), INSIDE, 26)).toBe(payableDays(joining(''), INSIDE, 26))
+  })
+
+  it('still prorates a date it can read, so the guard is not swallowing them all', () => {
+    /* The counter-example. If the guard above were too eager, this would read 26
+       as well and the tests further up would be passing for the wrong reason. */
+    expect(payableDays(joining('03/16/2026'), INSIDE, 26)).toBe(13)
+  })
+})

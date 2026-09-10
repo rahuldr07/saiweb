@@ -20,9 +20,6 @@ export const stateName = (st: string) => US_STATES[st] ?? st
 /** Every state — a level must be able to say "Ohio" before a single Ohio county is on file. */
 export const EVERYSTATE = () => Object.keys(US_STATES)
 
-export const levelOpen = (l: Level) =>
-  l.states === 'all' && l.products === 'all' && !Object.values(l.counties ?? {}).some((v) => v?.length)
-
 /** A level read back as a phrase — what the pills add up to. */
 export function covWord(c: Coverage): string {
   const st = c.states === 'all' ? 'every state' : `${c.states.length} state${c.states.length === 1 ? '' : 's'}`
@@ -110,11 +107,6 @@ export function makeCoverage(levels: Level[], personLevel: (id: string) => strin
   const onLevel = (lid: string) =>
     STAFF.filter((s) => personLevel(s.id) === lid && s.active !== false)
 
-  const covSummary = (id: string) => {
-    const l = levelOf(id)
-    return l ? `${l.n} — ${covWord(l)}` : 'No level — takes anything'
-  }
-
   /**
    * A level read back as a sentence. The pills say what is ticked; this says what
    * that means, which is the thing somebody actually wants to check before saving.
@@ -167,9 +159,7 @@ export function makeCoverage(levels: Level[], personLevel: (id: string) => strin
     countiesIn,
     coversPlace,
     coversProduct,
-    coversAll: (id: string) => levelOpen(covOf(id)),
     onLevel,
-    covSummary,
     levelSentence,
     coverageGaps,
   }
@@ -183,9 +173,7 @@ export const covOf = seed.covOf
 export const countiesIn = seed.countiesIn
 export const coversPlace = seed.coversPlace
 export const coversProduct = seed.coversProduct
-export const coversAll = seed.coversAll
 export const onLevel = seed.onLevel
-export const covSummary = seed.covSummary
 export const levelSentence = seed.levelSentence
 export const coverageGaps = seed.coverageGaps
 

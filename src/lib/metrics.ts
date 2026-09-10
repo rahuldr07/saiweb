@@ -53,5 +53,32 @@ export function median(xs: number[]): number {
   return s.length % 2 ? hi : ((s[mid - 1] ?? 0) + hi) / 2
 }
 
-// deliberate probe
-export const PROBE: number = [1, 2, 3][0]
+/**
+ * Where a capacity bar changes colour, and why those two numbers.
+ *
+ * Capacity is not a number, it is a curve, and the hour it crosses 90% is the
+ * hour the next arrival starts becoming an exception; 75% is the point that
+ * becomes worth watching for. Both screens that draw a load bar read them here,
+ * so the same department cannot be amber on one and green on the other.
+ */
+export const CAPACITY_AMBER = 75
+export const CAPACITY_RED = 90
+
+export interface CapacityTone {
+  /** Bar fill. */
+  fill: string
+  /** The figure beside the bar, which the design leaves grey until it matters. */
+  text: 'gr' | 'warn' | 'bad'
+}
+
+/**
+ * The colour a load of `pct` percent of its target carries.
+ *
+ * The comparison is strict, so a department sitting exactly on the threshold
+ * keeps the calmer colour and only the percent past it changes.
+ */
+export function capacityTone(pct: number): CapacityTone {
+  if (pct > CAPACITY_RED) return { fill: 'var(--bad)', text: 'bad' }
+  if (pct > CAPACITY_AMBER) return { fill: 'var(--warn)', text: 'warn' }
+  return { fill: 'var(--ok)', text: 'gr' }
+}

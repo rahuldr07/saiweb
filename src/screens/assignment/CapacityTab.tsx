@@ -1,6 +1,7 @@
 import { useGo } from '@/lib/nav'
-import { Btn, Card, Chip, Label } from '@/components/ui'
+import { BarRow, Btn, Card, Chip, Label } from '@/components/ui'
 import { AVAIL, STAFF } from '@/data/people'
+import { CAPACITY_AMBER, CAPACITY_RED, capacityTone } from '@/lib/metrics'
 import type { AssignmentBoard } from '@/lib/engine'
 
 /**
@@ -10,12 +11,6 @@ import type { AssignmentBoard } from '@/lib/engine'
  * and the hour it crosses 90% is the hour the next arrival starts becoming an
  * exception. The per-person bars then say who that will be.
  */
-
-/** Where the day chart changes colour — and why those two numbers. */
-const AMBER = 75
-const RED = 90
-
-const tone = (pct: number) => (pct > RED ? 'var(--bad)' : pct > AMBER ? 'var(--warn)' : 'var(--ok)')
 
 export function CapacityTab({ board }: { board: AssignmentBoard }) {
   const navigate = useGo()
@@ -77,7 +72,7 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
                 </span>
                 <span
                   style={{
-                    background: tone(pct),
+                    background: capacityTone(pct).fill,
                     borderRadius: '5px 5px 0 0',
                     height: `${Math.min(100, pct)}%`,
                   }}
@@ -90,7 +85,8 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
           })}
         </div>
         <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-          Total capacity consumed as the day fills. Green under {AMBER}%, amber to {RED}%, red above —
+          Total capacity consumed as the day fills. Green under {CAPACITY_AMBER}%, amber to{' '}
+          {CAPACITY_RED}%, red above —
           the point at which the next arrival is likely to become an exception.
         </p>
       </Card>
@@ -101,55 +97,49 @@ export function CapacityTab({ board }: { board: AssignmentBoard }) {
           const added = plan.filter((p) => p.who === s.id).length
           const total = load[s.id] ?? 0
           const before = total - added
-          const pct = Math.min(100, Math.round((total / s.cap) * 100))
           const at = total >= s.cap
           const carried = total ? Math.round((before / total) * 100) : 0
           return (
-            <div
+            <BarRow
               key={s.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '150px 1fr 120px',
-                gap: 12,
-                alignItems: 'center',
-                padding: '7px 0',
-                fontSize: '12.5px',
-              }}
-            >
-              <span>
-                {s.n}
-                {s.avail !== 'ok' ? (
-                  <>
-                    {' '}
-                    <span
-                      className={`chip ${AVAIL[s.avail][1]}`}
-                      style={{ fontSize: '10.5px', padding: '1px 7px' }}
-                    >
-                      {AVAIL[s.avail][0]}
-                    </span>
-                  </>
-                ) : null}
-              </span>
-              <span className="bar" title={`${before} already open, ${added} added, target ${s.cap}`}>
-                <i
-                  style={{
-                    width: `${pct}%`,
-                    background: at
-                      ? 'var(--bad)'
-                      : added
-                        ? `linear-gradient(90deg, var(--brand2) ${carried}%, var(--ok) ${carried}%)`
-                        : 'var(--brand2)',
-                  }}
-                />
-              </span>
-              <span
-                className={`mono ${at ? 'bad' : 'gr'}`}
-                style={{ textAlign: 'right', fontSize: '11.5px' }}
-              >
-                {total} / {s.cap}
-                {added ? <span className="ok"> +{added}</span> : null}
-              </span>
-            </div>
+              cols="150px 1fr 120px"
+              padding="7px 0"
+              labelClass=""
+              label={
+                <>
+                  {s.n}
+                  {s.avail !== 'ok' ? (
+                    <>
+                      {' '}
+                      <span
+                        className={`chip ${AVAIL[s.avail][1]}`}
+                        style={{ fontSize: '10.5px', padding: '1px 7px' }}
+                      >
+                        {AVAIL[s.avail][0]}
+                      </span>
+                    </>
+                  ) : null}
+                </>
+              }
+              value={total}
+              max={s.cap}
+              color={
+                at
+                  ? 'var(--bad)'
+                  : added
+                    ? `linear-gradient(90deg, var(--brand2) ${carried}%, var(--ok) ${carried}%)`
+                    : 'var(--brand2)'
+              }
+              title={`${before} already open, ${added} added, target ${s.cap}`}
+              rightClass={`mono ${at ? 'bad' : 'gr'}`}
+              rightStyle={{ fontSize: '11.5px' }}
+              right={
+                <>
+                  {total} / {s.cap}
+                  {added ? <span className="ok"> +{added}</span> : null}
+                </>
+              }
+            />
           )
         })}
         <p className="gr" style={{ fontSize: '11.5px', marginTop: 10 }}>

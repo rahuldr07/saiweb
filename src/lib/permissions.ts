@@ -33,8 +33,6 @@ export function can(person: Person | undefined, capability: string): boolean {
   return roleOf(person.r).p.includes(capability)
 }
 
-export const isAdmin = (person: Person | undefined) => person?.r === 'admin'
-
 /**
  * The three personal screens are deliberately the inverse of the company ones:
  * someone who can see every order uses the dashboard, not "My work"; someone who

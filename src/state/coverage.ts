@@ -224,5 +224,5 @@ const brokenCount = () => {
   )
 }
 
-/** Puts the seed back. For tests, which must not inherit each other's edits. */
+/** @see Store.reset in @/lib/store */
 export const resetCoverage = store.reset

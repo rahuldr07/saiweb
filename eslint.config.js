@@ -20,9 +20,11 @@ export default tseslint.config(
     languageOptions: {
       ecmaVersion: 2022,
       globals: { ...globals.browser, ...globals.node },
-      /* Type-aware linting. The three project files between them cover every
+      /* Type-aware linting. The project files between them cover every
          `.ts`/`.tsx` in the repo, so the service resolves each one without a
-         per-file `project` list to keep in step. */
+         per-file `project` list to keep in step. `src/lib` is in two of them —
+         the app project and the stricter `tsconfig.lib.json` — and the service
+         picks one; nothing here depends on which. */
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
     plugins: {

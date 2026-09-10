@@ -58,5 +58,5 @@ export function removePrefix(clientName: string, value: string): void {
   }))
 }
 
-/** Puts the seed back. For tests, which must not inherit each other's prefixes. */
+/** @see Store.reset in @/lib/store */
 export const resetPrefixes = store.reset

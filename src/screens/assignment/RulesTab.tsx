@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Btn, Card, Chip, Kpi, Kpis, Label } from '@/components/ui'
+import { Btn, Card, Chip, Kpi, Kpis, Label, Rows } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { useRules } from '@/state/rules'
 import { ASSIGN_STAGES, ENGINEOPTS } from '@/data/org'
@@ -96,7 +96,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
       title: 'Rule change history',
       body: (
         <>
-          <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+          <Rows bare>
             {rules.map((r) => (
               <div className="rw" key={r.id}>
                 <span className={r.on ? 'ok' : 'gr'}>{r.on ? '✓' : '·'}</span>
@@ -109,7 +109,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
                 <span className="mono gr">{run.fired[r.id] ?? 0} checks today</span>
               </div>
             ))}
-          </div>
+          </Rows>
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
             This is the current state and how often each rule was consulted today.{' '}
             <b>A dated change log needs somewhere to store it</b> — nothing here writes to a database
@@ -398,7 +398,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
             {on} of {rules.length} on
           </div>
         </div>
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           {rules.map((r, i) => {
             const kind = RULE_KIND[r.k] ?? RULE_KIND.prefer
             return (
@@ -470,7 +470,7 @@ export function RulesTab({ board, onTab }: { board: AssignmentBoard; onTab: (t: 
               </div>
             )
           })}
-        </div>
+        </Rows>
         <div className="cb">
           <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
             <b>Department membership</b> and <b>self-review</b> cannot be switched off — doing so would

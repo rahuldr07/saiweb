@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react'
-import { Banner, Btn, Chip, Rows } from '@/components/ui'
+import { useState } from 'react'
+import { Banner, Btn, Chip, FormActions, Rows } from '@/components/ui'
 import { BADSTATES } from '@/data/catalog'
+import { isDuplicateName } from '@/lib/forms'
 import {
   moveLinkType,
   removeLinkType,
@@ -23,14 +24,6 @@ import {
  */
 
 export type LtView = { at: 'list' } | { at: 'edit'; k?: string } | { at: 'confirm'; k: string }
-
-function Actions({ children }: { children: ReactNode }) {
-  return (
-    <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
-      {children}
-    </div>
-  )
-}
 
 export function LinkTypes({
   view,
@@ -72,7 +65,7 @@ export function LinkTypes({
             This is the last link type. A county with no links is not much use.
           </Banner>
         ) : null}
-        <Actions>
+        <FormActions>
           <Btn variant="ghost" onClick={() => onView({ at: 'list' })}>
             Cancel
           </Btn>
@@ -86,7 +79,7 @@ export function LinkTypes({
           >
             Remove {t.n}
           </Btn>
-        </Actions>
+        </FormActions>
       </>
     )
   }
@@ -139,12 +132,12 @@ export function LinkTypes({
           )
         })}
       </Rows>
-      <Actions>
+      <FormActions>
         <Btn variant="ghost" onClick={onClose}>
           Close
         </Btn>
         <Btn onClick={() => onView({ at: 'edit' })}>＋ Add a link type</Btn>
-      </Actions>
+      </FormActions>
     </>
   )
 }
@@ -162,7 +155,7 @@ function EditType({ k, onView }: { k?: string | undefined; onView: (v: LtView) =
   const submit = () => {
     const n = name.trim()
     if (!n) return setError('A name is required.')
-    if (linkTypes.some((x) => x.k !== k && x.n.toLowerCase() === n.toLowerCase()))
+    if (isDuplicateName(linkTypes, n, (x) => x.n, (x) => x.k === k))
       return setError(`There is already a link type called ${n}.`)
     saveLinkType({ n, note: note.trim(), req }, k)
     onView({ at: 'list' })
@@ -236,7 +229,7 @@ function EditType({ k, onView }: { k?: string | undefined; onView: (v: LtView) =
         </Banner>
       )}
 
-      <Actions>
+      <FormActions>
         <Btn variant="ghost" onClick={() => onView({ at: 'list' })}>
           Back
         </Btn>
@@ -246,7 +239,7 @@ function EditType({ k, onView }: { k?: string | undefined; onView: (v: LtView) =
           </Btn>
         ) : null}
         <Btn onClick={submit}>{k ? 'Save' : 'Add link type'}</Btn>
-      </Actions>
+      </FormActions>
     </>
   )
 }

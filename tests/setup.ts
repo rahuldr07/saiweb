@@ -9,7 +9,7 @@ import { resetPrefixes } from '@/screens/clients/prefixes'
 import { resetUpdates } from '@/screens/mywork/updates'
 import { resetBox } from '@/screens/petty/store'
 import { resetOrders } from '@/screens/orders/store'
-import { resetBoard as resetHiringBoard } from '@/screens/hiring/store'
+import { resetHiringBoard } from '@/screens/hiring/store'
 
 /**
  * Puts every piece of module-level state back between tests.

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Form } from '@/components/ui'
+import { Banner, Btn, Form, FormActions } from '@/components/ui'
 import { STAFF } from '@/data/people'
 import type { PettyConfig, PettyEntry } from '@/data/types'
 import { inr } from '@/lib/payroll'
@@ -166,12 +166,12 @@ export function EntryForm({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Record it</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

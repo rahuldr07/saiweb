@@ -1,4 +1,4 @@
-import { Btn, Card, CardHead, SecHead } from '@/components/ui'
+import { Btn, Card, CardHead, Rows, SecHead } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { useRoles, usePerms, useStaff } from '@/state/company'
 import { RoleForm, RoleDelete } from './forms/RoleForm'
@@ -202,7 +202,7 @@ export function RolesTab({
 
       <Card style={{ marginTop: 18 }}>
         <CardHead title="Who holds each role" />
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           {ROLELIST.map((r) => {
             const list = holders(r.id)
             return (
@@ -227,7 +227,7 @@ export function RolesTab({
               </div>
             )
           })}
-        </div>
+        </Rows>
       </Card>
 
       <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>

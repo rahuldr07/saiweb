@@ -1,9 +1,11 @@
-import { Banner, Card, Chip, Label, SectionHead } from '@/components/ui'
+import { Banner, BarRow, Card, Chip, Label, Rows, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead } from '@/components/FocusKpis'
-import { markTone, QC_SCALE, type RatedPerson } from '@/lib/quality'
+import { RatingMarks } from '@/components/RatingsTable'
+import { MarkSpread } from './QcFocus'
 import { hh } from '@/lib/sla'
 import { fmtDate } from '@/lib/format'
+import type { RatedPerson } from '@/lib/quality'
 import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
 import type { Range } from '@/lib/range'
@@ -130,25 +132,18 @@ export function QcTeamFocus({
             .sort((a, b) => b[1] - a[1])
             .slice(0, 12)
             .map(([n, c]) => (
-              <div
+              <BarRow
                 key={n}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '190px 1fr 70px',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: '5px 0',
-                  fontSize: '12.5px',
-                }}
-              >
-                <span>{n}</span>
-                <span className="bar">
-                  <i style={{ width: `${Math.round((c / peak) * 100)}%`, background: 'var(--warn)' }} />
-                </span>
-                <span className="mono gr" style={{ textAlign: 'right' }}>
-                  {c}
-                </span>
-              </div>
+                cols="190px 1fr 70px"
+                padding="5px 0"
+                labelClass=""
+                label={n}
+                value={c}
+                max={peak}
+                color="var(--warn)"
+                rightClass="mono gr"
+                right={c}
+              />
             ))}
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
             Spread fairly evenly, which says the gap is a process problem rather than one person being
@@ -183,7 +178,7 @@ export function QcTeamFocus({
   if (focus === 'spread') {
     const marks: number[] = []
     rows.forEach((x) => marks.push(x.acc, x.comp, x.fmt))
-    const dist = [5, 4, 3, 2, 1].map((v) => ({ v, n: marks.filter((m) => m === v).length }))
+    const fives = marks.filter((m) => m === 5).length
     const sorted = people.slice().sort((a, b) => b.o - a.o)
     const lo = sorted.length ? Math.min(...sorted.map((x) => x.o)) : 0
     const hi = sorted.length ? Math.max(...sorted.map((x) => x.o)) : 0
@@ -196,41 +191,9 @@ export function QcTeamFocus({
         </SectionHead>
         <Card padded>
           <Label>How the marks fall</Label>
-          {dist.map((d) => {
-            const scale = QC_SCALE.find((q) => q[0] === d.v)
-            return (
-              <div
-                key={d.v}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '150px 1fr 120px',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: '6px 0',
-                  fontSize: '12.5px',
-                }}
-              >
-                <span>
-                  <Chip kind={scale?.[2] ?? 'n'}>
-                    {d.v} · {scale?.[1] ?? ''}
-                  </Chip>
-                </span>
-                <span className="bar">
-                  <i
-                    style={{
-                      width: `${marks.length ? Math.round((d.n / marks.length) * 100) : 0}%`,
-                      background: d.v >= 4 ? 'var(--ok)' : 'var(--warn)',
-                    }}
-                  />
-                </span>
-                <span className="mono gr" style={{ textAlign: 'right' }}>
-                  {d.n.toLocaleString()} · {marks.length ? ((d.n / marks.length) * 100).toFixed(1) : '0.0'}%
-                </span>
-              </div>
-            )
-          })}
+          <MarkSpread marks={marks} mode="team" />
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
-            <b>{marks.length ? ((dist[0].n / marks.length) * 100).toFixed(0) : 0}% of all marks are a 5.</b> An
+            <b>{marks.length ? ((fives / marks.length) * 100).toFixed(0) : 0}% of all marks are a 5.</b> An
             average built from that cannot rank anyone — the question is not who scores lower, it is whether
             raters are willing to give a 3.
           </p>
@@ -299,7 +262,7 @@ export function QcTeamFocus({
       {Object.keys(byReason).length ? (
         <Card padded style={{ marginBottom: 14 }}>
           <Label>Grouped by reason</Label>
-          <div className="rows" style={{ border: 'none', borderRadius: 0, marginTop: 6 }}>
+          <Rows bare style={{ marginTop: 6 }}>
             {Object.entries(byReason)
               .sort((a, b) => b[1] - a[1])
               .map(([why, n]) => (
@@ -318,7 +281,7 @@ export function QcTeamFocus({
                   <span className="mono gr">{n}</span>
                 </div>
               ))}
-          </div>
+          </Rows>
         </Card>
       ) : null}
       <FlexTable
@@ -341,13 +304,7 @@ export function QcTeamFocus({
               <div className="s">by {x.byName}</div>
             </Cell>
             <Cell v={x.stage} />
-            <Cell>
-              <div className="v mono" style={{ fontSize: '12.5px' }}>
-                <span className={markTone(x.acc)}>{x.acc}</span>·
-                <span className={markTone(x.comp)}>{x.comp}</span>·
-                <span className={markTone(x.fmt)}>{x.fmt}</span>
-              </div>
-            </Cell>
+            <RatingMarks x={x} />
             <Cell v={x.note ?? 'no reason recorded'} tone="bad" s={x.crit ?? undefined} />
           </FlexRow>
         ))}

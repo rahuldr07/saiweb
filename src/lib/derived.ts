@@ -17,7 +17,7 @@ import { LEADS, STALE_BAD, STALE_WARN } from '@/data/business'
 import { STAFF } from '@/data/people'
 import { DEPTLIST } from '@/data/org'
 import { now } from '@/lib/clock'
-import { orderState } from '@/lib/format'
+import { fmtDate, orderState } from '@/lib/format'
 import type { ChipKind, County, CountyLink, Lead, LinkStatus } from '@/data/types'
 
 export const days = (d: Date) => Math.floor((now().getTime() - d.getTime()) / 86400000)
@@ -169,7 +169,7 @@ export function alerts(): Alert[] {
     out.push({
       sev: 'warn',
       t: 'Link check is due',
-      d: `Every ${CHECK_OF().every} days · last ran ${CHECK_OF().last.toLocaleDateString('en-US')}`,
+      d: `Every ${CHECK_OF().every} days · last ran ${fmtDate(CHECK_OF().last)}`,
       go: 'linkcheck',
     })
   }

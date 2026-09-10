@@ -415,5 +415,5 @@ export function removeStatus(k: string): void {
   store.update((prev) => ({ ...prev, statuses: prev.statuses.filter(([x]) => x !== k) }))
 }
 
-/** Puts the seed back. For tests, which must not inherit each other's settings. */
+/** @see Store.reset in @/lib/store */
 export const resetCompany = store.reset

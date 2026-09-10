@@ -160,6 +160,18 @@ describe('gratuity at the five-year threshold', () => {
     expect(f.lines[2]).toEqual(['Gratuity — no joining date on record', 0])
     expect(f.total).toBe(34541)
   })
+
+  it('reads a date it cannot parse as no date rather than as NaN years', () => {
+    /* A joining date the register holds in some other shape is no date, and the
+       line already has words for that. What it must not do is reach the
+       arithmetic: NaN years is neither under nor over the five-year threshold,
+       and a settlement slip cannot say "NaN years served". */
+    setClock(() => fiveYearsAfter(UMA_JOINED))
+    const misshapen: Person = { ...UMA, doj: '2024-11-12' }
+    const f = settlement(misshapen, LAST_DAY)
+    expect(f.yrs).toBeNull()
+    expect(f.lines[2]).toEqual(['Gratuity — no joining date on record', 0])
+  })
 })
 
 describe('the rest of a settlement', () => {
@@ -330,6 +342,21 @@ describe('the amount in words', () => {
     expect(words(1234.6)).toBe('One Thousand Two Hundred Thirty Five Only')
   })
 
+  it('says a net below zero rather than reading the gap off the end of its tables', () => {
+    /* The negative net the last test in this file produces is real, so `words`
+       has to have a reading for it. The grouping is done on the magnitude and
+       the sign is said in front, because every group of a negative figure
+       indexes before the start of the tables — and a slip cannot read
+       "undefined Crore undefined Lakh". */
+    expect(words(-5637)).toBe('Minus Five Thousand Six Hundred Thirty Seven Only')
+    expect(words(-1)).toBe('Minus One Only')
+    expect(words(-1234567)).toBe(
+      'Minus Twelve Lakh Thirty Four Thousand Five Hundred Sixty Seven Only',
+    )
+    /* Same digits, same words — only the sign in front differs. */
+    expect(words(-1234567)).toBe(`Minus ${words(1234567)}`)
+  })
+
   it('says a net of nothing as "Zero", without the "Only" every other net ends in', () => {
     /* Pinned rather than endorsed: the payslip reads "Rupees {words} · credited
        to the account…", so the one slip that pays nothing is also the one whose
@@ -390,12 +417,14 @@ describe('a payslip with no paid days at all', () => {
   it('still deducts a full month of tax from the people who pay any', () => {
     /* Tax is taken on the structure rather than on what was earned, so a month
        with no pay at all still deducts a month of it and the net goes below
-       zero — which `words` has no reading for. Harry's ₹1,09,051 gross is the
-       only one over the rebate threshold, at ₹5,637 a month. */
+       zero. Harry's ₹1,09,051 gross is the only one over the rebate threshold,
+       at ₹5,637 a month. */
     ATT[SPARE] = { hw: row(24) }
     const s = payslipOf(person('hw'), SPARE)
     expect(s.gross).toBe(0)
     expect(s.tds).toBe(5637)
     expect(s.net).toBe(-5637)
+    /* And the slip says so, rather than saying it in undefineds. */
+    expect(words(s.net)).toBe('Minus Five Thousand Six Hundred Thirty Seven Only')
   })
 })

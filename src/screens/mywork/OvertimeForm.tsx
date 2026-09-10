@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Field, Form } from '@/components/ui'
+import { Banner, Btn, Field, Form, FormActions } from '@/components/ui'
 import { TIMECFG } from '@/data/hrms'
 import { hm } from '@/lib/timeclock'
 import { fmtDate } from '@/lib/format'
@@ -100,12 +100,12 @@ export function OvertimeForm({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Send for approval</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

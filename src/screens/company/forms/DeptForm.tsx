@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Banner, Btn } from '@/components/ui'
+import { Banner, Btn, FormActions } from '@/components/ui'
 import { board } from '@/lib/engine'
+import { isDuplicateName } from '@/lib/forms'
 import { removeDept, saveDept, useDepartments, useStaff } from '@/state/company'
 
 /**
@@ -39,7 +40,7 @@ export function DeptForm({
   const submit = () => {
     const name = n.trim()
     if (!name) return setError('A name is required.')
-    if (depts.some((x) => x.id !== id && x.n.toLowerCase() === name.toLowerCase()))
+    if (isDuplicateName(depts, name, (x) => x.n, (x) => x.id === id))
       return setError(`There is already a department called ${name}.`)
     if (pair === name) return setError('A department cannot check itself.')
     saveDept({ n: name, desc: desc.trim(), auto, pair: pair || null, qc: !!pair }, id)
@@ -134,7 +135,7 @@ export function DeptForm({
         </Banner>
       )}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -144,7 +145,7 @@ export function DeptForm({
           </Btn>
         ) : null}
         <Btn onClick={submit}>{id ? 'Save changes' : 'Add department'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
@@ -185,7 +186,7 @@ export function DeptDelete({
           </span>
         </Banner>
       ) : null}
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -198,7 +199,7 @@ export function DeptDelete({
         >
           Remove {d.n}
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

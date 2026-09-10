@@ -4,7 +4,7 @@
  * stages where local knowledge is what is being bought.
  */
 import { useState } from 'react'
-import { Avatar, Banner, Btn, Card, Chip, Empty, Rows } from '@/components/ui'
+import { Avatar, Banner, Btn, Card, Chip, Empty, FormActions, Rows } from '@/components/ui'
 import { useLevels } from '@/state/levels'
 import { useUi } from '@/state/ui'
 import { COVSTAGES, EVERYSTATE, levelMoves, stateName } from '@/lib/coverage'
@@ -93,7 +93,7 @@ function AddCountyForm({ st, onDone }: { st: string; onDone: (msg: string) => vo
           ? `${stateName(st)} currently has ${have} on file.`
           : `This would be the first county on file for ${stateName(st)}.`}
       </p>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn
           onClick={() => {
             const r = addCounty(st, name)
@@ -103,7 +103,7 @@ function AddCountyForm({ st, onDone }: { st: string; onDone: (msg: string) => vo
         >
           Add county
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

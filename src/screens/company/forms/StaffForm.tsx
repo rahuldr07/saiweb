@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Label } from '@/components/ui'
+import { Banner, Btn, FormActions, Label } from '@/components/ui'
 import { AVAIL } from '@/data/people'
 import { STAGES } from '@/data/org'
 import { inr } from '@/lib/payroll'
@@ -7,7 +7,7 @@ import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { removeStaff, saveStaff, useCompany, useRoles, useStaff } from '@/state/company'
 import { newPerson, type Person } from '@/data/types'
-import { EMAIL_ERROR, isEmail } from '@/lib/forms'
+import { EMAIL_ERROR, isDuplicateName, isEmail } from '@/lib/forms'
 
 /**
  * A person's record.
@@ -80,7 +80,9 @@ export function StaffForm({
     const mail = email.trim().toLowerCase()
     if (!name) return setError('A name is required.')
     if (!isEmail(mail)) return setError(EMAIL_ERROR)
-    if (staff.some((x) => x.id !== id && (x.e ?? '').toLowerCase() === mail))
+    /* An address is a name here: two people sharing one is how a sign-in resolves
+       to whichever record happens to come first. */
+    if (isDuplicateName(staff, mail, (x) => x.e ?? '', (x) => x.id === id))
       return setError(`${mail} already belongs to someone here.`)
 
     saveStaff(
@@ -359,7 +361,7 @@ export function StaffForm({
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -369,7 +371,7 @@ export function StaffForm({
           </Btn>
         ) : null}
         <Btn onClick={submit}>{id ? 'Save changes' : 'Add staff'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
@@ -400,7 +402,7 @@ export function StaffDelete({
           record away, and the day re-runs without them.
         </span>
       </Banner>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -413,7 +415,7 @@ export function StaffDelete({
         >
           Remove {s.n}
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

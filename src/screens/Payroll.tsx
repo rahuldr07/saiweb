@@ -6,10 +6,12 @@ import {
   Btn,
   Card,
   Chip,
+  DetailRow,
   Kpi,
   Kpis,
   Label,
   PageHead,
+  Rows,
   SectionHead,
   Tabs,
 } from '@/components/ui'
@@ -390,7 +392,7 @@ function Payroll() {
             <>
               <SectionHead>Check these before approving — {checks}</SectionHead>
               <Card>
-                <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+                <Rows bare>
                   {noBank.map((p) => (
                     <Check
                       key={`bank-${p.id}`}
@@ -429,7 +431,7 @@ function Payroll() {
                       onAction={() => openPayslip(x.p.id)}
                     />
                   ))}
-                </div>
+                </Rows>
               </Card>
             </>
           ) : (
@@ -641,20 +643,7 @@ function Payroll() {
 
 /** One line of a cost or statutory breakdown. */
 function Line({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '7px 0',
-        fontSize: '13.5px',
-        borderBottom: '1px solid var(--hair)',
-      }}
-    >
-      <span className="gr">{label}</span>
-      <b className="mono">{value}</b>
-    </div>
-  )
+  return <DetailRow label={label} value={<b className="mono">{value}</b>} />
 }
 
 /** Something that has to be fixed, or knowingly accepted, before approving. */
@@ -717,22 +706,16 @@ function Leaver({ p, onOpen }: { p: Person; onOpen: () => void }) {
         </div>
       </div>
       {f.lines.map(([label, v]) => (
-        <div
+        <DetailRow
           key={label}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            padding: '7px 0',
-            fontSize: '13.5px',
-            borderBottom: '1px solid var(--hair)',
-          }}
-        >
-          <span className="gr">{label}</span>
-          <b className={`mono ${v < 0 ? 'warn' : ''}`}>
-            {v < 0 ? '−' : ''}
-            {inr(Math.abs(v))}
-          </b>
-        </div>
+          label={label}
+          value={
+            <b className={`mono ${v < 0 ? 'warn' : ''}`}>
+              {v < 0 ? '−' : ''}
+              {inr(Math.abs(v))}
+            </b>
+          }
+        />
       ))}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 0 0', fontSize: '14.5px' }}>
         <b>Payable</b>

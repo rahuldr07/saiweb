@@ -2,11 +2,9 @@ import { useMemo } from 'react'
 import { useGo } from '@/lib/nav'
 import { Btn, Card, Kpi, Kpis, PageHead, SectionHead, focusSection } from '@/components/ui'
 import { useSession } from '@/state/session'
-import { useUi } from '@/state/ui'
 import { PAYMONTHS, PAYRUNS } from '@/data/hrms'
 import { inr, payslipOf, ytd } from '@/lib/payroll'
-import { payslipFileStem, payslipRows } from '@/lib/payroll-csv'
-import { csvName, downloadCSV } from '@/lib/csv'
+import { usePayslipDownloads } from './payslips/usePayslipDownloads'
 
 const COLS = '150px 140px 140px 140px 1fr'
 
@@ -22,9 +20,9 @@ const COLS = '150px 140px 140px 140px 1fr'
  * Nothing on this screen compares anyone to anyone else.
  */
 export default function MyPayslips() {
-  const { me, tenant } = useSession()
-  const { toast } = useUi()
+  const { me } = useSession()
   const navigate = useGo()
+  const download = usePayslipDownloads()
 
   /* Published state is set by the pay run, so it is read rather than stored —
      publishing a month on the Payroll screen makes it appear here. */
@@ -33,14 +31,6 @@ export default function MyPayslips() {
 
   const openPayslip = (month: string) =>
     navigate({ to: '/payslips/$personId', params: { personId: me.id }, search: { m: month } })
-
-  const download = (month: string) => {
-    const out = downloadCSV(
-      csvName(payslipFileStem(me, month)),
-      payslipRows(me, month, tenant.name),
-    )
-    toast(out.name)
-  }
 
   /* No salary on the record means no payslip has been produced — which is a
      different thing from none being published, and says who can fix it. */
@@ -166,7 +156,7 @@ export default function MyPayslips() {
                           aria-label={`Download the ${m} payslip`}
                           onClick={(e) => {
                             e.stopPropagation()
-                            download(m)
+                            download.payslip(me, m)
                           }}
                         >
                           Download

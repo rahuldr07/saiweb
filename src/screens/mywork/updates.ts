@@ -26,5 +26,5 @@ export function postUpdate(who: string, kind: Update['kind'], body: string): Upd
   return entry
 }
 
-/** Puts the seed back. For tests, which must not inherit each other's notes. */
+/** @see Store.reset in @/lib/store */
 export const resetUpdates = store.reset

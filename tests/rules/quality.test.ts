@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { QC_FIX, QC_REASONS, QC_AXES } from '@/data/quality'
+import { QC_FIX, QC_REASONS } from '@/data/quality'
 import { QC_CRITERIA, QC_SCALE } from '@/lib/quality'
 
 /**
@@ -38,9 +38,5 @@ describe('the scale', () => {
     expect(QC_SCALE.map(([n]) => n)).toEqual([1, 2, 3, 4, 5])
     expect(QC_SCALE[0][2]).toBe('d')
     expect(QC_SCALE[4][2]).toBe('v')
-  })
-
-  it('names the same three axes the reasons are filed under', () => {
-    expect(QC_AXES.length).toBe(QC_CRITERIA.length)
   })
 })

@@ -1,5 +1,5 @@
-import { Card, Chip, Label, SectionHead } from '@/components/ui'
-import { QC_SCALE } from '@/lib/quality'
+import { BarRow, Card, Chip, Label, SectionHead } from '@/components/ui'
+import { QC_CRITERIA, QC_SCALE } from '@/lib/quality'
 import { hh } from '@/lib/sla'
 import type { QcEntry } from '@/data/quality'
 import type { StageWork } from '@/lib/quality'
@@ -15,19 +15,13 @@ import type { StageWork } from '@/lib/quality'
 
 const scaleWord = (v: number) => QC_SCALE.find((q) => q[0] === v)?.[1] ?? ''
 
-const CRITERIA: [string, keyof Pick<QcEntry, 'acc' | 'comp' | 'fmt'>][] = [
-  ['Accuracy', 'acc'],
-  ['Completeness', 'comp'],
-  ['Formatting', 'fmt'],
-]
-
 export function QcDefects({ defects }: { defects: QcEntry[] }) {
   const list = [...defects].sort((a, b) => b.d.getTime() - a.d.getTime())
 
   /* One rating can lose marks on more than one criterion, so a defect counts
      against each one it failed. */
   const byCrit = list.reduce<Record<string, number>>((acc, x) => {
-    const failed = CRITERIA.filter(([, k]) => x[k] <= 3).map(([c]) => c)
+    const failed = QC_CRITERIA.filter(([, field]) => x[field] <= 3).map(([name]) => name)
     for (const c of failed.length ? failed : ['Accuracy']) acc[c] = (acc[c] ?? 0) + 1
     return acc
   }, {})
@@ -56,7 +50,7 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
       <Card>
         <div className="tb">
           {list.map((x, i) => {
-            const failed = CRITERIA.filter(([, k]) => x[k] <= 3)
+            const failed = QC_CRITERIA.filter(([, field]) => x[field] <= 3)
             const severe = x.acc <= 2 || x.comp <= 2 || x.fmt <= 2
             return (
               <div
@@ -74,11 +68,11 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
                         {x.note || 'No reason was recorded'}
                       </div>
                       <div className="gr" style={{ fontSize: '12.5px' }}>
-                        {failed.map(([c, k], j) => (
-                          <span key={c}>
+                        {failed.map(([name, field], j) => (
+                          <span key={name}>
                             {j ? ' · ' : ''}
-                            <b className={x[k] <= 2 ? 'bad' : 'warn'}>
-                              {c} scored {x[k]} — {scaleWord(x[k])}
+                            <b className={x[field] <= 2 ? 'bad' : 'warn'}>
+                              {name} scored {x[field]} — {scaleWord(x[field])}
                             </b>
                           </span>
                         ))}
@@ -106,14 +100,14 @@ export function QcDefects({ defects }: { defects: QcEntry[] }) {
                       fontSize: '12.5px',
                     }}
                   >
-                    {CRITERIA.map(([c, k]) => (
-                      <span className="gr" key={c}>
-                        {c}
+                    {QC_CRITERIA.map(([name, field]) => (
+                      <span className="gr" key={name}>
+                        {name}
                         <b
-                          className={`mono ${x[k] <= 2 ? 'bad' : x[k] <= 3 ? 'warn' : 'ok'}`}
+                          className={`mono ${x[field] <= 2 ? 'bad' : x[field] <= 3 ? 'warn' : 'ok'}`}
                           style={{ marginLeft: 5 }}
                         >
-                          {x[k]}
+                          {x[field]}
                         </b>
                       </span>
                     ))}
@@ -220,15 +214,66 @@ export function QcOverBudget({ work, lateOnly }: { work: StageWork; lateOnly: bo
 }
 
 /**
- * How one person's marks are spread.
+ * The two sizes the same five bars are drawn at.
+ *
+ * One person's marks sit in a narrow card beside another and are counted; the
+ * whole team's fill the width, where the share of the total is the point and a
+ * four-figure count needs the room. The numbers are the design's.
+ */
+const SPREAD = {
+  person: { cols: '118px 1fr 62px', gap: 11, pad: '5px 0' },
+  team: { cols: '150px 1fr 120px', gap: 12, pad: '6px 0' },
+} as const
+
+/**
+ * How a set of marks falls across the 1–5 scale, one bar per score.
  *
  * Counted per criterion rather than per rating, so a single order can contribute
  * a 5 and a 3 — which is the point: an average of 4 hides whether it was three
  * fours or a five and a three.
+ *
+ * `team` shows each score's share as well as its count, because at that size the
+ * reading is "97% of all marks are a 5" rather than "this person dropped two".
  */
+export function MarkSpread({ marks, mode }: { marks: number[]; mode: keyof typeof SPREAD }) {
+  const { cols, gap, pad } = SPREAD[mode]
+
+  return (
+    <>
+      {[5, 4, 3, 2, 1].map((v) => {
+        const n = marks.filter((m) => m === v).length
+        const scale = QC_SCALE.find((q) => q[0] === v)
+        return (
+          <BarRow
+            key={v}
+            cols={cols}
+            gap={gap}
+            padding={pad}
+            labelClass=""
+            label={
+              <Chip kind={scale?.[2] ?? 'n'}>
+                {v} · {scale?.[1] ?? ''}
+              </Chip>
+            }
+            value={n}
+            max={marks.length}
+            color={v >= 4 ? 'var(--ok)' : 'var(--warn)'}
+            rightClass="mono gr"
+            right={
+              mode === 'team'
+                ? `${n.toLocaleString()} · ${marks.length ? ((n / marks.length) * 100).toFixed(1) : '0.0'}%`
+                : n || '—'
+            }
+          />
+        )
+      })}
+    </>
+  )
+}
+
+/** How one person's marks are spread. */
 export function QcMarks({ ratings }: { ratings: QcEntry[] }) {
   const all = ratings.flatMap((x) => [x.acc, x.comp, x.fmt])
-  const dist = [5, 4, 3, 2, 1].map((v) => ({ v, n: all.filter((m) => m === v).length }))
 
   return (
     <Card padded>
@@ -236,39 +281,7 @@ export function QcMarks({ ratings }: { ratings: QcEntry[] }) {
       <p className="gr" style={{ fontSize: '12.5px', margin: '6px 0 12px' }}>
         {all.length} criterion marks across {ratings.length} ratings.
       </p>
-      {dist.map((d) => {
-        const scale = QC_SCALE.find((q) => q[0] === d.v)
-        return (
-          <div
-            key={d.v}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '118px 1fr 62px',
-              gap: 11,
-              alignItems: 'center',
-              padding: '5px 0',
-              fontSize: '12.5px',
-            }}
-          >
-            <span>
-              <Chip kind={scale?.[2] ?? 'n'}>
-                {d.v} · {scale?.[1] ?? ''}
-              </Chip>
-            </span>
-            <span className="bar">
-              <i
-                style={{
-                  width: `${all.length ? Math.round((d.n / all.length) * 100) : 0}%`,
-                  background: d.v >= 4 ? 'var(--ok)' : 'var(--warn)',
-                }}
-              />
-            </span>
-            <span className="mono gr" style={{ textAlign: 'right' }}>
-              {d.n || '—'}
-            </span>
-          </div>
-        )
-      })}
+      <MarkSpread marks={all} mode="person" />
       <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
         Counted per criterion rather than per rating, so a single order can contribute a 5 and a 3.
       </p>

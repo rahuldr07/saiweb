@@ -2,7 +2,7 @@ import { createContext, use, useCallback, useEffect, useMemo, useState, type Rea
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { STAFF } from '@/data/people'
 import { TENANTS } from '@/data/org'
-import type { Person, Tenant } from '@/data/types'
+import { newPerson, type Person, type Tenant } from '@/data/types'
 import { can as canFor, roleName } from '@/lib/permissions'
 import { endSession as endApiSession, fetchMe, fetchMemberships, type Membership } from '@/lib/api'
 import { DEMO_IDENTITY } from '@/lib/demo'
@@ -35,18 +35,6 @@ import {
  */
 export type AuthState = 'loading' | 'authenticated' | 'anonymous' | 'demo'
 
-/*
- * There used to be an `OPEN_ACCESS` here, and with it the seed build opened
- * straight into a workspace as a fixed person. The reasoning was that a gate in
- * front of a build with no database can only ask for credentials it cannot
- * check.
- *
- * That was half right. It cannot check the password yet — but it can ask, and it
- * can let the email decide who you are, which is what gives each of the
- * twenty-eight people their own login instead of everybody arriving as the same
- * admin. See `seedSession.ts` for what is and is not verified.
- */
-
 interface SessionValue {
   me: Person
   tenant: Tenant
@@ -72,10 +60,19 @@ const SessionContext = createContext<SessionValue | null>(null)
 const isServerTenantId = (id: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
+/**
+ * Stands in until a workspace is known.
+ *
+ * The seed always carries one, and the server answers with the real one; this is
+ * what the shell renders against in the moment before either — an unnamed
+ * workspace, rather than reading a name off nothing.
+ */
+const NO_TENANT: Tenant = { id: '', name: '', plan: '', state: '' }
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   /* Whoever signed in on this tab. Nobody, until they do. */
   const [meId, setMeId] = useState<string | null>(() => readSeedSession())
-  const [pickedTenantId, setTenantId] = useState(TENANTS[0].id)
+  const [pickedTenantId, setTenantId] = useState(TENANTS[0]?.id ?? NO_TENANT.id)
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
   const [navOpen, setNavOpen] = useState(false)
   const queryClient = useQueryClient()
@@ -169,12 +166,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    * else. Capabilities were correct and identity was not, which is the worst
    * of the two to get wrong silently.
    */
-  const person = useMemo(() => {
+  const person = useMemo<Person>(() => {
     const ref = me.data?.person?.ref
     return (
       (ref ? STAFF.find((s) => s.id === ref) : undefined) ??
       STAFF.find((s) => s.id === meId) ??
-      STAFF[0]
+      STAFF[0] ??
+      /* An empty roster still has to render the shell. `newPerson` carries the
+         `staff` role, so this identity answers `can` through the role table like
+         any other — it is nobody in particular, not a way past the gate. */
+      newPerson()
     )
   }, [me.data?.person?.ref, meId])
 
@@ -187,7 +188,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const t = me.data.tenant
       return { id: t.id, name: t.name, plan: t.plan, state: t.state }
     }
-    return TENANTS.find((t) => t.id === tenantId) ?? TENANTS[0]
+    return TENANTS.find((t) => t.id === tenantId) ?? TENANTS[0] ?? NO_TENANT
   }, [memberships.data, me.data, tenantId])
 
   /* The design toggles these on <body>, and the stylesheet keys off them. */

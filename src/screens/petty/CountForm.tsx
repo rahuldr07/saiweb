@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn } from '@/components/ui'
+import { Banner, Btn, FormActions } from '@/components/ui'
 import type { PettyCount } from '@/data/types'
 import { inr } from '@/lib/payroll'
 import { now } from '@/lib/clock'
@@ -91,14 +91,14 @@ export function CountForm({
         )
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit} disabled={!entered || value < 0}>
           Record the count
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

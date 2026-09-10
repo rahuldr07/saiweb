@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Card, PageHead, SectionHead } from '@/components/ui'
+import { Banner, Btn, Card, PageHead, Rows, SectionHead } from '@/components/ui'
 import { ErrorBoundary } from '@/components/async'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -238,7 +238,7 @@ function Recruitment() {
 
       <SectionHead>Open positions</SectionHead>
       <Card>
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           {openings.map((o) => {
             const mine = candidates.filter((c) => c.job === o.id)
             const atOffer = mine.filter(
@@ -264,7 +264,7 @@ function Recruitment() {
               </div>
             )
           })}
-        </div>
+        </Rows>
       </Card>
       <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
         Every opening carries why it exists. A req without a reason is how headcount grows without

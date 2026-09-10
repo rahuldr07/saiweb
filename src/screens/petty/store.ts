@@ -47,5 +47,5 @@ export function setConfig<K extends keyof PettyConfig>(key: K, value: PettyConfi
   store.update((box) => ({ ...box, cfg: { ...box.cfg, [key]: value } }))
 }
 
-/** Puts the seed back. For tests, which must not inherit each other's entries. */
+/** @see Store.reset in @/lib/store */
 export const resetBox = store.reset

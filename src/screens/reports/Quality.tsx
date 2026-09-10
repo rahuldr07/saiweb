@@ -5,7 +5,7 @@ import { qualityCsv } from '@/lib/report-csv'
 import { useReportExport } from './useReportExport'
 import { FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
-import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
+import { DEFAULT_RANGE, inRange, resolveRange, weekTick, weeklyBuckets, type RangeState } from '@/lib/range'
 import { median } from '@/lib/metrics'
 import { QC_CRITERIA, QC_SCALE, ratedPeople, stageWorkOf, standing } from '@/lib/quality'
 import { setQcRule, useQcRules } from '@/state/qcRules'
@@ -72,15 +72,13 @@ function Scores({
   const people = useMemo(() => ratedPeople(rows, tw), [rows, tw])
   const twp = Object.values(tw.people)
 
-  const weeks: { from: Date; to: Date; pct: number; n: number }[] = []
-  for (let end = new Date(r.to); end >= r.from; end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 7)) {
-    const st = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6)
-    const w = { from: st < r.from ? r.from : st, to: end, label: '', preset: '' }
+  const weeks = weeklyBuckets(r).map((w) => {
+    /* Two QC stages per delivery here too, so the bars and the coverage card
+       are measured against the same denominator. */
     const d2 = deliveries.filter((x) => inRange(x.d, w)).length * 2
     const g = log.filter((x) => inRange(x.d, w))
-    weeks.unshift({ from: w.from, to: w.to, pct: d2 ? Math.round((g.length / d2) * 100) : 0, n: g.length })
-    if (weeks.length > 14) break
-  }
+    return { ...w, pct: d2 ? Math.round((g.length / d2) * 100) : 0, n: g.length }
+  })
 
   if (!dels.length) {
     return (
@@ -233,7 +231,7 @@ function Scores({
                     }}
                   />
                   <span className="mono gr" style={{ fontSize: '9.5px', textAlign: 'center' }}>
-                    {String(wk.to.getMonth() + 1).padStart(2, '0')}/{String(wk.to.getDate()).padStart(2, '0')}
+                    {weekTick(wk.to)}
                   </span>
                 </div>
               ))}
@@ -436,7 +434,7 @@ function ScoringConfig() {
           One number couldn't say <i>what</i> was wrong. Three can.
         </p>
         <div style={{ display: 'grid', gap: 9 }}>
-          {QC_CRITERIA.map(([name, question]) => (
+          {QC_CRITERIA.map(([name, , question]) => (
             <div
               key={name}
               style={{

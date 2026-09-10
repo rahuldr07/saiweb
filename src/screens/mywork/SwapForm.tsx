@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Field, Form } from '@/components/ui'
+import { Banner, Btn, Field, Form, FormActions } from '@/components/ui'
 import { shiftOf } from '@/lib/timeclock'
 import { fmtDate } from '@/lib/format'
 import { now } from '@/lib/clock'
@@ -88,12 +88,12 @@ export function SwapForm({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Send</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

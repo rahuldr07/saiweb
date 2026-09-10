@@ -117,9 +117,6 @@ export const QC_REASONS: Record<string, string[]> = {
   ],
 }
 
-/** The three axes every rating carries, in the order the design shows them. */
-export const QC_AXES = ['Accuracy', 'Completeness', 'Formatting'] as const
-
 let pending: Promise<QcEntry[]> | null = null
 
 export function loadQcLog(): Promise<QcEntry[]> {

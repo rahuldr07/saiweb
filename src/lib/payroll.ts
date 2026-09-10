@@ -455,9 +455,9 @@ export function words(n: number): string {
     'Eighteen', 'Nineteen',
   ]
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
-  /* The tables cover every index a non-negative group can produce. Nothing else
-     has a word, and '' is the only honest one — a negative net used to print the
-     literal "undefined Crore" on the slip. */
+  /* The groups below are always inside these tables, because `words` splits the
+     magnitude and says the sign separately. '' is what an index outside them
+     would be worth: no word at all, rather than the literal "undefined". */
   const word = (table: string[], i: number) => table[i] ?? ''
   const two = (x: number): string =>
     x < 20 ? word(ones, x) : word(tens, Math.floor(x / 10)) + (x % 10 ? ` ${word(ones, x % 10)}` : '')
@@ -466,11 +466,17 @@ export function words(n: number): string {
 
   const v = Math.round(n)
   if (!v) return 'Zero'
-  const cr = Math.floor(v / 10000000)
-  const lk = Math.floor((v % 10000000) / 100000)
-  const th = Math.floor((v % 100000) / 1000)
-  const rest = v % 1000
+  /* Tax is taken on the structure rather than on what was earned, so a month
+     with no pay still deducts a month of it and the net goes below zero. The
+     grouping is done on the magnitude and the sign is said in front of it —
+     negative crores and lakhs are not a thing anybody says. */
+  const abs = Math.abs(v)
+  const cr = Math.floor(abs / 10000000)
+  const lk = Math.floor((abs % 10000000) / 100000)
+  const th = Math.floor((abs % 100000) / 1000)
+  const rest = abs % 1000
   return (
+    (v < 0 ? 'Minus ' : '') +
     [
       cr ? `${three(cr)} Crore` : '',
       lk ? `${three(lk)} Lakh` : '',

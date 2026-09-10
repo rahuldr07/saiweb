@@ -51,5 +51,5 @@ export function addOpening(opening: Opening): void {
   store.update((board) => ({ ...board, openings: [opening, ...board.openings] }))
 }
 
-/** Puts the seed back. Exists for tests, which must not inherit each other's moves. */
-export const resetBoard = store.reset
+/** @see Store.reset in @/lib/store */
+export const resetHiringBoard = store.reset

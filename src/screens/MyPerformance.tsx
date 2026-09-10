@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGo } from '@/lib/nav'
 import {
   Banner,
+  BarRow,
   Btn,
   Card,
   Kpi,
@@ -20,19 +21,12 @@ import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { STAFF } from '@/data/people'
 import { QC_FIX, type QcEntry } from '@/data/quality'
-import { stageWorkOf } from '@/lib/quality'
+import { QC_CRITERIA, stageWorkOf } from '@/lib/quality'
 import { useQcRules } from '@/state/qcRules'
 import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
 import { useDeliveries } from '@/lib/useDeliveries'
 import { useQcLog } from '@/lib/useQcLog'
 import { fmtDate } from '@/lib/format'
-
-/** The three things a rating is given on, and the field each is stored in. */
-const AXES = [
-  ['Accuracy', 'acc'],
-  ['Completeness', 'comp'],
-  ['Formatting', 'fmt'],
-] as const
 
 /** `A`, `A and B`, `A, B and C` — the design joins with " and " throughout. */
 const listOf = (xs: string[]) =>
@@ -119,7 +113,7 @@ export default function MyPerformance() {
   const recent = below.filter((x) => x.d >= half)
   const older = below.filter((x) => x.d < half)
 
-  const axes = AXES.map(([name, field]) => ({
+  const axes = QC_CRITERIA.map(([name, field]) => ({
     name,
     n: below.filter((x) => x.crit === name).length,
     avg: rows.length ? rows.reduce((a, x) => a + x[field], 0) / rows.length : null,
@@ -401,7 +395,7 @@ export default function MyPerformance() {
             <>
               <SectionHead>Worth knowing — these came up once</SectionHead>
               <Card>
-                <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+                <Rows bare>
                   {oneOffs.map(([reason]) => {
                     const x = below.find((y) => y.note === reason)
                     return (
@@ -422,7 +416,7 @@ export default function MyPerformance() {
                       </div>
                     )
                   })}
-                </div>
+                </Rows>
               </Card>
             </>
           ) : null}
@@ -431,33 +425,24 @@ export default function MyPerformance() {
             <Card padded>
               <Label>What you’re doing well, and where marks come off</Label>
               {axes.map((a) => (
-                <div
+                <BarRow
                   key={a.name}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '118px 1fr 100px',
-                    gap: 11,
-                    alignItems: 'center',
-                    padding: '7px 0',
-                    fontSize: '12.5px',
-                  }}
-                >
-                  <span className="gr">{a.name}</span>
-                  <span className="bar">
-                    <i
-                      style={{
-                        width: `${below.length ? Math.round((a.n / Math.max(1, below.length)) * 100) : 0}%`,
-                        background: a.n ? 'var(--warn)' : 'var(--ok)',
-                      }}
-                    />
-                  </span>
-                  <span className="mono" style={{ textAlign: 'right' }}>
-                    {/* An average of nothing is not zero — 0.00 reads as the worst
-                        possible score rather than as no data. */}
-                    {a.avg === null ? <span className="gr">—</span> : a.avg.toFixed(2)}
-                    {a.n ? <span className="gr"> · {a.n}</span> : null}
-                  </span>
-                </div>
+                  cols="118px 1fr 100px"
+                  gap={11}
+                  padding="7px 0"
+                  label={a.name}
+                  value={a.n}
+                  max={below.length}
+                  color={a.n ? 'var(--warn)' : 'var(--ok)'}
+                  right={
+                    <>
+                      {/* An average of nothing is not zero — 0.00 reads as the worst
+                          possible score rather than as no data. */}
+                      {a.avg === null ? <span className="gr">—</span> : a.avg.toFixed(2)}
+                      {a.n ? <span className="gr"> · {a.n}</span> : null}
+                    </>
+                  }
+                />
               ))}
               {strongest.length ? (
                 <div

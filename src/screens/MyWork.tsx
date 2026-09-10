@@ -6,6 +6,7 @@ import {
   Btn,
   Card,
   Chip,
+  DetailRow,
   Due,
   Kpi,
   Kpis,
@@ -465,19 +466,7 @@ export default function MyWork() {
               ['Holidays in the month', att.hol],
             ] as [string, string | number][]
           ).map((r) => (
-            <div
-              key={r[0]}
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '7px 0',
-                fontSize: '13.5px',
-                borderBottom: '1px solid var(--hair)',
-              }}
-            >
-              <span className="gr">{r[0]}</span>
-              <b className="mono">{r[1]}</b>
-            </div>
+            <DetailRow key={r[0]} label={r[0]} value={<b className="mono">{r[1]}</b>} />
           ))}
           {nextHoliday ? (
             <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -553,9 +542,9 @@ export default function MyWork() {
             </div>
           </div>
           {myUpdates.length ? (
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {myUpdates.map((u) => updateRow(u, false))}
-            </div>
+            </Rows>
           ) : (
             <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
               Nothing yet. A handover note written today is the thing that saves someone an hour
@@ -570,9 +559,9 @@ export default function MyWork() {
         <Card padded>
           <Label>From your department</Label>
           {teamUpdates.length ? (
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {teamUpdates.map((u) => updateRow(u, true))}
-            </div>
+            </Rows>
           ) : (
             <p className="gr" style={{ fontSize: '13.5px', margin: 0 }}>
               Nothing from the rest of {me.dep[0] || 'your department'} recently.
@@ -688,7 +677,7 @@ export default function MyWork() {
         <>
           <SectionHead id="mwDone">Finished today — {wk.done}</SectionHead>
           <Card>
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {(showAllDone ? finished : finished.slice(0, 8)).map((i, idx) => (
                 <div className="rw" key={`${i.o.id}-${i.stage}-${idx}`}>
                   <span className="ok">✓</span>
@@ -719,7 +708,7 @@ export default function MyWork() {
                   </span>
                 </div>
               ) : null}
-            </div>
+            </Rows>
           </Card>
         </>
       ) : null}
@@ -752,7 +741,7 @@ export default function MyWork() {
                 </span>
               </div>
               {rated.filter((x) => x.note).length ? (
-                <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+                <Rows bare>
                   {rated
                     .filter((x) => x.note)
                     .slice(0, 4)
@@ -768,7 +757,7 @@ export default function MyWork() {
                         <span />
                       </div>
                     ))}
-                </div>
+                </Rows>
               ) : (
                 <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
                   Nothing has been raised against your work in this range.

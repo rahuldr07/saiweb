@@ -1,5 +1,5 @@
 import { useGo } from '@/lib/nav'
-import { Avatar, Banner, Card, Label } from './ui'
+import { Avatar, Banner, Card, Label, Rows } from './ui'
 import {
   aboutOther,
   whenWord,
@@ -72,7 +72,7 @@ export function TeamWishes({
       <Label>{title}</Label>
 
       {celebrations.length ? (
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           {[...today, ...soon].map((c) => (
             <button
               key={`${c.person.id}-${c.kind}`}
@@ -102,7 +102,7 @@ export function TeamWishes({
               </span>
             </button>
           ))}
-        </div>
+        </Rows>
       ) : (
         <p className="gr" style={{ fontSize: '12.5px', margin: 0 }}>
           {empty}

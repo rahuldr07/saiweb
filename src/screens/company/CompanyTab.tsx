@@ -1,4 +1,4 @@
-import { Banner, Btn, Card, Label } from '@/components/ui'
+import { Banner, Btn, Card, FormActions, Label, Rows } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { useCompany, setProfile } from '@/state/company'
 import { getDateFormat, setDateFormat, fmtDate, type DateFormat } from '@/lib/format'
@@ -110,7 +110,7 @@ export function CompanyTab({ plan }: { plan: string }) {
 
       <Card padded>
         <Label>Your data</Label>
-        <div className="rows" style={{ border: 'none', borderRadius: 0, marginTop: 4 }}>
+        <Rows bare style={{ marginTop: 4 }}>
           <div className="rw">
             <span className="gr">↓</span>
             <span>
@@ -135,7 +135,7 @@ export function CompanyTab({ plan }: { plan: string }) {
               </Btn>
             </span>
           </div>
-        </div>
+        </Rows>
       </Card>
     </div>
   )
@@ -182,7 +182,7 @@ function CloseWorkspace({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -203,7 +203,7 @@ function CloseWorkspace({
         >
           Close the workspace
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Btn, Card, Chip, Label, SectionHead } from '@/components/ui'
+import { Btn, Card, Chip, DetailRow, Label, SectionHead } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { useTimeclock } from '@/state/timeclock'
 import { LEAVE, LEAVEPOLICY, LEAVETYPES, TIMECFG } from '@/data/hrms'
@@ -67,20 +67,7 @@ function NumberField({
 
 /** A figure the current rules produce, so the setting above can be read in effect. */
 function Outcome({ label, value, warn }: { label: string; value: number | string; warn?: boolean }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '7px 0',
-        fontSize: '13.5px',
-        borderBottom: '1px solid var(--hair)',
-      }}
-    >
-      <span className="gr">{label}</span>
-      <b className={`mono ${warn ? 'warn' : ''}`}>{value}</b>
-    </div>
-  )
+  return <DetailRow label={label} value={<b className={`mono ${warn ? 'warn' : ''}`}>{value}</b>} />
 }
 
 export function LeavePolicy({ onChanged }: { onChanged: () => void }) {

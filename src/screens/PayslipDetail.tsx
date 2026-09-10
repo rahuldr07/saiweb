@@ -1,14 +1,12 @@
 import { useParams, useSearch } from '@tanstack/react-router'
 import { useGo } from '@/lib/nav'
-import { Assumption, Btn, Card, Label, PageHead } from '@/components/ui'
+import { Assumption, Btn, Card, DetailRow, Label, PageHead, Rows } from '@/components/ui'
 import { useSession } from '@/state/session'
-import { useUi } from '@/state/ui'
 import { PAYCFG, PAYMONTHS, PAYRUNS, RUNSTATE } from '@/data/hrms'
 import { STAFF } from '@/data/people'
 import { inr, inr2, payslipOf, words, ytd } from '@/lib/payroll'
 import { roleName } from '@/lib/permissions'
-import { csvName, downloadCSV } from '@/lib/csv'
-import { payslipFileStem, payslipRows } from '@/lib/payroll-csv'
+import { usePayslipDownloads } from './payslips/usePayslipDownloads'
 
 /**
  * One payslip.
@@ -26,20 +24,7 @@ import { payslipFileStem, payslipRows } from '@/lib/payroll-csv'
 
 /** A labelled amount, the way both columns of the slip state one. */
 function Row({ label, value, tone }: { label: string; value: number; tone?: 'warn' | 'ok' }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '7px 0',
-        fontSize: '13.5px',
-        borderBottom: '1px solid var(--hair)',
-      }}
-    >
-      <span className="gr">{label}</span>
-      <b className={`mono ${tone ?? ''}`}>{inr2(value)}</b>
-    </div>
-  )
+  return <DetailRow label={label} value={<b className={`mono ${tone ?? ''}`}>{inr2(value)}</b>} />
 }
 
 /** A closing figure under a column, which is not a row and should not look like one. */
@@ -71,7 +56,7 @@ export default function PayslipDetail() {
   const { m } = useSearch({ from: '/payslips/$personId' })
   const navigate = useGo()
   const { me, tenant, can } = useSession()
-  const { toast } = useUi()
+  const download = usePayslipDownloads()
 
   const person = STAFF.find((x) => x.id === personId)
   const month = m && PAYMONTHS.includes(m) ? m : PAYMONTHS[PAYMONTHS.length - 1]
@@ -139,14 +124,6 @@ export default function PayslipDetail() {
   const s = payslipOf(person, month)
   const y = ytd(person, month)
 
-  const download = () => {
-    const out = downloadCSV(
-      csvName(payslipFileStem(person, month)),
-      payslipRows(person, month, tenant.name),
-    )
-    toast(out.name)
-  }
-
   const facts: [string, string | number][] = [
     ['Name', person.n],
     ['Employee ID', person.id.toUpperCase()],
@@ -169,7 +146,7 @@ export default function PayslipDetail() {
             <Btn variant="ghost" onClick={() => window.print()}>
               Print
             </Btn>
-            <Btn variant="ghost" onClick={download}>
+            <Btn variant="ghost" onClick={() => download.payslip(person, month)}>
               Download
             </Btn>
           </>
@@ -300,7 +277,7 @@ export default function PayslipDetail() {
         <div className="lb" style={{ marginTop: 20 }}>
           How these figures were arrived at
         </div>
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           <Why
             head={`Basic is ${PAYCFG.basicPct}% of your monthly cost to company`}
             detail="Set by the labour codes, which require basic to be at least half. Everything statutory is calculated from it."
@@ -333,7 +310,7 @@ export default function PayslipDetail() {
             head="Tax is this year’s estimate, spread evenly"
             detail="Computed on the new regime with the standard deduction, then divided by twelve. It moves if your declarations change."
           />
-        </div>
+        </Rows>
 
         <Assumption title="Tax here is illustrative">
           The slabs are the new-regime rates and the arithmetic is right, but a real payroll takes

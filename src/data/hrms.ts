@@ -11,7 +11,6 @@ import type {
   Claim,
   Loan,
   Arrear,
-  DeclType,
   PettyEntry,
   PettyConfig,
   PettyCount,
@@ -856,15 +855,6 @@ export const LVSTATUS: LabelMap = {
   cancelled: ["Cancelled", "n"],
 }
 
-export const ATTMARK: LabelMap = {
-  p: ["Present", "v"],
-  wfh: ["Work from home", "b"],
-  leave: ["On leave", "r"],
-  lop: ["Unpaid", "d"],
-  off: ["Rest day", "n"],
-  hol: ["Holiday", "n"],
-}
-
 export const ATT: Attendance = {
   "Mar 2026": {
     us: { days: 31, working: 26, hol: 1, lop: 1, paidLeave: 0, payable: 26, joined: false, present: 25 },
@@ -1060,29 +1050,6 @@ export const RUNSTEPS: [string, string][] = [
 export const STDDED: number = 75000
 
 export const OLDSTD: number = 50000
-
-export const DECLTYPES: DeclType[] = [
-  {
-    k: "80c",
-    n: "80C — PF, insurance, ELSS, tuition",
-    cap: 150000,
-    d: "Your own provident fund already counts towards this.",
-  },
-  {
-    k: "80d",
-    n: "80D — health insurance premium",
-    cap: 25000,
-    d: "Higher if a parent over sixty is covered.",
-  },
-  {
-    k: "hra",
-    n: "House rent paid",
-    cap: 0,
-    d: "Exempt up to the least of three formulas. Needs the landlord's PAN above a lakh a year.",
-  },
-  { k: "home", n: "24(b) — home loan interest", cap: 200000, d: "On a self-occupied property." },
-  { k: "80ccd", n: "80CCD(1B) — extra NPS", cap: 50000, d: "On top of 80C." },
-]
 
 export const CLAIMS: Claim[] = [
   {

@@ -172,5 +172,5 @@ export function addNote(id: string, text: string, by: string, defect = false): v
 
 export const markRated = (id: string) => change(id, (w) => ({ ...w, rated: true }))
 
-/** Puts the seed back. For tests, which must not inherit each other's edits. */
+/** @see Store.reset in @/lib/store */
 export const resetOrders = store.reset

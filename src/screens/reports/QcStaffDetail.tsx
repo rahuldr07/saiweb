@@ -1,18 +1,17 @@
 import { useState } from 'react'
 import { useGo } from '@/lib/nav'
-import { Avatar, Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
+import { Avatar, BarRow, Btn, Card, Chip, Empty, Label, Rows, SectionHead } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
+import { RatingsTable } from '@/components/RatingsTable'
 import { QcDefects, QcMarks, QcOverBudget } from './QcFocus'
 import { ASSIGN_STAGES } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { median } from '@/lib/metrics'
-import { markTone, standing, type RatedPerson, type StageWorkResult } from '@/lib/quality'
+import { QC_CRITERIA, standing, type RatedPerson, type StageWorkResult } from '@/lib/quality'
 import { hh } from '@/lib/sla'
 import type { QcEntry } from '@/data/quality'
 import type { Range } from '@/lib/range'
-
-const AXIS = { Accuracy: 'acc', Completeness: 'comp', Formatting: 'fmt' } as const
 
 /**
  * Everything about one person's quality, with the clock beside it.
@@ -67,13 +66,11 @@ export function QcStaffDetail({
 
   const defects = mine.filter((x) => x.defect)
   const below = mine.filter((x) => x.crit)
-  const crit = (['Accuracy', 'Completeness', 'Formatting'] as const)
-    .map((c) => ({
-      c,
-      n: below.filter((x) => x.crit === c).length,
-      avg: mine.reduce((a, x) => a + x[AXIS[c]], 0) / mine.length,
-    }))
-    .sort((a, b) => b.n - a.n)
+  const crit = QC_CRITERIA.map(([name, field]) => ({
+    c: name,
+    n: below.filter((x) => x.crit === name).length,
+    avg: mine.reduce((a, x) => a + x[field], 0) / mine.length,
+  })).sort((a, b) => b.n - a.n)
 
   const reasons: Record<string, number> = {}
   below.forEach((x) => {
@@ -254,30 +251,20 @@ export function QcStaffDetail({
               : 'Every rating in this range was a straight 5 on all three criteria.'}
           </p>
           {crit.map((c) => (
-            <div
+            <BarRow
               key={c.c}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '118px 1fr 92px',
-                gap: 11,
-                alignItems: 'center',
-                padding: '6px 0',
-                fontSize: '12.5px',
-              }}
-            >
-              <span className="gr">{c.c}</span>
-              <span className="bar">
-                <i
-                  style={{
-                    width: `${below.length ? Math.round((c.n / Math.max(1, below.length)) * 100) : 0}%`,
-                    background: c.n && c.c === crit[0].c ? 'var(--warn)' : 'var(--brand2)',
-                  }}
-                />
-              </span>
-              <span className="mono" style={{ textAlign: 'right' }}>
-                {c.avg.toFixed(2)} {c.n ? <span className="gr">· {c.n}</span> : null}
-              </span>
-            </div>
+              cols="118px 1fr 92px"
+              gap={11}
+              label={c.c}
+              value={c.n}
+              max={below.length}
+              color={c.n && c.c === crit[0].c ? 'var(--warn)' : 'var(--brand2)'}
+              right={
+                <>
+                  {c.avg.toFixed(2)} {c.n ? <span className="gr">· {c.n}</span> : null}
+                </>
+              }
+            />
           ))}
           {below.length && crit[0].n >= 2 ? (
             <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -294,27 +281,20 @@ export function QcStaffDetail({
       <Card padded>
         <Label>Who did the rating</Label>
         {raterRows.map((x) => (
-          <div
+          <BarRow
             key={x.n}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '190px 1fr 110px',
-              gap: 12,
-              alignItems: 'center',
-              padding: '6px 0',
-              fontSize: '12.5px',
-            }}
-          >
-            <span>
-              <b>{x.n}</b>
-            </span>
-            <span className="bar">
-              <i style={{ width: `${Math.round((x.c / mine.length) * 100)}%`, background: 'var(--brand2)' }} />
-            </span>
-            <span className="mono" style={{ textAlign: 'right' }}>
-              {x.c} · avg {x.avg.toFixed(2)}
-            </span>
-          </div>
+            cols="190px 1fr 110px"
+            labelClass=""
+            label={<b>{x.n}</b>}
+            value={x.c}
+            max={mine.length}
+            color="var(--brand2)"
+            right={
+              <>
+                {x.c} · avg {x.avg.toFixed(2)}
+              </>
+            }
+          />
         ))}
         <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
           {raterRows.length > 1 &&
@@ -328,7 +308,7 @@ export function QcStaffDetail({
         <>
           <SectionHead>Why the marks came off — most common first</SectionHead>
           <Card>
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {topReasons.map(([why, n]) => (
                 <div className="rw" key={why}>
                   <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
@@ -345,7 +325,7 @@ export function QcStaffDetail({
                   <span className="mono gr">{n}</span>
                 </div>
               ))}
-            </div>
+            </Rows>
           </Card>
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
             A repeated reason is worth a five-minute conversation; a one-off usually is not. That distinction
@@ -367,42 +347,26 @@ export function QcStaffDetail({
               const m = median(list.map((x) => x.ratio))
               const ov = list.filter((x) => x.over).length
               return (
-                <div
+                <BarRow
                   key={st}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '118px 1fr 190px',
-                    gap: 12,
-                    alignItems: 'center',
-                    padding: '7px 0',
-                    fontSize: '12.5px',
-                  }}
-                >
-                  <span className="gr">{st}</span>
-                  <span style={{ position: 'relative', height: 16 }}>
-                    <span className="bar" style={{ position: 'absolute', inset: 0, height: 16 }}>
-                      <i style={{ width: '50%', background: 'var(--brandsoft)' }} />
-                    </span>
-                    <span
-                      className="bar"
-                      style={{ position: 'absolute', inset: '4px 0', height: 8, background: 'transparent' }}
-                    >
-                      <i
-                        style={{
-                          width: `${Math.min(100, Math.round(m * 50))}%`,
-                          background: m > 1 ? 'var(--warn)' : 'var(--brand2)',
-                        }}
-                      />
-                    </span>
-                  </span>
-                  <span className="mono" style={{ textAlign: 'right', fontSize: '12.5px' }}>
-                    {m.toFixed(2)}× budget
-                    <span className={ov / list.length > 0.3 ? 'warn' : 'gr'}>
-                      {' '}
-                      · over on {ov} of {list.length}
-                    </span>
-                  </span>
-                </div>
+                  cols="118px 1fr 190px"
+                  padding="7px 0"
+                  label={st}
+                  /* The track runs to twice the budget, so the pale mark is 1×. */
+                  value={m}
+                  max={2}
+                  budget={{ value: 1, max: 2 }}
+                  color={m > 1 ? 'var(--warn)' : 'var(--brand2)'}
+                  right={
+                    <>
+                      {m.toFixed(2)}× budget
+                      <span className={ov / list.length > 0.3 ? 'warn' : 'gr'}>
+                        {' '}
+                        · over on {ov} of {list.length}
+                      </span>
+                    </>
+                  }
+                />
               )
             })}
             <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -453,33 +417,16 @@ export function QcStaffDetail({
       ) : null}
 
       <SectionHead>Every rating in range</SectionHead>
-      <FlexTable
+      {/* The register closes a screen that has already broken the notes down —
+          which criterion, how often, in whose words — so here it is the defects
+          that are worth picking out of it. */}
+      <RatingsTable
+        rows={mine}
         cols="110px 140px 130px 120px 1fr 150px"
         min={960}
-        head={['Date', 'Order', 'Stage', 'Marks', 'What the rater said', 'Rated by']}
-      >
-        {mine.map((x, i) => (
-          <FlexRow cols="110px 140px 130px 120px 1fr 150px" key={`${x.order}-${i}`}>
-            <Cell v={x.dk} mono />
-            <Cell v={x.order} mono s={`${x.cl} · ${x.pr}`} />
-            <Cell v={x.stage} />
-            <Cell>
-              <div className="v mono" style={{ fontSize: '12.5px' }}>
-                <span className={markTone(x.acc)}>{x.acc}</span> ·{' '}
-                <span className={markTone(x.comp)}>{x.comp}</span> ·{' '}
-                <span className={markTone(x.fmt)}>{x.fmt}</span>
-              </div>
-              <div className="s">acc · comp · fmt</div>
-            </Cell>
-            <Cell
-              v={x.note ?? <span className="gr">clean — nothing raised</span>}
-              tone={x.defect ? 'bad' : undefined}
-              s={x.crit ?? undefined}
-            />
-            <Cell v={x.byName} />
-          </FlexRow>
-        ))}
-      </FlexTable>
+        legend
+        highlightDefectsOnly
+      />
         </>
       )}
     </>

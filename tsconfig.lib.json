@@ -9,9 +9,12 @@
      `tsconfig.app.json` only because the screens are mid-rewrite. When they
      land, move `noUncheckedIndexedAccess` there and delete this file.
 
-     `src/lib` is the root set; the files it imports (`src/data`, and the two
-     `src/state` modules the payroll and coverage helpers read) are pulled into
-     the program and checked under the flag too. */
+     `src/lib` is the root set, and whatever it imports is pulled into the
+     program and checked under the flag with it — today that reaches `src/data`
+     and the `src/state` modules these helpers read. So adding an import to
+     `src/lib` can widen what this project checks, which is the intended
+     direction: anything the money and assignment code depends on is held to the
+     same standard. It does not reach `src/screens`, and must not start to. */
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
     "noUncheckedIndexedAccess": true,

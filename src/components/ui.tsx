@@ -587,13 +587,111 @@ export function ReadOnly({ children }: { children: ReactNode }) {
   return <div className="ro">{children}</div>
 }
 
+/**
+ * The buttons a form or a confirmation ends on, ranged right so the one that
+ * commits sits closest to where the thumb and the eye finish the form.
+ */
+export function FormActions({ children }: { children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      {children}
+    </div>
+  )
+}
+
 /* ── capacity bar ───────────────────────────────────────────────────────── */
 
+/** Share of the track a value fills. A total of nothing reads as empty, not as NaN. */
+function fill(value: number, max: number) {
+  return max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
+}
+
+function Fill({ value, max, color }: { value: number; max: number; color?: string | undefined }) {
+  return <i style={{ width: `${fill(value, max)}%`, ...(color ? { background: color } : {}) }} />
+}
+
 export function Bar({ value, max, color }: { value: number; max: number; color?: string }) {
-  const wpc = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
   return (
     <div className="bar">
-      <i style={{ width: `${wpc}%`, ...(color ? { background: color } : {}) }} />
+      <Fill value={value} max={max} color={color} />
+    </div>
+  )
+}
+
+/**
+ * A labelled bar with its figure beside it — the shape a distribution takes
+ * wherever one is shown. The columns stay the caller's: a name needs a
+ * different width from a score chip, and fixing them per screen is what keeps
+ * the bars from stepping in and out down the page.
+ */
+export function BarRow({
+  cols,
+  gap = 12,
+  padding = '6px 0',
+  label,
+  labelClass = 'gr',
+  value,
+  max,
+  color,
+  title,
+  budget,
+  right,
+  rightClass = 'mono',
+  rightStyle,
+}: {
+  /** grid-template-columns for the three cells: label, bar, figure. */
+  cols: string
+  gap?: number
+  padding?: string
+  label: ReactNode
+  /** Empty for a label that carries its own emphasis — a name, a chip. */
+  labelClass?: string
+  value: number
+  max: number
+  color?: string
+  /** Names the parts of a fill that is built from more than one thing. */
+  title?: string
+  /**
+   * A pale bar behind the solid one, for a figure read against an allowance
+   * rather than against a total. The solid bar then rides inside it.
+   */
+  budget?: { value: number; max: number }
+  right: ReactNode
+  rightClass?: string
+  rightStyle?: CSSProperties
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: cols,
+        gap,
+        alignItems: 'center',
+        padding,
+        fontSize: '12.5px',
+      }}
+    >
+      <span className={labelClass || undefined}>{label}</span>
+      {budget ? (
+        <span style={{ position: 'relative', height: 16 }}>
+          <span className="bar" style={{ position: 'absolute', inset: 0, height: 16 }}>
+            <Fill value={budget.value} max={budget.max} color="var(--brandsoft)" />
+          </span>
+          <span
+            className="bar"
+            style={{ position: 'absolute', inset: '4px 0', height: 8, background: 'transparent' }}
+          >
+            <Fill value={value} max={max} color={color} />
+          </span>
+        </span>
+      ) : (
+        <span className="bar" title={title}>
+          <Fill value={value} max={max} color={color} />
+        </span>
+      )}
+      <span className={rightClass || undefined} style={{ textAlign: 'right', ...rightStyle }}>
+        {right}
+      </span>
     </div>
   )
 }
@@ -647,10 +745,83 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
   )
 }
 
+/* ── detail rows ────────────────────────────────────────────────────────── */
+
+/**
+ * A label and its figure on one line, ruled off from the next. The rule sits
+ * between rows rather than under the run, so the last row asks for `last`.
+ */
+export function DetailRow({
+  label,
+  value,
+  last,
+  gap,
+  padding = '7px 0',
+  center,
+  labelClass = 'gr',
+}: {
+  label: ReactNode
+  value: ReactNode
+  last?: boolean
+  /** Only where a long label and a long figure would otherwise meet. */
+  gap?: number
+  padding?: string
+  /** For a figure tall enough that a top-aligned label would ride above it. */
+  center?: boolean
+  /** Empty for a label that carries its own emphasis. */
+  labelClass?: string
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        ...(center ? { alignItems: 'center' } : {}),
+        ...(gap === undefined ? {} : { gap }),
+        padding,
+        fontSize: '13.5px',
+        ...(last ? {} : { borderBottom: '1px solid var(--hair)' }),
+      }}
+    >
+      <span className={labelClass || undefined}>{label}</span>
+      <span style={{ textAlign: 'right', fontWeight: 600 }}>{value}</span>
+    </div>
+  )
+}
+
+/** A run of detail rows built from label/figure pairs. */
+export function DetailList({ rows, gap }: { rows: [string, ReactNode][]; gap?: number }) {
+  return (
+    <>
+      {rows.map(([label, value]) => (
+        <DetailRow key={label} label={label} value={value} {...(gap === undefined ? {} : { gap })} />
+      ))}
+    </>
+  )
+}
+
 /* ── row list ───────────────────────────────────────────────────────────── */
 
-export function Rows({ children }: { children: ReactNode }) {
-  return <div className="rows">{children}</div>
+const BARE: CSSProperties = { border: 'none', borderRadius: 0 }
+
+export function Rows({
+  children,
+  bare,
+  style,
+}: {
+  children: ReactNode
+  /**
+   * Drop the hairline box `.rows` draws for itself. Inside a card that already
+   * has edges, the second box reads as a frame around a frame.
+   */
+  bare?: boolean
+  style?: CSSProperties
+}) {
+  return (
+    <div className="rows" style={bare ? { ...BARE, ...style } : style}>
+      {children}
+    </div>
+  )
 }
 
 export function Row({

@@ -6,11 +6,13 @@ import {
   Btn,
   Card,
   Chip,
+  DetailRow,
   Empty,
   Kpi,
   Kpis,
   Label,
   PageHead,
+  Rows,
   SectionHead,
   Tabs,
 } from '@/components/ui'
@@ -328,7 +330,7 @@ function TodayTab({
         <>
           <SectionHead>Corrections waiting on you — {pendingCorrections.length}</SectionHead>
           <Card>
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {pendingCorrections.map((r) => (
                 <div className="rw" key={r.id}>
                   <span className="warn" style={{ fontSize: '14.5px' }}>
@@ -356,7 +358,7 @@ function TodayTab({
                   </span>
                 </div>
               ))}
-            </div>
+            </Rows>
           </Card>
         </>
       ) : null}
@@ -365,7 +367,7 @@ function TodayTab({
         <>
           <SectionHead>Overtime to approve — {pendingOt.length}</SectionHead>
           <Card>
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {pendingOt.map((o) => (
                 <div className="rw" key={o.id}>
                   <span className="warn" style={{ fontSize: '14.5px' }}>
@@ -390,7 +392,7 @@ function TodayTab({
                   </span>
                 </div>
               ))}
-            </div>
+            </Rows>
           </Card>
         </>
       ) : null}
@@ -399,7 +401,7 @@ function TodayTab({
         <>
           <SectionHead>Shift swaps — {pendingSwaps.length}</SectionHead>
           <Card>
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {pendingSwaps.map((x) => (
                 <div className="rw" key={x.id}>
                   <span className="warn" style={{ fontSize: '14.5px' }}>
@@ -425,7 +427,7 @@ function TodayTab({
                   </span>
                 </div>
               ))}
-            </div>
+            </Rows>
           </Card>
         </>
       ) : null}
@@ -1016,7 +1018,7 @@ function PatternsTab({ list, openPerson }: { list: Person[]; openPerson: (id: st
   return (
     <>
       <Card>
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           {flagged.map(({ p, a }) => (
             <div className="rw" key={p.id}>
               <span className="warn" style={{ fontSize: '14.5px' }}>
@@ -1040,7 +1042,7 @@ function PatternsTab({ list, openPerson }: { list: Person[]; openPerson: (id: st
               </span>
             </div>
           ))}
-        </div>
+        </Rows>
       </Card>
       <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
         Patterns, not totals. Somebody who took three weeks in one go does not appear here; somebody
@@ -1058,24 +1060,20 @@ function HowTab() {
       <Card padded>
         <Label>Sites and the geofence</Label>
         {SITES.map((x) => (
-          <div
+          <DetailRow
             key={x.k}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: '8px 0',
-              fontSize: '13.5px',
-              borderBottom: '1px solid var(--hair)',
-            }}
-          >
-            <span>
-              <b>{x.n}</b>
-              <div className="gr" style={{ fontSize: '11.5px' }}>
-                {x.lat}, {x.lng}
-              </div>
-            </span>
-            <b className="mono">{x.radius} m</b>
-          </div>
+            padding="8px 0"
+            labelClass=""
+            label={
+              <>
+                <b>{x.n}</b>
+                <div className="gr" style={{ fontSize: '11.5px' }}>
+                  {x.lat}, {x.lng}
+                </div>
+              </>
+            }
+            value={<b className="mono">{x.radius} m</b>}
+          />
         ))}
         <p className="gr" style={{ fontSize: '12.5px', marginTop: 10 }}>
           A check-in outside every radius is still recorded — it is marked as away from site rather

@@ -195,11 +195,22 @@ export const QC_SCALE: [score: number, label: string, kind: ChipKind][] = [
  */
 export const markTone = (v: number): 'bad' | 'warn' | 'ok' => (v < 4 ? 'bad' : v < 5 ? 'warn' : 'ok')
 
-/** One number could not say *what* was wrong. Three can. */
-export const QC_CRITERIA: [name: string, question: string][] = [
-  ['Accuracy', 'Do the typed values match the instrument?'],
-  ['Completeness', 'Is every required section present?'],
-  ['Formatting', 'Dates, names, money and recording references to the client format'],
+/**
+ * One number could not say *what* was wrong. Three can.
+ *
+ * The field is here because the name and the column it is stored in are one
+ * fact, and five screens were each restating it: an axis renamed in the rating
+ * form but left mapped to the old column reads plausibly and is wrong
+ * everywhere. `crit` on a rating holds the *name*, so the two have to agree.
+ */
+export const QC_CRITERIA: [
+  name: string,
+  field: keyof Pick<QcEntry, 'acc' | 'comp' | 'fmt'>,
+  question: string,
+][] = [
+  ['Accuracy', 'acc', 'Do the typed values match the instrument?'],
+  ['Completeness', 'comp', 'Is every required section present?'],
+  ['Formatting', 'fmt', 'Dates, names, money and recording references to the client format'],
 ]
 
 export interface QcRule {

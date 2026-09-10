@@ -10,6 +10,7 @@ import {
   Label,
   NotFoundRecord,
   PageHead,
+  Rows,
 } from '@/components/ui'
 import { RequireCap } from '@/components/RequireCap'
 import { useSession } from '@/state/session'
@@ -446,7 +447,7 @@ function LeadDetail() {
                 </span>
               </div>
             </CardBody>
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {notes.map((n, i) => (
                 <div
                   className="rw"
@@ -470,7 +471,7 @@ function LeadDetail() {
                   </span>
                 </div>
               ))}
-            </div>
+            </Rows>
           </Card>
         </div>
 

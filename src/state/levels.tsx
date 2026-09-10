@@ -11,6 +11,7 @@ import { LEVELS } from '@/data/org'
 import { STAFF } from '@/data/people'
 import { COUNTIES, LINKTYPES, PRODUCTS } from '@/data/catalog'
 import { makeCoverage } from '@/lib/coverage'
+import { isDuplicateName } from '@/lib/forms'
 import type { County, Level } from '@/data/types'
 
 type LevelsValue = ReturnType<typeof makeCoverage> & {
@@ -132,7 +133,9 @@ export function LevelsProvider({ children }: { children: ReactNode }) {
     (st, name) => {
       const n = name.trim()
       if (!n) return { ok: false, error: 'A county name is required.' }
-      if (counties.some((c) => c.n.toLowerCase() === n.toLowerCase() && c.st === st))
+      /* Nothing is being edited here, so there is no record to exclude — and the
+         state is half the identity, so only the ones in it can clash. */
+      if (isDuplicateName(counties.filter((c) => c.st === st), n, (c) => c.n))
         return { ok: false, error: `${n}, ${st} is already on file.` }
       const links = Object.fromEntries(LINKTYPES.map((t) => [t.k, { u: '', s: 'none' }]))
       setCounties((prev) => [...prev, { n, st, idx: null, links } as County])

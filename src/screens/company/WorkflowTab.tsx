@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Card, CardHead, Label, SecHead, Tabs } from '@/components/ui'
+import { Banner, Btn, Card, CardHead, Label, Rows, SecHead, Tabs } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { useGo } from '@/lib/nav'
 import { StatusForm, StatusDelete } from './forms/StatusForm'
@@ -95,7 +95,7 @@ export function WorkflowTab() {
                 </Btn>
               }
             />
-            <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+            <Rows bare>
               {statuses.map(([k, v], i) => {
                 const used = ORDERS.filter((o) => o.stt === k).length
                 return (
@@ -148,7 +148,7 @@ export function WorkflowTab() {
                   </div>
                 )
               })}
-            </div>
+            </Rows>
           </Card>
 
           <Banner kind="b" icon="⚑" title="A status in use cannot be deleted" style={{ marginTop: 16 }}>

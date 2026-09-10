@@ -9,6 +9,7 @@
  */
 import { whoName } from '@/lib/permissions'
 import { COVSTAGES, coversPlace, coversProduct } from '@/lib/coverage'
+import { isDuplicateName } from '@/lib/forms'
 import type { Exception } from '@/lib/engine'
 import type { Rule, RuleCondition } from '@/data/types'
 
@@ -117,7 +118,7 @@ export function ruleProblem(d: RuleDraft, rules: Rule[], id: string | null): str
   if (!d.n.trim()) {
     return 'A name — it is what appears in the trace when this rule decides something.'
   }
-  if (rules.some((x) => x.id !== id && x.n.toLowerCase() === d.n.trim().toLowerCase())) {
+  if (isDuplicateName(rules, d.n, (x) => x.n, (x) => x.id === id)) {
     return `${d.n.trim()} already exists. Two rules with one name makes a trace unreadable.`
   }
   if (d.k !== 'block' && !d.pool.length) {

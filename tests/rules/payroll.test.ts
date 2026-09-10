@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   leaveBalance,
+  monthOf,
   otMinsFor,
   paidStaff,
   payslipOf,
@@ -9,6 +10,7 @@ import {
   taxUnder,
   ytd,
 } from '@/lib/payroll'
+import { mins } from '@/lib/timeclock'
 import { resetClock, setClock } from '@/lib/clock'
 import { PAYCFG, PAYMONTHS } from '@/data/hrms'
 
@@ -297,5 +299,62 @@ describe('a full and final settlement', () => {
     expect(s.yrs, 'the counter-example no longer crosses the threshold').toBeGreaterThanOrEqual(5)
     expect(s.lines[2][1]).toBe(45_720)
     expect(s.lines[2][0]).toContain('6 completed years')
+  })
+})
+
+describe('the month a dated record belongs to', () => {
+  /*
+   * `monthOf` turns a stored MM/DD/YYYY into the "Mon YYYY" label the register
+   * is keyed by, and overtime is matched against it. A date it cannot read, and
+   * a thirteenth month in a date that parses perfectly well, belong to no month
+   * at all — so both get '', the one label no real month carries.
+   *
+   * That is what keeps them matching nothing: a near-miss label like
+   * "undefined 2026" or "Jan NaN" reads like a month and sits next to a real one.
+   */
+  it('labels a date it can read', () => {
+    expect(monthOf('07/15/2026')).toBe('Jul 2026')
+    expect(monthOf('01/01/2026')).toBe('Jan 2026')
+    expect(monthOf('12/31/2026')).toBe('Dec 2026')
+  })
+
+  it('gives no label to a date it cannot read', () => {
+    for (const d of ['2026-07-15', '15 July 2026', '', 'never']) {
+      expect(monthOf(d), `${d} should belong to no month`).toBe('')
+    }
+  })
+
+  it('gives no label to a month number that is not a month', () => {
+    expect(monthOf('13/01/2026')).toBe('')
+    expect(monthOf('00/01/2026')).toBe('')
+  })
+
+  it('never returns a label that matches a real month it did not mean', () => {
+    /* The point of the empty string: it cannot collide with a pay month, so an
+       unreadable overtime record is matched by nothing rather than by whichever
+       month a stray "undefined" happened to sit next to. */
+    for (const mn of PAYMONTHS) {
+      expect(monthOf('2026-07-15')).not.toBe(mn)
+    }
+  })
+})
+
+describe('a punch time with a part missing', () => {
+  /* Minutes past midnight, off an HH:MM string. A component that is not there is
+     worth none of them, so every shape a punch arrives in reads as a finite
+     number: a timesheet can no more show NaN minutes worked than a payslip can
+     show NaN rupees. */
+  it('reads the parts it has', () => {
+    expect(mins('09:30')).toBe(570)
+    expect(mins('00:00')).toBe(0)
+    expect(mins('23:59')).toBe(1439)
+  })
+
+  it('is a number rather than NaN when a part is missing', () => {
+    for (const t of ['09', '', 'half nine']) {
+      expect(Number.isFinite(mins(t)), `${t} produced ${mins(t)}`).toBe(true)
+    }
+    expect(mins('09')).toBe(540)
+    expect(mins('')).toBe(0)
   })
 })

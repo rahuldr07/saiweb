@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGo } from '@/lib/nav'
-import { Avatar, Banner, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
+import { Avatar, Banner, Bar, Btn, Card, Kpi, Kpis, EmbedHead, SectionHead } from '@/components/ui'
 import { WorkFilter, WorkRow, WorkTable, WORKCOLS, useWorkFilter } from './WorkRows'
 import { workloadCsv } from '@/lib/report-csv'
 import { useReportExport } from './useReportExport'
@@ -9,12 +9,7 @@ import { FocusKpis } from '@/components/FocusKpis'
 import { WorkFocus } from './WorkFocus'
 import { board } from '@/lib/engine'
 import { AVAIL } from '@/data/people'
-
-/** The bar fill: green all the way up to the point it starts to matter. */
-const capTone = (pct: number) => (pct >= 95 ? 'var(--bad)' : pct >= 80 ? 'var(--warn)' : 'var(--ok)')
-
-/** The figure beside it, which the design leaves grey until it matters. */
-const capTextTone = (pct: number) => (pct >= 95 ? 'bad' : pct >= 80 ? 'warn' : 'gr')
+import { capacityTone } from '@/lib/metrics'
 
 const PEOPLE_COLS = '190px 1fr 85px 85px 130px'
 
@@ -158,9 +153,7 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
                 <Cell v={x.pend || '—'} mono tone={x.pend ? 'warn' : 'gr'} />
                 <Cell v={x.unplaced || '—'} mono tone={x.unplaced ? 'bad' : 'gr'} />
                 <Cell>
-                  <span className="bar" style={{ display: 'block' }}>
-                    <i style={{ width: `${Math.min(100, cu)}%`, background: capTone(cu) }} />
-                  </span>
+                  <Bar value={x.load} max={x.cap} color={capacityTone(cu).fill} />
                   <div className="s">
                     {x.load} of {x.cap}
                   </div>
@@ -224,7 +217,7 @@ export function ByDepartment({ initial, onOpenStaff }: { initial?: string | unde
           title="Capacity used"
           value={`${cu}%`}
           detail={
-            <span className={capTextTone(cu)}>
+            <span className={capacityTone(cu).text}>
               {r.load} of {r.cap}
             </span>
           }

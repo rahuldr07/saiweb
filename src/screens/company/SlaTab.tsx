@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGo } from '@/lib/nav'
-import { Assumption, Banner, Btn, Card, CardHead, Label, SecHead, Seg } from '@/components/ui'
+import { Assumption, Banner, Btn, Card, CardHead, FormActions, Label, SecHead, Seg } from '@/components/ui'
 import { useUi } from '@/state/ui'
 import { ASSIGN_STAGES } from '@/data/org'
 import { CLIENTS, PRODUCTS } from '@/data/catalog'
@@ -91,7 +91,7 @@ function ClientPromise() {
             </b>{' '}
             is promised in {r.h}h. Without it, those orders fall back to {fb.h}h.
           </p>
-          <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+          <FormActions>
             <Btn variant="ghost" onClick={closeModal}>
               Keep it
             </Btn>
@@ -105,7 +105,7 @@ function ClientPromise() {
             >
               Remove
             </Btn>
-          </div>
+          </FormActions>
         </>
       ),
     })
@@ -289,12 +289,12 @@ function AddSla({ onCancel, onDone }: { onCancel: () => void; onDone: (m: string
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Add rule</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

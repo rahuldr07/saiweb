@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn } from '@/components/ui'
+import { Banner, Btn, FormActions } from '@/components/ui'
 import { BADSTATES } from '@/data/catalog'
 import { LSTATE, days, nextLinkCheck } from '@/lib/derived'
 import { fmtDate } from '@/lib/format'
@@ -69,7 +69,7 @@ export function FixLink({
         </span>
       </Banner>
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -94,7 +94,7 @@ export function FixLink({
         >
           Save link
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

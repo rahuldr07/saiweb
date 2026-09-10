@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Banner, Btn, Label } from '@/components/ui'
+import { Banner, Btn, FormActions, Label } from '@/components/ui'
+import { isDuplicateName } from '@/lib/forms'
 import { ADMIN_FLOOR, removeRole, saveRole, usePerms, useRoles, useStaff } from '@/state/company'
 
 /**
@@ -45,7 +46,7 @@ export function RoleForm({
   const submit = () => {
     const name = n.trim()
     if (!name) return setError('A name is required.')
-    if (roles.some((x) => x.id !== id && x.n.toLowerCase() === name.toLowerCase()))
+    if (isDuplicateName(roles, name, (x) => x.n, (x) => x.id === id))
       return setError(`There is already a role called ${name}.`)
     if (!picked.length)
       return setError('A role that can do nothing is not much use — pick at least one permission.')
@@ -172,7 +173,7 @@ export function RoleForm({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -182,7 +183,7 @@ export function RoleForm({
           </Btn>
         ) : null}
         <Btn onClick={submit}>{id ? 'Save role' : 'Add role'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
@@ -217,7 +218,7 @@ export function RoleDelete({
           'Nobody holds this role.'
         )}
       </p>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -230,7 +231,7 @@ export function RoleDelete({
         >
           Remove {r.n}
         </Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

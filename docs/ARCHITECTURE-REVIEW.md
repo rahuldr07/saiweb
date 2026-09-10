@@ -512,7 +512,8 @@ payslip did not, so a month with no working days would have put `Infinity` and
   deductions exist as a table and as the `declared` parameter of `taxUnder`,
   which every caller leaves at zero — so an employee on the old regime is taxed
   as though they had declared nothing. Either the screen that collects them is
-  missing or the table should go.
+  missing or the table should go. *Resolved the second way — the table is not in
+  the tree, and the list below carries what that left behind.*
 - **Payroll mutates the imported seed directly.** `run.state`, `run.by` and
   `run.at` are written onto `PAYRUNS` and a `useReducer` counter forces the
   re-render, which is the one screen not following the store convention the
@@ -553,9 +554,11 @@ raised each item.
   Only `resetOrders` and `resetPrefixes` are exercised
   (`tests/rules/orderStore.test.ts:27-28`). The second review said seven and
   then listed six; six is right.
-- **`DECLTYPES` is declared and never read.** `src/data/hrms.ts:1064` is its
-  only occurrence in the tree, so an employee on the old tax regime is still
-  taxed as though they had declared nothing.
+- **The old tax regime taxes as though nothing were declared.** `taxUnder` takes
+  a `declared` parameter (`src/lib/payroll.ts:87`) and its only caller leaves it
+  at the zero default (`src/lib/payroll.ts:221`). Nothing collects a
+  declaration, so an employee on the old regime pays on the whole gross above
+  the standard deduction.
 - **Payroll still mutates the imported seed.** `src/screens/Payroll.tsx:101` and
   `:161-162` write onto `PAYRUNS`, with the `useReducer` counter at `:58`
   forcing the re-render.

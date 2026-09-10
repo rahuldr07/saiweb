@@ -374,7 +374,7 @@ function ClientDetail() {
           </Btn>
         }
       />
-      <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+      <Rows bare>
         {prefixes.length ? (
           prefixes.map((p) => (
             <div className="rw" key={p}>
@@ -404,7 +404,7 @@ function ClientDetail() {
             </Empty>
           </div>
         )}
-      </div>
+      </Rows>
     </Card>
   )
 

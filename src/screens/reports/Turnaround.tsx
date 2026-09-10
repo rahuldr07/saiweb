@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useGo } from '@/lib/nav'
-import { Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
+import { BarRow, Btn, Card, Chip, Empty, Label, SectionHead } from '@/components/ui'
 import { turnaroundCsv } from '@/lib/report-csv'
 import { useReportExport } from './useReportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
-import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
+import { DEFAULT_RANGE, inRange, resolveRange, weekTick, weeklyBuckets, type RangeState } from '@/lib/range'
 import { ONTIMETARGET, median } from '@/lib/metrics'
 import { checkpoints, hh } from '@/lib/sla'
 import { ASSIGN_STAGES } from '@/data/org'
@@ -81,19 +81,16 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
   stages.forEach((x) => (x.share = Math.round((x.med / totMed) * 100)))
   const worst = [...stages].sort((a, b) => b.overPct - a.overPct)[0]
 
-  /* Week by week, so a bad fortnight is visible as a fortnight. */
-  const weeks: { from: Date; to: Date; n: number; pct: number | null }[] = []
-  for (let end = new Date(r.to); end >= r.from; end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 7)) {
-    const st0 = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6)
-    const wk = { from: st0 < r.from ? r.from : st0, to: end }
-    const m = deliveries.filter((x) => inRange(x.d, { ...wk, label: '', preset: '' }))
-    weeks.unshift({
+  /* Week by week, so a bad fortnight is visible as a fortnight. A week nothing
+     was delivered in scores null rather than 0% — no orders is not a miss. */
+  const weeks = weeklyBuckets(r).map((wk) => {
+    const m = deliveries.filter((x) => inRange(x.d, wk))
+    return {
       ...wk,
       n: m.length,
       pct: m.length ? Math.round(((m.length - m.filter((x) => x.late).length) / m.length) * 100) : null,
-    })
-    if (weeks.length > 14) break
-  }
+    }
+  })
 
   const delRows = (list: Delivery[]) => (
     <FlexTable
@@ -291,25 +288,18 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                   .sort((a, b) => b[1] - a[1])
                   .slice(0, 10)
                   .map(([n, c]) => (
-                    <div
+                    <BarRow
                       key={n}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '190px 1fr 70px',
-                        gap: 12,
-                        alignItems: 'center',
-                        padding: '5px 0',
-                        fontSize: '12.5px',
-                      }}
-                    >
-                      <span>{n}</span>
-                      <span className="bar">
-                        <i style={{ width: `${Math.round((c / peak) * 100)}%`, background: 'var(--warn)' }} />
-                      </span>
-                      <span className="mono gr" style={{ textAlign: 'right' }}>
-                        {c}
-                      </span>
-                    </div>
+                      cols="190px 1fr 70px"
+                      padding="5px 0"
+                      labelClass=""
+                      label={n}
+                      value={c}
+                      max={peak}
+                      color="var(--warn)"
+                      rightClass="mono gr"
+                      right={c}
+                    />
                   ))}
                 <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
                   Spread across the whole department, which is the signature of a budget that is too tight
@@ -378,30 +368,19 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                 {buckets.map((b, i) => {
                   const n = d.filter((x) => x.hrs / x.slaH >= b[0] && x.hrs / x.slaH < b[1]).length
                   return (
-                    <div
+                    <BarRow
                       key={lab[i]}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '190px 1fr 110px',
-                        gap: 12,
-                        alignItems: 'center',
-                        padding: '6px 0',
-                        fontSize: '12.5px',
-                      }}
-                    >
-                      <span className="gr">{lab[i]}</span>
-                      <span className="bar">
-                        <i
-                          style={{
-                            width: `${Math.round((n / d.length) * 100)}%`,
-                            background: b[0] >= 1 ? 'var(--warn)' : 'var(--ok)',
-                          }}
-                        />
-                      </span>
-                      <span className="mono" style={{ textAlign: 'right' }}>
-                        {n} · {Math.round((n / d.length) * 100)}%
-                      </span>
-                    </div>
+                      cols="190px 1fr 110px"
+                      label={lab[i]}
+                      value={n}
+                      max={d.length}
+                      color={b[0] >= 1 ? 'var(--warn)' : 'var(--ok)'}
+                      right={
+                        <>
+                          {n} · {Math.round((n / d.length) * 100)}%
+                        </>
+                      }
+                    />
                   )
                 })}
                 <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -431,44 +410,22 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
               ; the solid bar is what actually happened.
             </p>
             {stages.map((x) => (
-              <div
+              <BarRow
                 key={x.st}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '118px 1fr 150px',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: '7px 0',
-                  fontSize: '12.5px',
-                }}
-              >
-                <span className="gr">{x.st}</span>
-                <span style={{ position: 'relative', height: 16 }}>
-                  <span className="bar" style={{ position: 'absolute', inset: 0, height: 16 }}>
-                    <i
-                      style={{
-                        width: `${Math.round((x.budget / Math.max(totMed, 1)) * 100)}%`,
-                        background: 'var(--brandsoft)',
-                      }}
-                    />
-                  </span>
-                  <span
-                    className="bar"
-                    style={{ position: 'absolute', inset: '4px 0', height: 8, background: 'transparent' }}
-                  >
-                    <i
-                      style={{
-                        width: `${Math.round((x.med / Math.max(totMed, 1)) * 100)}%`,
-                        background: x.overPct > 25 ? 'var(--warn)' : 'var(--brand2)',
-                      }}
-                    />
-                  </span>
-                </span>
-                <span className="mono" style={{ textAlign: 'right', fontSize: '12.5px' }}>
-                  {hh(x.med)} <span className="gr">of {hh(x.budget)}</span>
-                  <span className={x.overPct > 25 ? 'warn' : 'gr'}> · over on {x.overPct}%</span>
-                </span>
-              </div>
+                cols="118px 1fr 150px"
+                padding="7px 0"
+                label={x.st}
+                value={x.med}
+                max={Math.max(totMed, 1)}
+                budget={{ value: x.budget, max: Math.max(totMed, 1) }}
+                color={x.overPct > 25 ? 'var(--warn)' : 'var(--brand2)'}
+                right={
+                  <>
+                    {hh(x.med)} <span className="gr">of {hh(x.budget)}</span>
+                    <span className={x.overPct > 25 ? 'warn' : 'gr'}> · over on {x.overPct}%</span>
+                  </>
+                }
+              />
             ))}
             <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
               <b>{worst.st}</b> misses its checkpoint on {worst.overPct}% of orders —{' '}
@@ -512,7 +469,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
                     }}
                   />
                   <span className="mono gr" style={{ fontSize: '9.5px', textAlign: 'center' }}>
-                    {String(wk.to.getMonth() + 1).padStart(2, '0')}/{String(wk.to.getDate()).padStart(2, '0')}
+                    {weekTick(wk.to)}
                   </span>
                 </div>
               ))}

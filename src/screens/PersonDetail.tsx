@@ -3,10 +3,13 @@ import { useParams } from '@tanstack/react-router'
 import { useGo } from '@/lib/nav'
 import {
   Bar,
+  BarRow,
   Banner,
   Btn,
   Card,
   Chip,
+  DetailList,
+  DetailRow,
   Field,
   Kpi,
   Kpis,
@@ -19,6 +22,7 @@ import {
   Tabs,
 } from '@/components/ui'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
+import { RatingsTable } from '@/components/RatingsTable'
 import { SkeletonRows, SkeletonValue } from '@/components/async'
 import { useBudgetHelp } from '@/components/budgetHelp'
 import { useStaffEditor } from './company/forms/useStaffEditor'
@@ -31,7 +35,7 @@ import { ASSIGN_STAGES, COVSTAGES, STAGES } from '@/data/org'
 import { board } from '@/lib/engine'
 import { covWord } from '@/lib/coverage'
 import { median } from '@/lib/metrics'
-import { markTone, stageWorkOf, standing, type StageWork } from '@/lib/quality'
+import { stageWorkOf, standing, type StageWork } from '@/lib/quality'
 import { DEFAULT_RANGE, inRange, resolveRange } from '@/lib/range'
 import { fmtDate, initials } from '@/lib/format'
 import { roleName } from '@/lib/permissions'
@@ -44,34 +48,6 @@ type Tab = (typeof TABS)[number]
 
 /** Last four only. Anything more should be a deliberate act. */
 const maskAadhaar = (a: string) => (a ? `XXXX XXXX ${a.replace(/\s/g, '').slice(-4)}` : '')
-
-
-/** The label/value line the design uses down the side of the Overview cards. */
-function DetailRow({
-  label,
-  value,
-  last,
-}: {
-  label: string
-  value: React.ReactNode
-  last?: boolean
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        gap: 14,
-        padding: '7px 0',
-        fontSize: '13.5px',
-        ...(last ? {} : { borderBottom: '1px solid var(--hair)' }),
-      }}
-    >
-      <span className="gr">{label}</span>
-      <span style={{ textAlign: 'right', fontWeight: 600 }}>{value}</span>
-    </div>
-  )
-}
 
 const TINT: Record<string, string> = {
   v: 'var(--oksoft)',
@@ -424,17 +400,16 @@ export default function PersonDetail() {
       <div className="two" style={{ marginTop: 16 }}>
         <Card padded>
           <Label>Contact and emergency</Label>
-          {(
-            [
-              ['Mobile', person.mob],
-              ['Email', person.e],
-              ['Address', person.addr],
-            ] as [string, string][]
-          )
-            .filter((r) => r[1])
-            .map((r) => (
-              <DetailRow key={r[0]} label={r[0]} value={r[1]} />
-            ))}
+          <DetailList
+            gap={14}
+            rows={(
+              [
+                ['Mobile', person.mob],
+                ['Email', person.e],
+                ['Address', person.addr],
+              ] as [string, string][]
+            ).filter((r) => r[1])}
+          />
           {person.emg?.n ? (
             <div
               className="rw"
@@ -478,40 +453,36 @@ export default function PersonDetail() {
               ).map((r) => (
                 <DetailRow
                   key={r[0]}
+                  gap={14}
                   label={r[0]}
                   value={
                     r[1] ? <span className="mono">{r[1]}</span> : <span className="bad">not on record</span>
                   }
                 />
               ))}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  gap: 14,
-                  padding: '7px 0',
-                  fontSize: '13.5px',
-                  borderBottom: '1px solid var(--hair)',
-                }}
-              >
-                <span className="gr">Aadhaar</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                  <b className="mono">
-                    {person.aadhaar
-                      ? aadhaarShown
-                        ? person.aadhaar
-                        : maskAadhaar(person.aadhaar)
-                      : 'not on record'}
-                  </b>
-                  {person.aadhaar && !aadhaarShown ? (
-                    <Btn variant="ghost" small onClick={() => setAadhaarShown(true)}>
-                      Show
-                    </Btn>
-                  ) : null}
-                </span>
-              </div>
               <DetailRow
+                gap={14}
+                center
+                label="Aadhaar"
+                value={
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <b className="mono">
+                      {person.aadhaar
+                        ? aadhaarShown
+                          ? person.aadhaar
+                          : maskAadhaar(person.aadhaar)
+                        : 'not on record'}
+                    </b>
+                    {person.aadhaar && !aadhaarShown ? (
+                      <Btn variant="ghost" small onClick={() => setAadhaarShown(true)}>
+                        Show
+                      </Btn>
+                    ) : null}
+                  </span>
+                }
+              />
+              <DetailRow
+                gap={14}
                 label="Bank"
                 last
                 value={
@@ -730,42 +701,26 @@ export default function PersonDetail() {
             const md = median(l.map((x) => x.ratio))
             const ov = l.filter((x) => x.over).length
             return (
-              <div
+              <BarRow
                 key={st}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '120px 1fr 200px',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: '7px 0',
-                  fontSize: '12.5px',
-                }}
-              >
-                <span className="gr">{st}</span>
-                {/* Pale bar is the budget, solid is their median against it. */}
-                <span style={{ position: 'relative', height: 16 }}>
-                  <span className="bar" style={{ position: 'absolute', inset: 0, height: 16 }}>
-                    <i style={{ width: '50%', background: 'var(--brandsoft)' }} />
-                  </span>
-                  <span
-                    className="bar"
-                    style={{ position: 'absolute', inset: '4px 0', height: 8, background: 'transparent' }}
-                  >
-                    <i
-                      style={{
-                        width: `${Math.min(100, Math.round(md * 50))}%`,
-                        background: md > 1 ? 'var(--warn)' : 'var(--brand2)',
-                      }}
-                    />
-                  </span>
-                </span>
-                <span className="mono" style={{ textAlign: 'right', fontSize: '12.5px' }}>
-                  {md.toFixed(2)}×{' '}
-                  <span className={ov / l.length > 0.3 ? 'warn' : 'gr'}>
-                    · over on {ov} of {l.length}
-                  </span>
-                </span>
-              </div>
+                cols="120px 1fr 200px"
+                padding="7px 0"
+                label={st}
+                /* Track runs to twice the budget, so the pale bar marks 1× and
+                   the solid one is their median against it. */
+                value={md}
+                max={2}
+                budget={{ value: 1, max: 2 }}
+                color={md > 1 ? 'var(--warn)' : 'var(--brand2)'}
+                right={
+                  <>
+                    {md.toFixed(2)}×{' '}
+                    <span className={ov / l.length > 0.3 ? 'warn' : 'gr'}>
+                      · over on {ov} of {l.length}
+                    </span>
+                  </>
+                }
+              />
             )
           })}
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
@@ -881,7 +836,7 @@ export default function PersonDetail() {
             <>
               <SectionHead>Why marks came off</SectionHead>
               <Card>
-                <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+                <Rows bare>
                   {reasons.map(([why, n]) => (
                     <div className="rw" key={why}>
                       <span className={n > 1 ? 'warn' : 'gr'} style={{ fontSize: '14.5px' }}>
@@ -894,7 +849,7 @@ export default function PersonDetail() {
                       <span className="mono gr">{n}</span>
                     </div>
                   ))}
-                </div>
+                </Rows>
               </Card>
             </>
           ) : (
@@ -906,34 +861,7 @@ export default function PersonDetail() {
           )}
 
           <SectionHead>Every rating — {range.label}</SectionHead>
-          <FlexTable
-            cols="105px 150px 130px 110px 1fr 140px"
-            min={880}
-            head={['Date', 'Order', 'Stage', 'Marks', 'What the rater said', 'Rated by']}
-          >
-            {[...rated]
-              .sort((a, b) => b.d.getTime() - a.d.getTime())
-              .map((x, i) => (
-                <FlexRow key={`${x.order}-${x.stage}-${i}`} cols="105px 150px 130px 110px 1fr 140px">
-                  <Cell v={x.dk} mono />
-                  <Cell v={x.order} s={`${x.cl} · ${x.pr}`} mono />
-                  <Cell v={x.stage} />
-                  <Cell>
-                    <div className="v mono" style={{ fontSize: '12.5px' }}>
-                      <span className={markTone(x.acc)}>{x.acc}</span>·
-                      <span className={markTone(x.comp)}>{x.comp}</span>·
-                      <span className={markTone(x.fmt)}>{x.fmt}</span>
-                    </div>
-                  </Cell>
-                  {x.note ? (
-                    <Cell v={x.note} s={x.crit ?? ''} tone={x.defect ? 'bad' : 'warn'} />
-                  ) : (
-                    <Cell v="clean — nothing raised" tone="gr" />
-                  )}
-                  <Cell v={x.byName} />
-                </FlexRow>
-              ))}
-          </FlexTable>
+          <RatingsTable rows={rated} cols="105px 150px 130px 110px 1fr 140px" min={880} />
         </>
       ) : (
         <Card padded style={{ marginTop: 16 }}>
@@ -1004,7 +932,7 @@ export default function PersonDetail() {
               {role ? role.desc : 'role no longer exists'}
             </span>
           </div>
-          <div className="rows" style={{ border: 'none', borderRadius: 0, marginTop: 10 }}>
+          <Rows bare style={{ marginTop: 10 }}>
             {perms.map((x) => {
               const has = held.includes(x.k)
               return (
@@ -1020,7 +948,7 @@ export default function PersonDetail() {
                 </div>
               )
             })}
-          </div>
+          </Rows>
           <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
             These come from the role, not from the person. Change them under{' '}
             <button
@@ -1065,7 +993,7 @@ export default function PersonDetail() {
 
       <Card padded style={{ marginTop: 16 }}>
         <Label>Account</Label>
-        <div className="rows" style={{ border: 'none', borderRadius: 0 }}>
+        <Rows bare>
           <Row
             icon={<span className="gr">·</span>}
             title="Daily target"
@@ -1102,7 +1030,7 @@ export default function PersonDetail() {
               </Btn>
             }
           />
-        </div>
+        </Rows>
         <p className="gr" style={{ fontSize: '12.5px', marginTop: 12 }}>
           Disabling keeps every rating and every hour they worked. Deleting a person would silently
           rewrite the reports they appear in, which is why it is not offered.

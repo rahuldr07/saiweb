@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Banner, Btn, Chip, Rows } from '@/components/ui'
+import { Banner, Btn, Chip, FormActions, Rows } from '@/components/ui'
+import { isDuplicateName } from '@/lib/forms'
 import { removePerm, savePerm, usePerms, useRoles } from '@/state/company'
 
 /**
@@ -48,7 +49,7 @@ export function PermsManager({
             'No role has it ticked.'
           )}
         </p>
-        <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+        <FormActions>
           <Btn variant="ghost" onClick={() => onView({ at: 'list' })}>
             Cancel
           </Btn>
@@ -62,7 +63,7 @@ export function PermsManager({
           >
             Remove
           </Btn>
-        </div>
+        </FormActions>
       </>
     )
   }
@@ -93,12 +94,12 @@ export function PermsManager({
           )
         })}
       </Rows>
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onClose}>
           Close
         </Btn>
         <Btn onClick={() => onView({ at: 'edit' })}>＋ Add a permission</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
@@ -122,7 +123,7 @@ function EditPerm({
   const submit = () => {
     const wording = n.trim()
     if (!wording) return setError('Some wording is required.')
-    if (perms.some((x) => x.k !== k && x.n.toLowerCase() === wording.toLowerCase()))
+    if (isDuplicateName(perms, wording, (x) => x.n, (x) => x.k === k))
       return setError(`There is already a permission worded “${wording}”.`)
     savePerm(wording, k)
     onView({ at: 'list' })
@@ -196,7 +197,7 @@ function EditPerm({
         </Banner>
       )}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={() => onView({ at: 'list' })}>
           Back
         </Btn>
@@ -206,7 +207,7 @@ function EditPerm({
           </Btn>
         ) : null}
         <Btn onClick={submit}>{k ? 'Save' : 'Add permission'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

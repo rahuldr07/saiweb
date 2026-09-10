@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Banner, Btn, Label } from '@/components/ui'
+import { Banner, Btn, FormActions, Label } from '@/components/ui'
 import { BADSTATES } from '@/data/catalog'
 import { LSTATE, days } from '@/lib/derived'
+import { isDuplicateName } from '@/lib/forms'
 import { removeCounty, saveCounty, useCoverage } from '@/state/coverage'
 import type { County, CountyLink } from '@/data/types'
 
@@ -40,13 +41,12 @@ export function CountyEdit({
     if (!name) return setError('A county name is required.')
     if (!/^[A-Z]{2}$/.test(state)) return setError('Use a two-letter state code.')
 
-    const clash = counties.find(
-      (c) =>
-        c.n.toLowerCase() === name.toLowerCase() &&
-        c.st === state &&
-        !(county && c.n === county.n && c.st === county.st),
-    )
-    if (clash) return setError(`${name}, ${state} is already on file.`)
+    /* The state is half the identity — a Washington County in two states is two
+       counties, so only the ones in this state can clash. */
+    const inState = counties.filter((c) => c.st === state)
+    const isEdited = (c: County) => !!county && c.n === county.n && c.st === county.st
+    if (isDuplicateName(inState, name, (c) => c.n, isEdited))
+      return setError(`${name}, ${state} is already on file.`)
 
     /* An unchanged address keeps its health and its history; a new or edited one
        has to be checked again before anyone can call it working. */
@@ -83,7 +83,7 @@ export function CountyEdit({
           Order intake validates against this record, so an order for {county.n} can no longer be
           taken.
         </Banner>
-        <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+        <FormActions>
           <Btn variant="ghost" onClick={() => setConfirming(false)}>
             Cancel
           </Btn>
@@ -96,7 +96,7 @@ export function CountyEdit({
           >
             Remove {county.n}
           </Btn>
-        </div>
+        </FormActions>
       </>
     )
   }
@@ -206,7 +206,7 @@ export function CountyEdit({
         </span>
       </Banner>
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
@@ -216,7 +216,7 @@ export function CountyEdit({
           </Btn>
         ) : null}
         <Btn onClick={submit}>{county ? 'Save county' : 'Add county'}</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }

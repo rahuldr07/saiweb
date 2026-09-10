@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { median, onTime30, type Delivery } from '@/lib/metrics'
+import {
+  CAPACITY_AMBER,
+  CAPACITY_RED,
+  capacityTone,
+  median,
+  onTime30,
+  type Delivery,
+} from '@/lib/metrics'
 import { SEED_NOW, resetClock, setClock } from '@/lib/clock'
 import { registerRows } from '@/lib/payroll-csv'
 import { paidStaff, payslipOf, type Payslip } from '@/lib/payroll'
@@ -125,6 +132,32 @@ describe('median', () => {
     const xs = [3, 1, 2]
     median(xs)
     expect(xs).toEqual([3, 1, 2])
+  })
+})
+
+describe('the capacity colour', () => {
+  /* Assignment and Reports both draw a load bar. A department at 78% reading
+     amber on one screen and green on the other is the failure this pins. */
+  it('is one scale, whichever screen draws the bar', () => {
+    expect(capacityTone(50)).toEqual({ fill: 'var(--ok)', text: 'gr' })
+    expect(capacityTone(80)).toEqual({ fill: 'var(--warn)', text: 'warn' })
+    expect(capacityTone(120)).toEqual({ fill: 'var(--bad)', text: 'bad' })
+  })
+
+  it('compares strictly, so a load sitting on a threshold keeps the calmer colour', () => {
+    expect(capacityTone(CAPACITY_AMBER).fill).toBe('var(--ok)')
+    expect(capacityTone(CAPACITY_AMBER + 1).fill).toBe('var(--warn)')
+    expect(capacityTone(CAPACITY_RED).fill).toBe('var(--warn)')
+    expect(capacityTone(CAPACITY_RED + 1).fill).toBe('var(--bad)')
+  })
+
+  it('greys the figure while the bar is green, and colours it with the bar after that', () => {
+    /* The two outputs are not the same word: the design leaves a healthy number
+       grey rather than green, which is why the caller cannot derive one from
+       the other. */
+    expect(capacityTone(50).text).toBe('gr')
+    expect(capacityTone(85).text).toBe('warn')
+    expect(capacityTone(99).text).toBe('bad')
   })
 })
 

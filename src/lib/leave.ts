@@ -14,7 +14,7 @@ import { STAFF } from '@/data/people'
 import { leaveBalance } from './payroll'
 import { now } from './clock'
 import type { Leave, Person } from '@/data/types'
-import { midnight, r2 } from '@/lib/format'
+import { fmtDate, midnight, r2 } from '@/lib/format'
 
 /** What to do when a request would leave a department below cover. */
 export const CLASHRULES: Record<string, [label: string, detail: string]> = {
@@ -168,7 +168,7 @@ export function leaveCheck(pid: string, typeKey: string, days: number, from: Dat
   if (cover && (short > 0 || clash.length)) {
     const names = clash.map((x) => {
       const who = STAFF.find((s) => s.id === x.who)?.n ?? x.who
-      return `${who} (${x.from.toLocaleDateString('en-US')}–${x.to.toLocaleDateString('en-US')})`
+      return `${who} (${fmtDate(x.from)}–${fmtDate(x.to)})`
     })
     if (short > 0) {
       blocked = LEAVEPOLICY.clashRule === 'block'

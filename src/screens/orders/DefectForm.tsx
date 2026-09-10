@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Banner, Btn, Field } from '@/components/ui'
+import { Banner, Btn, Field, FormActions } from '@/components/ui'
 import { QC_CRITERIA } from '@/lib/quality'
 
 /**
@@ -68,12 +68,12 @@ export function DefectForm({
         </Banner>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 9, justifyContent: 'flex-end', marginTop: 18 }}>
+      <FormActions>
         <Btn variant="ghost" onClick={onCancel}>
           Cancel
         </Btn>
         <Btn onClick={submit}>Log it</Btn>
-      </div>
+      </FormActions>
     </>
   )
 }
