@@ -25,7 +25,7 @@ export const LOANS: LoanRecord[] = [
     reqAt: new Date(2026, 1, 20),
     decidedBy: 'hw',
     decidedAt: new Date(2026, 1, 25),
-    takenOn: new Date(2026, 2, 1),
+    takenOn: new Date(2026, 1, 26),
     note: 'Home repairs',
   },
   {
@@ -40,7 +40,7 @@ export const LOANS: LoanRecord[] = [
     reqAt: new Date(2026, 2, 25),
     decidedBy: 'hw',
     decidedAt: new Date(2026, 2, 28),
-    takenOn: new Date(2026, 3, 1),
+    takenOn: new Date(2026, 2, 29),
     note: 'Medical expenses',
   },
   {
@@ -54,7 +54,7 @@ export const LOANS: LoanRecord[] = [
     reqAt: new Date(2026, 2, 20),
     decidedBy: 'hw',
     decidedAt: new Date(2026, 2, 22),
-    takenOn: new Date(2026, 3, 1),
+    takenOn: new Date(2026, 2, 23),
     note: "Child's school fees",
   },
   {
@@ -83,7 +83,7 @@ export const LOANS: LoanRecord[] = [
     reqAt: new Date(2026, 1, 25),
     decidedBy: 'hw',
     decidedAt: new Date(2026, 1, 27),
-    takenOn: new Date(2026, 2, 1),
+    takenOn: new Date(2026, 1, 28),
     note: 'Travel expenses',
   },
   {
@@ -97,7 +97,7 @@ export const LOANS: LoanRecord[] = [
     reqAt: new Date(2026, 1, 10),
     decidedBy: 'hw',
     decidedAt: new Date(2026, 1, 12),
-    takenOn: new Date(2026, 2, 1),
+    takenOn: new Date(2026, 1, 13),
     note: 'Wedding in the family',
   },
   {
