@@ -35,6 +35,7 @@ export const NAV: NavGroup[] = [
       ['Payslips', 'payslips', '▤'],
       ['Recruitment', 'hiring', '⊕'],
       ['Petty cash', 'petty', '◫'],
+      ['Loans & advances', 'loans', '⇌'],
     ],
   },
   {

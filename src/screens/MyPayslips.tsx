@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useGo } from '@/lib/nav'
 import { Btn, Card, Kpi, Kpis, PageHead, SectionHead, focusSection } from '@/components/ui'
+import { LoanCard } from '@/components/LoanCard'
 import { useSession } from '@/state/session'
 import { PAYMONTHS, PAYRUNS } from '@/data/hrms'
 import { inr, payslipOf, ytd } from '@/lib/payroll'
@@ -81,6 +82,8 @@ export default function MyPayslips() {
           />
         </Kpis>
       ) : null}
+
+      <LoanCard personId={me.id} />
 
       <SectionHead id="mpList">Every payslip</SectionHead>
 

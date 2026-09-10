@@ -33,6 +33,7 @@ import { fmtDate, initials } from '@/lib/format'
 import { now } from '@/lib/clock'
 import { csvName, downloadCSV, type CsvRow } from '@/lib/csv'
 import { registerRows } from '@/lib/payroll-csv'
+import { recoverForRun } from '@/state/loans'
 import type { Person, RunState } from '@/data/types'
 
 type Tab = 'The run' | 'Register' | 'Cost and statutory' | 'Leavers'
@@ -136,6 +137,10 @@ function Payroll() {
           onApprove={() => {
             run.by = me.n
             run.at = fmtDate(now())
+            recoverForRun(
+              month,
+              totals.list.map((x) => x.p.id),
+            )
             setState('approved')
           }}
           onCancel={closeModal}

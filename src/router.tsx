@@ -94,6 +94,18 @@ const routeTree = rootRoute.addChildren([
   }),
   screen('/hiring', () => import('./screens/Recruitment')),
   screen('/petty', () => import('./screens/PettyCash')),
+  screen('/loans', () => import('./screens/Loans')),
+  /* Static before dynamic, so "new" is the form and not a loan id. */
+  screen('/loans/new', () => import('./screens/NewLoan')),
+  /* The Schedule tab is a CTA target ("View schedule"), so it lives in the URL
+     the same way a payslip's month does. */
+  createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/loans/$loanId',
+    validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+      typeof s.tab === 'string' ? { tab: s.tab } : {},
+    component: lazyRouteComponent(() => import('./screens/LoanDetail')),
+  }),
 
   /* Reference */
   /* The link monitor's tiles hand the coverage screen a filter, so it lives in
