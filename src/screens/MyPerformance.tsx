@@ -40,6 +40,53 @@ const byReason = (rows: QcEntry[]): [reason: string, count: number][] =>
     }, {}),
   ).sort((a, b) => b[1] - a[1])
 
+interface WeekPoint {
+  from: Date
+  to: Date
+  avg: number | null
+  n: number
+}
+
+const MAX_WEEKS = 12
+
+function weeklyAverages(rows: QcEntry[], from: Date, to: Date): WeekPoint[] {
+  const weeks: WeekPoint[] = []
+  for (
+    let end = new Date(to);
+    end >= from;
+    end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 7)
+  ) {
+    const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6)
+    const lo = start < from ? from : start
+    const list = rows.filter((x) => x.d >= lo && x.d <= end)
+    weeks.unshift({
+      from: lo,
+      to: end,
+      avg: list.length ? list.reduce((a, x) => a + x.avg, 0) / list.length : null,
+      n: list.length,
+    })
+    if (weeks.length >= MAX_WEEKS) break
+  }
+  return weeks
+}
+
+const weekTick = (d: Date) => fmtDate(d).split('/').slice(0, 2).join('/')
+
+/** SVG path `d` for a line over `points`, skipping nulls so a quiet week breaks the line rather than reading as zero. */
+function linePath(points: (readonly [number, number] | null)[]): string {
+  let d = ''
+  let started = false
+  points.forEach((p) => {
+    if (!p) {
+      started = false
+      return
+    }
+    d += `${started ? 'L' : 'M'} ${p[0]} ${p[1]} `
+    started = true
+  })
+  return d.trim()
+}
+
 export default function MyPerformance() {
   const { me, can } = useSession()
   const { openModal } = useUi()
@@ -87,6 +134,9 @@ export default function MyPerformance() {
   const habits = ranked.filter(([, n]) => n > 1)
   const oneOffs = ranked.filter(([, n]) => n === 1)
   const mineAvg = rows.length ? rows.reduce((a, x) => a + x.avg, 0) / rows.length : null
+
+  const weeks = weeklyAverages(rows, range.from, range.to)
+  const chartedWeeks = weeks.filter((w) => w.avg !== null).length
 
   const t = stageWork.people[me.n] ?? null
 
@@ -197,10 +247,7 @@ export default function MyPerformance() {
         title="How I’m doing"
         sub={`${me.dep.join(' · ') || 'no department'} · ${range.label}`}
         actions={
-          <Btn
-            variant="ghost"
-            onClick={() => navigate({ to: '/staff/$personId', params: { personId: me.id } })}
-          >
+          <Btn onClick={() => navigate({ to: '/staff/$personId', params: { personId: me.id } })}>
             My profile
           </Btn>
         }
@@ -265,6 +312,125 @@ export default function MyPerformance() {
           onClick={can('assign') ? () => focusSection('mfDept') : budgetHelp}
         />
       </Kpis>
+
+      <Card padded style={{ marginTop: 16 }}>
+        <Label>Your score, week by week</Label>
+        {chartedWeeks > 1 ? (
+          (() => {
+            const PLOT_LEFT = 42
+            const PLOT_RIGHT = 596
+            const PLOT_TOP = 14
+            const PLOT_BOTTOM = 122
+            const xOf = (i: number) =>
+              PLOT_LEFT + (i / (weeks.length - 1 || 1)) * (PLOT_RIGHT - PLOT_LEFT)
+            const yOf = (avg: number) => PLOT_BOTTOM - (avg / 5) * (PLOT_BOTTOM - PLOT_TOP)
+            const labelEvery = weeks.length > 8 ? 2 : 1
+            return (
+              <>
+                <svg
+                  viewBox="0 0 610 178"
+                  width="100%"
+                  height={178}
+                  preserveAspectRatio="none"
+                  role="img"
+                  aria-label="Your average quality score by week"
+                >
+                  {[0, 1, 2, 3, 4, 5].map((g) => (
+                    <g key={g}>
+                      <line
+                        x1={PLOT_LEFT}
+                        x2={PLOT_RIGHT}
+                        y1={yOf(g)}
+                        y2={yOf(g)}
+                        stroke="var(--hair)"
+                        strokeWidth={1}
+                      />
+                      <text x={PLOT_LEFT - 8} y={yOf(g) + 3} textAnchor="end" fontSize="9" fill="var(--gr)">
+                        {g}
+                      </text>
+                    </g>
+                  ))}
+                  <line
+                    x1={PLOT_LEFT}
+                    x2={PLOT_LEFT}
+                    y1={PLOT_TOP}
+                    y2={PLOT_BOTTOM}
+                    stroke="var(--gr)"
+                    strokeWidth={1}
+                  />
+                  <line
+                    x1={PLOT_LEFT}
+                    x2={PLOT_RIGHT}
+                    y1={PLOT_BOTTOM}
+                    y2={PLOT_BOTTOM}
+                    stroke="var(--gr)"
+                    strokeWidth={1}
+                  />
+                  <path
+                    d={linePath(weeks.map((w, i) => (w.avg === null ? null : [xOf(i), yOf(w.avg)])))}
+                    fill="none"
+                    stroke="var(--brand2)"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  {weeks.map((w, i) =>
+                    w.avg === null ? null : (
+                      <circle key={i} cx={xOf(i)} cy={yOf(w.avg)} r={3.5} fill="var(--brand2)">
+                        <title>
+                          {`${fmtDate(w.from)} – ${fmtDate(w.to)}: ${w.avg.toFixed(2)} from ${w.n} check${w.n === 1 ? '' : 's'}`}
+                        </title>
+                      </circle>
+                    ),
+                  )}
+                  {weeks.map((w, i) =>
+                    i % labelEvery === 0 || i === weeks.length - 1 ? (
+                      <text
+                        key={i}
+                        x={xOf(i)}
+                        y={140}
+                        textAnchor="middle"
+                        fontSize="9"
+                        fill="var(--gr)"
+                        fontFamily="var(--mono)"
+                      >
+                        {weekTick(w.to)}
+                      </text>
+                    ) : null,
+                  )}
+                  <text
+                    x={(PLOT_LEFT + PLOT_RIGHT) / 2}
+                    y={164}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="var(--gr)"
+                  >
+                    Week ending
+                  </text>
+                  <text
+                    x={0}
+                    y={0}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fill="var(--gr)"
+                    transform={`rotate(-90 14 ${(PLOT_TOP + PLOT_BOTTOM) / 2}) translate(14 ${(PLOT_TOP + PLOT_BOTTOM) / 2})`}
+                  >
+                    Average score
+                  </text>
+                </svg>
+                <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 6 }}>
+                  Weekly average against the full 0–5 scale, so a flat line near the top means the
+                  scale is not finding much to disagree about — not that nothing happened.
+                </p>
+              </>
+            )
+          })()
+        ) : (
+          <p className="gr" style={{ fontSize: 'var(--t-small)', margin: 0 }}>
+            Not enough checks spread across separate weeks yet to show a trend — widen the range.
+          </p>
+        )}
+      </Card>
 
       {loading ? (
         <Card style={{ marginTop: 16 }}>
@@ -357,7 +523,7 @@ export default function MyPerformance() {
                     return (
                       <div className="rw" key={reason}>
                         <span className="gr" style={{ fontSize: 'var(--t-lead)' }}>
-                          ·
+                          ○
                         </span>
                         <span>
                           <b style={{ fontSize: 'var(--t-body)' }}>{reason}</b>
@@ -471,7 +637,7 @@ export default function MyPerformance() {
                   deptTop.map(([reason, n]) => (
                     <div className="rw" style={{ padding: '9px 0' }} key={reason}>
                       <span className={n > 2 ? 'warn' : 'gr'} style={{ fontSize: 'var(--t-lead)' }}>
-                        {n > 2 ? '⚑' : '·'}
+                        {n > 2 ? '⚑' : '○'}
                       </span>
                       <span>
                         <b style={{ fontSize: 'var(--t-body)' }}>{reason}</b>

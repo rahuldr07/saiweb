@@ -19,6 +19,7 @@ import {
 } from '@/components/ui'
 import { SkeletonRows } from '@/components/async'
 import { TeamWishes, YourWish } from '@/components/Wishes'
+import { ScoreGauge } from '@/components/ScoreGauge'
 import { useSession } from '@/state/session'
 import { useUi } from '@/state/ui'
 import { useTimeclock } from '@/state/timeclock'
@@ -86,13 +87,11 @@ export default function MyWork() {
   const theirs = wishes.filter((c) => c.person.id !== me.id)
 
   const myUpdates = updates.filter((u) => u.who === me.id).slice(0, 4)
-  const teamUpdates = updates
-    .filter(
-      (u) =>
-        u.who !== me.id &&
-        (STAFF.find((x) => x.id === u.who)?.dep ?? []).some((d) => me.dep.includes(d)),
-    )
-    .slice(0, 4)
+  const deptUpdates = updates.filter(
+    (u) =>
+      u.who !== me.id &&
+      (STAFF.find((x) => x.id === u.who)?.dep ?? []).some((d) => me.dep.includes(d)),
+  )
 
   const workedToday = mark?.out ? worked(mark) - (mark.breakMins ?? 0) : 0
 
@@ -153,6 +152,18 @@ export default function MyWork() {
       {children}
     </p>
   )
+
+  const openDeptUpdates = () =>
+    openModal({
+      title: 'From your department',
+      body: deptUpdates.length ? (
+        <Rows bare>{deptUpdates.map((u) => updateRow(u, true))}</Rows>
+      ) : (
+        <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
+          Nothing from the rest of {me.dep[0] || 'your department'} recently.
+        </p>
+      ),
+    })
 
   const myDone = () =>
     openModal({
@@ -312,12 +323,18 @@ export default function MyWork() {
         title={`Good ${greeting(now().getHours())}, ${me.n.split(' ')[0]}`}
         sub={`${me.dep.join(' · ') || 'No department'} · target ${me.cap} a day`}
         actions={
-          <Btn
-            variant="ghost"
-            onClick={() => navigate({ to: '/staff/$personId', params: { personId: me.id } })}
-          >
-            My profile
-          </Btn>
+          <>
+            <button type="button" className="needsYou" onClick={openDeptUpdates}>
+              <span>Needs you</span>
+              {deptUpdates.length ? <span className="bdg">{deptUpdates.length}</span> : null}
+              <span className="sw" aria-hidden="true">
+                <i />
+              </span>
+            </button>
+            <Btn onClick={() => navigate({ to: '/staff/$personId', params: { personId: me.id } })}>
+              My profile
+            </Btn>
+          </>
         }
       />
 
@@ -505,44 +522,29 @@ export default function MyWork() {
         </Banner>
       ) : null}
 
-      <div className="two" style={{ marginTop: 18 }}>
-        <Card padded>
-          <div className="ch" style={{ border: 'none', padding: '0 0 10px' }}>
-            <Label>What you wrote</Label>
-            <div className="r">
-              <Btn small onClick={addUpdate}>
-                ＋ Add an update
-              </Btn>
-            </div>
+      <Card padded style={{ marginTop: 18 }}>
+        <div className="ch" style={{ border: 'none', padding: '0 0 10px' }}>
+          <Label>What you wrote</Label>
+          <div className="r">
+            <Btn small onClick={addUpdate}>
+              ＋ Add an update
+            </Btn>
           </div>
-          {myUpdates.length ? (
-            <Rows bare>
-              {myUpdates.map((u) => updateRow(u, false))}
-            </Rows>
-          ) : (
-            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
-              Nothing yet. A handover note written today is the thing that saves someone an hour
-              tomorrow.
-            </p>
-          )}
-          <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
-            Updates cannot be edited once posted. That is what makes them worth reading back.
+        </div>
+        {myUpdates.length ? (
+          <Rows bare>
+            {myUpdates.map((u) => updateRow(u, false))}
+          </Rows>
+        ) : (
+          <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
+            Nothing yet. A handover note written today is the thing that saves someone an hour
+            tomorrow.
           </p>
-        </Card>
-
-        <Card padded>
-          <Label>From your department</Label>
-          {teamUpdates.length ? (
-            <Rows bare>
-              {teamUpdates.map((u) => updateRow(u, true))}
-            </Rows>
-          ) : (
-            <p className="gr" style={{ fontSize: 'var(--t-body)', margin: 0 }}>
-              Nothing from the rest of {me.dep[0] || 'your department'} recently.
-            </p>
-          )}
-        </Card>
-      </div>
+        )}
+        <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 12 }}>
+          Updates cannot be edited once posted. That is what makes them worth reading back.
+        </p>
+      </Card>
 
       <SectionHead id="mwQueue">
         {open.length ? `Your queue — ${open.length} to do` : 'Your queue is clear'}
@@ -703,10 +705,8 @@ export default function MyWork() {
             <SkeletonRows rows={3} cols={2} />
           ) : rated.length && qavg !== null ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, margin: '8px 0 10px' }}>
-                <b className="mono" style={{ fontSize: 'var(--t-display)' }}>
-                  {qavg.toFixed(2)}
-                </b>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '8px 0 10px' }}>
+                <ScoreGauge value={qavg} />
                 <span className="gr">
                   from {rated.length} checks · {range.label}
                 </span>
@@ -718,7 +718,9 @@ export default function MyWork() {
                     .slice(0, 4)
                     .map((x, i) => (
                       <div className="rw" key={`${x.order}-${i}`}>
-                        <span className="warn">·</span>
+                        <span className="warn" style={{ fontSize: 'var(--t-lead)' }}>
+                          ⚑
+                        </span>
                         <span>
                           <b style={{ fontSize: 'var(--t-small)' }}>{x.note}</b>
                           <div className="sd gr">

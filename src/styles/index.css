@@ -554,6 +554,56 @@ body *::-webkit-scrollbar-thumb:hover {
 }
 
 /*
+ * "Needs you" on My Work — a pill button styled like a labelled switch, not a
+ * plain ghost button, so it reads as a status indicator next to "My profile".
+ * design.css has no switch of its own to reuse; this is the smallest one that
+ * still matches the card language (border, radius, shadow) already in use.
+ */
+.needsYou {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px 7px 14px;
+  border: 1px solid var(--hair);
+  border-radius: 99px;
+  background: var(--card);
+  box-shadow: var(--sh1);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.needsYou .bdg {
+  background: var(--bad);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+}
+.needsYou .sw {
+  width: 34px;
+  height: 19px;
+  border-radius: 99px;
+  background: var(--rail);
+  position: relative;
+  flex: none;
+}
+.needsYou .sw i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+}
+
+/*
  * `.mat`'s header cells carry none of `.mat td`'s padding (design.css). Tailwind's
  * preflight zeroes table-cell padding globally, and design.css only redeclares it
  * for `td` — so every `.mat` table's header row (Invoicing's by-client-and-month

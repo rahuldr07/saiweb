@@ -1,21 +1,16 @@
 import { useGo } from '@/lib/nav'
 import { useSession } from '@/state/session'
-import { useUi } from '@/state/ui'
 import { fmtTime, initials, LOCAL_OFFSET_H, TZ, TZ2 } from '@/lib/format'
 import { now } from '@/lib/clock'
-import { alerts } from '@/lib/derived'
 import { DEMO_IDENTITY } from '@/lib/demo'
-import { useCoverage } from '@/state/counties'
 import { ROUTE_LABEL } from './nav'
-import { Empty, Row, Rows } from '@/components/ui'
+import { useNotifications } from '@/components/Notifications'
 
 export function TopBar({ current }: { current: string }) {
   const { me, tenant, theme, toggleTheme, navOpen, setNavOpen, roleLabel, can } = useSession()
-  const { openModal, closeModal } = useUi()
-  const { check } = useCoverage()
   const navigate = useGo()
+  const { list, open: openAlerts } = useNotifications()
 
-  const list = alerts()
   const worst = list.some((a) => a.sev === 'bad') ? 'var(--bad)' : 'var(--warn)'
   const label = ROUTE_LABEL[current]
   const crumb = label ? `${tenant.name} · ${label}` : tenant.name
@@ -24,42 +19,6 @@ export function TopBar({ current }: { current: string }) {
   const target = hasDash ? '/dash' : '/mywork'
   const targetLabel = hasDash ? 'dashboard' : 'my work'
   const atTarget = target === `/${current}`
-
-  const openAlerts = () =>
-    openModal({
-      title: 'Notifications',
-      body: list.length ? (
-        <>
-          <Rows>
-            {list.map((a, i) => (
-              <Row
-                key={i}
-                icon={
-                  <span className={a.sev === 'bad' ? 'bad' : 'warn'} style={{ fontSize: 'var(--t-lead)' }}>
-                    {a.sev === 'bad' ? '⚑' : '◷'}
-                  </span>
-                }
-                title={a.t}
-                detail={a.d}
-                right={<span className="gr">→</span>}
-                onClick={() => {
-                  closeModal()
-                  navigate({ to: `/${a.go}` })
-                }}
-              />
-            ))}
-          </Rows>
-          <p className="gr" style={{ fontSize: 'var(--t-label)', marginTop: 12 }}>
-            Going to {check.notify === 'admins' ? 'company admins' : check.notify}. Change who under
-            Link monitor.
-          </p>
-        </>
-      ) : (
-        <div className="empty" style={{ padding: '26px 10px' }}>
-          <Empty icon="✓">Nothing needs your attention.</Empty>
-        </div>
-      ),
-    })
 
   return (
     <header className="top">
