@@ -1,6 +1,6 @@
 import { now } from './clock'
 import { QC_DAYS } from '@/data/quality'
-import { fmtDate, iso, parseIso } from '@/lib/format'
+import { iso, parseIso } from '@/lib/format'
 
 export const QC_PRESETS: [key: string, label: string, days: number | null][] = [
   ['7', 'Last 7 days', 7],
@@ -63,24 +63,6 @@ export function setRangeEnd(state: RangeState, which: 'from' | 'to', v: string):
   }
   return next
 }
-
-const MAX_WEEKS = 15
-
-export function weeklyBuckets(r: Range): Span[] {
-  const out: Span[] = []
-  for (
-    let end = new Date(r.to);
-    end >= r.from;
-    end = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 7)
-  ) {
-    const start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - 6)
-    out.unshift({ from: start < r.from ? r.from : start, to: end })
-    if (out.length >= MAX_WEEKS) break
-  }
-  return out
-}
-
-export const weekTick = (d: Date) => fmtDate(d).split('/').slice(0, 2).join('/')
 
 export function setPreset(state: RangeState, preset: string): RangeState {
   if (preset !== 'custom') return { ...state, preset }

@@ -15,11 +15,13 @@ export function RangeBar({
   value,
   onChange,
   note,
+  showCustom = true,
 }: {
   id: string
   value: RangeState
   onChange: (next: RangeState) => void
   note?: string
+  showCustom?: boolean
 }) {
   const r = resolveRange(value)
   const lo = iso(rangeFloor())
@@ -38,41 +40,45 @@ export function RangeBar({
             {label}
           </button>
         ))}
-        <button
-          className={`pill ${r.preset === 'custom' ? 'on' : ''}`}
-          aria-pressed={r.preset === 'custom'}
-          onClick={() => onChange(setPreset(value, 'custom'))}
-        >
-          Custom
-        </button>
-        <div className="sp" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <label htmlFor={`${id}f`} className="gr" style={{ fontSize: 'var(--t-label)' }}>
-            From
-          </label>
-          <input
-            id={`${id}f`}
-            className="inp mono"
-            type="date"
-            style={{ width: 150 }}
-            value={iso(r.from)}
-            min={lo}
-            max={hi}
-            onChange={(e) => onChange(setRangeEnd(value, 'from', e.target.value))}
-          />
-          <label htmlFor={`${id}t`} className="gr" style={{ fontSize: 'var(--t-label)' }}>
-            to
-          </label>
-          <input
-            id={`${id}t`}
-            className="inp mono"
-            type="date"
-            style={{ width: 150 }}
-            value={iso(r.to)}
-            min={lo}
-            max={hi}
-            onChange={(e) => onChange(setRangeEnd(value, 'to', e.target.value))}
-          />
-        </div>
+        {showCustom ? (
+          <>
+            <button
+              className={`pill ${r.preset === 'custom' ? 'on' : ''}`}
+              aria-pressed={r.preset === 'custom'}
+              onClick={() => onChange(setPreset(value, 'custom'))}
+            >
+              Custom
+            </button>
+            <div className="sp" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <label htmlFor={`${id}f`} className="gr" style={{ fontSize: 'var(--t-label)' }}>
+                From
+              </label>
+              <input
+                id={`${id}f`}
+                className="inp mono"
+                type="date"
+                style={{ width: 150 }}
+                value={iso(r.from)}
+                min={lo}
+                max={hi}
+                onChange={(e) => onChange(setRangeEnd(value, 'from', e.target.value))}
+              />
+              <label htmlFor={`${id}t`} className="gr" style={{ fontSize: 'var(--t-label)' }}>
+                to
+              </label>
+              <input
+                id={`${id}t`}
+                className="inp mono"
+                type="date"
+                style={{ width: 150 }}
+                value={iso(r.to)}
+                min={lo}
+                max={hi}
+                onChange={(e) => onChange(setRangeEnd(value, 'to', e.target.value))}
+              />
+            </div>
+          </>
+        ) : null}
       </div>
       <p className="cnt">
         <span>ⓘ</span> Showing <b>{fmtDate(r.from)}</b> to <b>{fmtDate(r.to)}</b> —{' '}

@@ -9,28 +9,22 @@ export function DayPicker({ value, onChange }: { value: string; onChange: (dk: s
   const today = fmtDate(now())
 
   return (
-    <div className="fbar" role="group" aria-label="Choose a day">
-      {run.days.map((d) => (
-        <button
-          key={d.dk}
-          className={`pill ${value === d.dk ? 'on' : ''}`}
-          aria-pressed={value === d.dk}
-          onClick={() => onChange(d.dk)}
-        >
-          {d.dk === today ? 'Today' : DAY_LABEL[d.date.getDay()]}{' '}
-          <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)' }}>
-            {d.dk}
-          </span>
-          <span className="n">{d.n}</span>
-        </button>
-      ))}
-      <button
-        className={`pill ${value === 'all' ? 'on' : ''}`}
-        aria-pressed={value === 'all'}
-        onClick={() => onChange('all')}
+    <div className="fbar">
+      <select
+        className="inp"
+        aria-label="Choose a day"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
       >
-        All {run.days.length} days<span className="n">{run.orders.length}</span>
-      </button>
+        {run.days.map((d) => (
+          <option key={d.dk} value={d.dk}>
+            {d.dk === today ? 'Today' : DAY_LABEL[d.date.getDay()]} · {d.dk} — {d.n}
+          </option>
+        ))}
+        <option value="all">
+          All {run.days.length} days — {run.orders.length}
+        </option>
+      </select>
     </div>
   )
 }

@@ -6,11 +6,10 @@ import { useReportExport } from '@/state/reportExport'
 import { Cell, FlexRow, FlexTable } from '@/components/FlexTable'
 import { FocusHead, FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
-import { DEFAULT_RANGE, inRange, resolveRange, weekTick, weeklyBuckets, type RangeState } from '@/lib/range'
+import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
 import { ONTIMETARGET, median } from '@/lib/metrics'
 import { checkpoints, hh } from '@/lib/sla'
 import { ASSIGN_STAGES } from '@/data/org'
-import { fmtDate } from '@/lib/format'
 import type { Delivery } from '@/data/deliveries'
 
 const DEL_COLS = '40px 105px 150px 130px 110px 105px 110px 1fr'
@@ -52,7 +51,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
   if (!d.length) {
     return (
       <>
-        <RangeBar id="t" value={range} onChange={setRange} />
+        <RangeBar id="t" value={range} onChange={setRange} showCustom={false} />
         <Card>
           <Empty
             icon="◷"
@@ -77,15 +76,6 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
   const totMed = stages.reduce((a, x) => a + x.med, 0) || 1
   stages.forEach((x) => (x.share = Math.round((x.med / totMed) * 100)))
   const worst = [...stages].sort((a, b) => b.overPct - a.overPct)[0]
-
-  const weeks = weeklyBuckets(r).map((wk) => {
-    const m = deliveries.filter((x) => inRange(x.d, wk))
-    return {
-      ...wk,
-      n: m.length,
-      pct: m.length ? Math.round(((m.length - m.filter((x) => x.late).length) / m.length) * 100) : null,
-    }
-  })
 
   const delRows = (list: Delivery[]) => (
     <FlexTable
@@ -184,7 +174,7 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
 
   return (
     <>
-      <RangeBar id="t" value={range} onChange={setRange} />
+      <RangeBar id="t" value={range} onChange={setRange} showCustom={false} />
 
       <FocusKpis
         focus={focus}
@@ -429,51 +419,6 @@ export function Turnaround({ deliveries }: { deliveries: Delivery[] }) {
               {worst.overPct > 25
                 ? 'either the budget is wrong or the department is under-resourced, and the two need telling apart before anything is fixed.'
                 : 'which is within tolerance. No stage is systematically starved.'}
-            </p>
-          </Card>
-
-          <Card padded style={{ marginTop: 18 }}>
-            <Label>On time, week by week</Label>
-            <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end', height: 120, margin: '14px 0 4px' }}>
-              {weeks.map((wk) => (
-                <div
-                  key={wk.to.toISOString()}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-end',
-                    height: '100%',
-                    gap: 5,
-                  }}
-                  title={`${fmtDate(wk.from)} – ${fmtDate(wk.to)}: ${wk.pct === null ? 'nothing delivered' : `${wk.pct}% on time from ${wk.n} orders`}`}
-                >
-                  <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)', textAlign: 'center' }}>
-                    {wk.pct === null ? '—' : `${wk.pct}%`}
-                  </span>
-                  <span
-                    style={{
-                      background:
-                        wk.pct === null
-                          ? 'var(--hair)'
-                          : wk.pct >= ONTIMETARGET
-                            ? 'var(--ok)'
-                            : wk.pct >= 90
-                              ? 'var(--brand2)'
-                              : 'var(--warn)',
-                      borderRadius: '5px 5px 0 0',
-                      height: `${wk.pct === null ? 3 : Math.max(3, wk.pct)}%`,
-                    }}
-                  />
-                  <span className="mono gr" style={{ fontSize: 'var(--t-mini)', textAlign: 'center' }}>
-                    {weekTick(wk.to)}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
-              Green clears the {ONTIMETARGET}% target, amber is under 90%. A single late order in a thin week
-              swings this a long way — read the bar heights with the order counts in the tooltip.
             </p>
           </Card>
 

@@ -5,14 +5,13 @@ import { qualityCsv } from '@/lib/report-csv'
 import { useReportExport } from '@/state/reportExport'
 import { FocusKpis } from '@/components/FocusKpis'
 import { RangeBar } from '@/components/RangeBar'
-import { DEFAULT_RANGE, inRange, resolveRange, weekTick, weeklyBuckets, type RangeState } from '@/lib/range'
+import { DEFAULT_RANGE, inRange, resolveRange, type RangeState } from '@/lib/range'
 import { median } from '@/lib/metrics'
 import { QC_CRITERIA, QC_SCALE, ratedPeople, stageWorkOf, standing } from '@/lib/quality'
 import { setQcRule, useQcRules } from '@/state/qcRules'
 import { STAFF } from '@/data/people'
 import { QcTeamFocus } from './QcTeamFocus'
 import { QcStaffDetail } from './QcStaffDetail'
-import { fmtDate } from '@/lib/format'
 import type { Delivery } from '@/data/deliveries'
 import type { QcEntry } from '@/data/quality'
 
@@ -68,16 +67,10 @@ function Scores({
   const people = useMemo(() => ratedPeople(rows, tw), [rows, tw])
   const twp = Object.values(tw.people)
 
-  const weeks = weeklyBuckets(r).map((w) => {
-    const d2 = deliveries.filter((x) => inRange(x.d, w)).length * 2
-    const g = log.filter((x) => inRange(x.d, w))
-    return { ...w, pct: d2 ? Math.round((g.length / d2) * 100) : 0, n: g.length }
-  })
-
   if (!dels.length) {
     return (
       <>
-        <RangeBar id="q" value={range} onChange={setRange} />
+        <RangeBar id="q" value={range} onChange={setRange} showCustom={false} />
         <Card>
           <Empty
             icon="★"
@@ -106,7 +99,7 @@ function Scores({
   if (person) {
     return (
       <>
-        <RangeBar id="q" value={range} onChange={setRange} />
+        <RangeBar id="q" value={range} onChange={setRange} showCustom={false} />
         <QcStaffDetail
           name={person}
           rows={rows}
@@ -122,7 +115,7 @@ function Scores({
 
   return (
     <>
-      <RangeBar id="q" value={range} onChange={setRange} />
+      <RangeBar id="q" value={range} onChange={setRange} showCustom={false} />
 
       <Banner
         kind="r"
@@ -197,45 +190,6 @@ function Scores({
 
       {focus === 'all' ? (
         <>
-          <Card padded style={{ marginTop: 18 }}>
-            <Label>Coverage week by week — is rating becoming a habit?</Label>
-            <div style={{ display: 'flex', gap: 5, alignItems: 'flex-end', height: 120, margin: '14px 0 4px' }}>
-              {weeks.map((wk) => (
-                <div
-                  key={wk.to.toISOString()}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-end',
-                    height: '100%',
-                    gap: 5,
-                  }}
-                  title={`${fmtDate(wk.from)} – ${fmtDate(wk.to)}: ${wk.pct}% rated, ${wk.n} checks`}
-                >
-                  <span className="mono gr" style={{ fontSize: 'var(--t-eyebrow)', textAlign: 'center' }}>
-                    {wk.pct}%
-                  </span>
-                  <span
-                    style={{
-                      background:
-                        wk.pct >= 90 ? 'var(--ok)' : wk.pct >= 70 ? 'var(--brand2)' : 'var(--warn)',
-                      borderRadius: '5px 5px 0 0',
-                      height: `${Math.max(3, wk.pct)}%`,
-                    }}
-                  />
-                  <span className="mono gr" style={{ fontSize: 'var(--t-mini)', textAlign: 'center' }}>
-                    {weekTick(wk.to)}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="gr" style={{ fontSize: 'var(--t-small)', marginTop: 10 }}>
-              Bars are the share of checks actually filled in, week ending. Amber is below 70%. The scores
-              themselves barely move — coverage is the variable worth watching.
-            </p>
-          </Card>
-
           <Card style={{ marginTop: 18 }}>
             <div className="ch">
               <h2>By person</h2>
