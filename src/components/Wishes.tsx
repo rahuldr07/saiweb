@@ -4,6 +4,7 @@ import {
   aboutOther,
   whenWord,
   wishFor,
+  wishIcon,
   wishNote,
   type Celebration,
 } from '@/lib/celebrations'
@@ -24,7 +25,7 @@ export function YourWish({
         <Banner
           key={`${c.person.id}-${c.kind}`}
           kind="v"
-          icon={c.kind === 'birthday' ? '🎂' : '🎉'}
+          icon={wishIcon(c)}
           title={wishFor(c)}
         >
           {wishNote(c, firstName)}
@@ -68,7 +69,9 @@ export function TeamWishes({
                 <Avatar name={c.person.n} />
               </span>
               <span>
-                <b style={{ fontSize: 'var(--t-body)' }}>{aboutOther(c)}</b>
+                <b style={{ fontSize: 'var(--t-body)' }}>
+                  {wishIcon(c)} {aboutOther(c)}
+                </b>
                 <div className="sd gr">
                   {c.person.dep.join(', ') || 'No department'} · {fmtDate(c.at)}
                 </div>

@@ -62,6 +62,10 @@ export function celebrationsWithin(staff: Person[], on: Date, days: number): Cel
   )
 }
 
+export function wishIcon(c: Celebration): string {
+  return c.kind === 'birthday' ? '🎂' : '🎉'
+}
+
 export function wishFor(c: Celebration): string {
   if (c.kind === 'birthday') return 'Happy birthday'
   return c.years === 1 ? 'One year today' : `${c.years} years today`
