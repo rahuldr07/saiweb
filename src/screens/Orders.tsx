@@ -8,7 +8,7 @@ import { useUi } from '@/state/ui'
 import { ORDERS } from '@/data/production'
 import { STAGES, STATUS } from '@/data/org'
 import { STAFF } from '@/data/people'
-import { SOON_HOURS, TZ, fmtDT, orderChipKind, orderState, type OrderState } from '@/lib/format'
+import { SOON_HOURS, TZ, fmtDT, fmtDate, iso, orderChipKind, orderState, parseIso, type OrderState } from '@/lib/format'
 import { whoName } from '@/lib/permissions'
 import { hh, orderAtRisk, orderPlan } from '@/lib/sla'
 import { csvName, downloadCSV } from '@/lib/csv'
@@ -33,6 +33,7 @@ export default function Orders() {
   const [client, setClient] = useState('all')
   const [dept, setDept] = useState('all')
   const [staff, setStaff] = useState('all')
+  const [dueDate, setDueDate] = useState('all')
 
   const scope = can('all') ? ORDERS : ORDERS.filter((o) => Object.values(o.a).includes(me.id))
 
@@ -43,9 +44,10 @@ export default function Orders() {
           (staff === 'all' || Object.values(o.a).includes(staff)) &&
           (dept === 'all' || !!o.a[dept]) &&
           (product === 'all' || o.pr === product) &&
-          (client === 'all' || o.cl === client),
+          (client === 'all' || o.cl === client) &&
+          (dueDate === 'all' || iso(o.due) === dueDate),
       ),
-    [scope, staff, dept, product, client],
+    [scope, staff, dept, product, client, dueDate],
   )
 
   const inState = (k: OrderState) => base.filter((o) => orderState(o) === k).length
@@ -113,6 +115,7 @@ export default function Orders() {
     staffName ? <>with <b>{staffName}</b></> : null,
     product !== 'all' ? <>for <b>{product}</b></> : null,
     client !== 'all' ? <>from <b>{client}</b></> : null,
+    dueDate !== 'all' ? <>due <b>{fmtDate(parseIso(dueDate))}</b></> : null,
   ].filter(Boolean)
 
   const clearFilters = () => {
@@ -120,6 +123,7 @@ export default function Orders() {
     setDept('all')
     setProduct('all')
     setClient('all')
+    setDueDate('all')
   }
 
   const openWorkload = () =>
@@ -199,6 +203,7 @@ export default function Orders() {
         noun="orders"
         min={1080}
         total={base.length}
+        wideFilters
         search="Search order #, property or client"
         activePill={pill}
         onPill={setPill}
@@ -245,6 +250,7 @@ export default function Orders() {
             ],
           },
         ]}
+        dateFilter={{ label: 'Due date', value: dueDate, onChange: setDueDate }}
         cols={[
           { l: 'Order', w: 120 },
           { l: 'Product', w: 95 },

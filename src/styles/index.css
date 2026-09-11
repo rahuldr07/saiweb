@@ -359,6 +359,27 @@ h1.pg {
 }
 
 /*
+ * Orders' filter row, opted in via `.fbar.wide`.
+ *
+ * `.fbar` wraps (design.css), and six controls — four selects, a date and
+ * search — are already wider than the space left beside the pills at most
+ * desktop widths, so the group drops to a line of its own. There it still
+ * only claims its own content width and `.fbar .sp`'s `margin-left: auto`
+ * (above) pushes that block flush right, leaving the rest of the line empty.
+ * `flex-basis: 100%` claims the whole line instead of just its content, and
+ * `justify-content: space-between` spreads the controls across it at their
+ * existing sizes — no control shrinks, so nothing truncates. Scoped above the
+ * drawer breakpoint — below it, `.fbar .sp` above already goes full width on
+ * its own terms.
+ */
+@media (min-width: 821px) {
+  .fbar.wide .sp {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+}
+
+/*
  * The mobile menu button. `.top .ic` sets display:grid at (0,2,0) and beat
  * `.burger { display: none }` at (0,1,0), so the hamburger sat in the top bar
  * on desktop beside an already-visible sidebar. Matching the specificity is the
@@ -530,6 +551,18 @@ body *::-webkit-scrollbar-thumb:hover {
 .xscroll {
   overflow-x: auto;
   padding-bottom: 4px;
+}
+
+/*
+ * `.mat`'s header cells carry none of `.mat td`'s padding (design.css). Tailwind's
+ * preflight zeroes table-cell padding globally, and design.css only redeclares it
+ * for `td` — so every `.mat` table's header row (Invoicing's by-client-and-month
+ * grid, Attendance's roster, and the rest built on the same class) rendered as a
+ * thin sliver next to its own 9px/11px body rows. Giving `th` a taller padding
+ * than the data rows both fixes the gap and gives the heading its own weight.
+ */
+.mat th {
+  padding: 12px 11px;
 }
 
 /* Design tokens exposed to Tailwind so utilities resolve to the design's palette. */

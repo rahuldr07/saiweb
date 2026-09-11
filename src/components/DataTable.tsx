@@ -39,6 +39,12 @@ export interface SelectFilter {
   onChange: (v: string) => void
 }
 
+export interface DateFilter {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}
+
 export interface DataTableProps {
   cols: Col[]
   rows: DataRow[]
@@ -46,6 +52,7 @@ export interface DataTableProps {
   activePill?: string
   onPill?: (key: string) => void
   filters?: SelectFilter[]
+  dateFilter?: DateFilter
   search?: string
   noun?: string
   total?: number
@@ -53,6 +60,7 @@ export interface DataTableProps {
   emptyText?: string
   emptyAction?: ReactNode
   numbered?: boolean
+  wideFilters?: boolean
 }
 
 const cellText = (c: Cell): string =>
@@ -65,6 +73,7 @@ export function DataTable({
   activePill,
   onPill,
   filters,
+  dateFilter,
   search,
   noun = 'orders',
   total,
@@ -72,6 +81,7 @@ export function DataTable({
   emptyText = 'No rows match this filter.',
   emptyAction,
   numbered,
+  wideFilters,
 }: DataTableProps) {
   const [innerPill, setInnerPill] = useState('all')
   const [query, setQuery] = useState('')
@@ -100,13 +110,13 @@ export function DataTable({
 
   const tm =
     (numbered ? '40px ' : '') + cols.map((x) => `minmax(${x.w ?? 100}px,${x.f ?? 1}fr)`).join(' ')
-  const hasBar = !!(pills?.length || search || filters?.length)
+  const hasBar = !!(pills?.length || search || filters?.length || dateFilter)
 
   return (
     <>
       {hasBar ? (
         <>
-          <div className="fbar">
+          <div className={`fbar${wideFilters ? ' wide' : ''}`}>
             {(pills ?? []).map((p) => (
               <button
                 key={p.key}
@@ -129,6 +139,15 @@ export function DataTable({
                   onChange={f.onChange}
                 />
               ))}
+              {dateFilter ? (
+                <input
+                  type="date"
+                  className="inp"
+                  aria-label={dateFilter.label}
+                  value={dateFilter.value === 'all' ? '' : dateFilter.value}
+                  onChange={(e) => dateFilter.onChange(e.target.value || 'all')}
+                />
+              ) : null}
               {search ? (
                 <input
                   className="inp"
