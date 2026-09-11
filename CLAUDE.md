@@ -162,13 +162,16 @@ this app spends most of its time. Inline styles take the token too
 (`fontSize: 'var(--t-small)'`); 611 of them across 86 files already do, so a
 literal `'12.5px'` appearing again is a regression, not a local choice.
 
-There are two greys and they are not interchangeable. `--gr` is for text that
-recedes — a hint, a timestamp, an empty state, the `.gr` utility that ~465
-component call sites use for asides. `--gr2` is for text that *labels* something
-else: section eyebrows, column heads, field labels, page subtitles, the term
-half of a key/value pair. A label printed in `--gr` reads as an aside, which is
-the bug this split fixes. `--gr2` inverts under `body.dark` — there the
-emphatic grey is the lighter one.
+**There is no grey text.** `--gr`, `--gr2` and the sidebar's `--navtx` all
+alias to `--ink` / `--navon` in `index.css` — every rule in `design.css` and
+every component call site that names one of them (the `.gr` utility alone is
+~465 of them) prints in full ink now, not a lighter tone. The tokens are kept
+rather than deleted only because `design.css` cannot be edited (invariant 2)
+and still names them. Do not reintroduce a grey text colour, hardcoded or
+through a new token — restate the alias in `index.css` if a new selector needs
+one. This does not touch opacity-based dimming used as a state (a disabled
+row, a zero-count chip) — that is a different signal from a text colour and is
+out of scope for this rule.
 
 The faces are Geist and Geist Mono, vendored under
 [`src/styles/fonts/`](src/styles/fonts) (OFL) rather than fetched, so there is

@@ -111,33 +111,56 @@
   --t-display: 28px; /* was 26 — KPI figures */
 
   /*
-   * A second grey.
+   * No grey text, anywhere.
    *
-   * design.css spends `--gr` on two unrelated jobs: text that should recede — a
-   * timestamp, a hint, an empty state — and text that should not, which is every
-   * section eyebrow, table head and field label on the screen. The second group
-   * is structure, and structure printed in the same tone as an aside reads as an
-   * aside.
+   * design.css spends `--gr` on two unrelated jobs — text that recedes (a
+   * hint, a timestamp, an empty state) and text that labels something else (a
+   * section eyebrow, a column head, a field name) — and an earlier revision of
+   * this file split that into two tones, `--gr` and `--gr2`, rather than
+   * settle which reading was wanted. Told plainly that neither was: nothing on
+   * screen renders in grey. Both tokens alias to `--ink` here, so every rule in
+   * design.css and every component call site naming `--gr` or `--gr2` — the
+   * `.gr` utility alone is ~465 of them — prints in the same ink as primary
+   * text, in both themes, because `--ink` already flips between them.
    *
-   * `--gr2` is that group's colour: slate-700, 9.7:1 on the page ground, against
-   * `--gr`'s 5.1:1. Both are still clearly separated, so the hierarchy the
-   * design intended survives — it is now expressed in two tones rather than one.
+   * The tokens stay defined rather than deleted: design.css cannot be edited
+   * (invariant 2), so deleting them would leave `var(--gr)` there pointing at
+   * nothing, and a browser drops a declaration with an unresolvable custom
+   * property silently rather than erroring.
    */
-  --gr2: #334155;
+  --gr2: var(--ink);
+  --gr: var(--ink);
 
   /*
-   * `--gr` itself moves one notch, #64748b -> #5c6b80. Not a style change: at
-   * #64748b it was 4.44:1 on `--bg`, which fails WCAG AA for body text, and it
-   * was being used at 10.5px. #5c6b80 is 5.06:1 and still visibly the lighter of
-   * the two greys.
+   * The sidebar rail has its own grey, `--navtx`, for the same reason: nav
+   * labels, the tenant's plan line and the sign-out row all rendered lighter
+   * than the active item's white. Aliased to `--navon` — the rail's own
+   * "this is emphatic" white — so nothing there recedes either. `--navon`
+   * does not change under `body.dark` (the rail stays the same dark navy in
+   * both app themes), so one alias covers both.
    */
-  --gr: #5c6b80;
+  --navtx: var(--navon);
 }
 
 body.dark {
-  /* Inverted: in dark mode the emphatic grey is the lighter one. 12.8:1 on the
-     dark ground, against `--gr`'s 7.4:1, which already passes and is left. */
-  --gr2: #cbd5e1;
+  /* design.css redeclares `--gr`, `--gr2` and `--navtx` under `body.dark`
+     with different literals (invariant 2 again), which would win back over
+     the `:root` aliases above on specificity. Redeclaring the aliases here,
+     later in the cascade, keeps dark mode grey-free too. */
+  --gr2: var(--ink);
+  --gr: var(--ink);
+  --navtx: var(--navon);
+}
+
+/*
+ * Two greys design.css never routed through a token at all: `.navlbl` (the
+ * PRODUCTION / BUSINESS / HRMS section labels in the rail) and the hover
+ * state on an inactive nav item are literal hex, not `var(--navtx)`. Restated
+ * here at the same selector and specificity so the later rule wins.
+ */
+.navlbl,
+.side nav button:hover {
+  color: var(--navon);
 }
 
 /* The faces. design.css names Inter in three places — `body`, the `--mono`
@@ -263,37 +286,11 @@ h1.pg {
 }
 
 /*
- * ── The structural greys, moved to `--gr2`. ──
- *
- * Everything here is a label for something else on the page: an eyebrow over a
- * section, a column head, a field's name, a page's subtitle, the term half of a
- * key/value pair, the count above a table. What stays on `--gr` is the text that
- * genuinely recedes — `.empty`, `.fld .hint`, `.due .sub`, `.tl-when`, the
- * `.gr` utility that 465 component call sites use for asides, and the neutral
- * `.chip.n`, whose grey is a chip colour rather than a text tone.
+ * No per-selector override needed for the labels that used to read `--gr2`
+ * (section eyebrows, column heads, field labels, page subtitles, k/v terms):
+ * design.css already sets `color: var(--gr)` directly on every one of them,
+ * and `--gr` is `--ink` now. The alias above is the whole fix.
  */
-h2.sec,
-.lb,
-.kpi .t,
-.trow.h span,
-.mat th,
-.eyebrow,
-p.sub,
-.fld label,
-.kv dt,
-.cnt,
-.rw .sd,
-.cell .s,
-.bnr .bs,
-.hbar-n,
-.hbar-l,
-.seg button,
-.tabs button {
-  color: var(--gr2);
-}
-/* No companion rule for the selected tab or segment: design.css states both at
-   `.tabs button.on` / `.seg button.on`, which outrank the line above on
-   specificity rather than on order and so still win. */
 
 /*
  * Additions that are not in the design sheet, kept here so design.css stays a
@@ -539,11 +536,14 @@ body *::-webkit-scrollbar-thumb:hover {
 @theme {
   --color-nav: #131a2b;
   --color-nav2: #1b2438;
-  --color-navtx: #94a3b8;
+  /* Aliased to --ink / --navon rather than the design's own grey, so a
+     Tailwind `text-gr` or `text-navtx` utility — none exist today — could
+     not silently reintroduce grey text. */
+  --color-navtx: var(--navon);
   --color-bg: #f6f7f9;
   --color-card: #ffffff;
   --color-ink: #0f172a;
-  --color-gr: #64748b;
+  --color-gr: var(--ink);
   --color-hair: #e6e9ef;
   --color-brand: #4f46e5;
   --color-brand2: #6366f1;
