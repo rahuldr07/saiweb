@@ -47,9 +47,9 @@ jobs:
       BETTER_AUTH_SECRET: ci-only-secret-not-used-for-anything-real
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -126,9 +126,9 @@ jobs:
       APP_URL: http://localhost:4173
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -181,7 +181,7 @@ jobs:
 
       - name: Save the smoke output
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-results
           path: smoke-results.txt
